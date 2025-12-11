@@ -175,6 +175,11 @@ const routes: RouteRecordRaw[] = [
         name: 'TeacherProfile',
         component: () => import('@/views/teacher/Profile.vue'),
       },
+      {
+        path: 'departments',
+        name: 'TeacherDepartments',
+        component: () => import('@/views/teacher/Departments.vue'),
+      },
     ],
   },
   // 运营管理端路由

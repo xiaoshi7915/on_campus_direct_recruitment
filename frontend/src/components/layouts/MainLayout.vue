@@ -132,6 +132,7 @@ const updateNavItems = () => {
       navItems.value = [
         { name: '工作台', path: '/teacher' },
         { name: '学生管理', path: '/teacher/students' },
+        { name: '我的院校', path: '/teacher/departments' },
         { name: '双选会管理', path: '/teacher/job-fairs' },
         { name: '宣讲会管理', path: '/teacher/info-sessions' },
         { name: '数据统计', path: '/teacher/statistics' },
