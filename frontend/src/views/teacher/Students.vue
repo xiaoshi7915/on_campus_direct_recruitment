@@ -75,6 +75,18 @@
             >
               查看简历
             </button>
+            <button
+              @click="openCommentModal(student)"
+              class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              点评
+            </button>
+            <button
+              @click="confirmRemoveStudent(student)"
+              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              移除
+            </button>
           </div>
         </div>
       </div>
@@ -87,13 +99,120 @@
       :total="total"
       @change="handlePaginationChange"
     />
+
+    <!-- 点评模态框 -->
+    <div
+      v-if="showCommentModalVisible"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="showCommentModalVisible = false"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-900">学生点评</h2>
+          <div v-if="selectedStudent" class="mb-4 p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">学生：<strong class="text-gray-900">{{ selectedStudent.real_name }}</strong></p>
+            <p v-if="selectedStudent.student_id" class="text-sm text-gray-600">学号：{{ selectedStudent.student_id }}</p>
+          </div>
+          <form @submit.prevent="saveComment">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">点评内容 <span class="text-red-500">*</span></label>
+                <textarea
+                  v-model="commentForm.content"
+                  rows="6"
+                  required
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  placeholder="请输入点评内容"
+                ></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">评分（1-5分）</label>
+                <input
+                  v-model.number="commentForm.score"
+                  type="number"
+                  min="1"
+                  max="5"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  placeholder="请输入评分"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">标签（逗号分隔）</label>
+                <input
+                  v-model="commentForm.tags"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  placeholder="例如：学习能力强,团队合作好"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">是否公开</label>
+                <select
+                  v-model="commentForm.is_public"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                >
+                  <option value="PRIVATE">仅教师可见</option>
+                  <option value="PUBLIC">公开</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+              <button
+                type="button"
+                @click="showCommentModalVisible = false"
+                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                保存
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 移除确认模态框 -->
+    <div
+      v-if="showRemoveModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="showRemoveModal = false"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+          <h2 class="text-xl font-bold mb-4 text-gray-900">确认移除</h2>
+          <p class="text-gray-700 mb-6">
+            确定要将学生 "{{ selectedStudent?.real_name }}" 从管辖范围内移除吗？此操作不会删除学生数据，只是将其移出您的管辖范围。
+          </p>
+          <div class="flex justify-end space-x-4">
+            <button
+              @click="showRemoveModal = false"
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              取消
+            </button>
+            <button
+              @click="handleRemoveStudent"
+              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              确认移除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { getStudents, getStudent, type Student } from '@/api/students'
+import { getStudents, getStudent, removeStudent, type Student } from '@/api/students'
 import { getResumes } from '@/api/resumes'
+import { createStudentComment, getStudentComments, type StudentCommentCreate } from '@/api/studentComments'
 import { useRouter } from 'vue-router'
 import Pagination from '@/components/Pagination.vue'
 
@@ -110,6 +229,20 @@ const filters = ref({
 const currentPage = ref(1)
 const pageSize = ref(20)
 const total = ref(0)
+
+// 模态框状态
+const showCommentModalVisible = ref(false)
+const showRemoveModal = ref(false)
+const selectedStudent = ref<Student | null>(null)
+
+// 点评表单
+const commentForm = ref<StudentCommentCreate>({
+  student_id: '',
+  content: '',
+  score: undefined,
+  tags: '',
+  is_public: 'PRIVATE'
+})
 
 // 计算总页数
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
@@ -169,6 +302,61 @@ const viewStudentResumes = async (studentId: string) => {
     router.push(`/teacher/resumes?student_id=${studentId}`)
   } catch (error: any) {
     alert('查看简历失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 显示点评模态框
+const openCommentModal = (student: Student) => {
+  selectedStudent.value = student
+  commentForm.value = {
+    student_id: student.id,
+    content: '',
+    score: undefined,
+    tags: '',
+    is_public: 'PRIVATE'
+  }
+  showCommentModalVisible.value = true
+}
+
+// 保存点评
+const saveComment = async () => {
+  if (!selectedStudent.value) return
+  
+  try {
+    await createStudentComment(commentForm.value)
+    alert('点评成功！')
+    showCommentModalVisible.value = false
+    selectedStudent.value = null
+    commentForm.value = {
+      student_id: '',
+      content: '',
+      score: undefined,
+      tags: '',
+      is_public: 'PRIVATE'
+    }
+  } catch (error: any) {
+    alert('点评失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 确认移除学生
+const confirmRemoveStudent = (student: Student) => {
+  selectedStudent.value = student
+  showRemoveModal.value = true
+}
+
+// 移除学生
+const handleRemoveStudent = async () => {
+  if (!selectedStudent.value) return
+  
+  try {
+    await removeStudent(selectedStudent.value.id)
+    alert('移除成功！')
+    showRemoveModal.value = false
+    selectedStudent.value = null
+    handleSearch() // 刷新列表
+  } catch (error: any) {
+    alert('移除失败: ' + (error.response?.data?.detail || error.message))
   }
 }
 

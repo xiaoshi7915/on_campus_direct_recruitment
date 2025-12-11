@@ -55,6 +55,12 @@
               查看报名
             </button>
             <button
+              @click="showInviteModal(jobFair)"
+              class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              邀请企业
+            </button>
+            <button
               @click="handleDeleteJobFair(jobFair.id)"
               class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
             >
@@ -200,7 +206,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
+import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, inviteEnterpriseToJobFair, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
 import Pagination from '@/components/Pagination.vue'
 
 // 双选会列表
@@ -209,8 +215,10 @@ const loading = ref(false)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showRegistrationsModal = ref(false)
+const showInviteModalVisible = ref(false)
 const currentJobFair = ref<JobFair | null>(null)
 const registrations = ref<JobFairRegistration[]>([])
+const inviteEnterpriseId = ref('')
 const createForm = ref({
   title: '',
   description: '',
@@ -357,6 +365,35 @@ const viewRegistrations = async (jobFairId: string) => {
     showRegistrationsModal.value = true
   } catch (error: any) {
     alert('加载报名信息失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 显示邀请模态框
+const showInviteModal = (jobFair: JobFair) => {
+  currentJobFair.value = jobFair
+  inviteEnterpriseId.value = ''
+  showInviteModalVisible.value = true
+}
+
+// 邀请企业
+const handleInviteEnterprise = async () => {
+  if (!currentJobFair.value || !inviteEnterpriseId.value.trim()) {
+    alert('请输入企业ID')
+    return
+  }
+  
+  try {
+    await inviteEnterpriseToJobFair(currentJobFair.value.id, inviteEnterpriseId.value.trim())
+    alert('邀请成功！')
+    showInviteModalVisible.value = false
+    inviteEnterpriseId.value = ''
+    currentJobFair.value = null
+    // 如果当前正在查看报名，刷新报名列表
+    if (showRegistrationsModal.value && currentJobFair.value) {
+      viewRegistrations(currentJobFair.value.id)
+    }
+  } catch (error: any) {
+    alert('邀请失败: ' + (error.response?.data?.detail || error.message))
   }
 }
 

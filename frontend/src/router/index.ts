@@ -180,6 +180,16 @@ const routes: RouteRecordRaw[] = [
         name: 'TeacherDepartments',
         component: () => import('@/views/teacher/Departments.vue'),
       },
+      {
+        path: 'student-comments',
+        name: 'TeacherStudentComments',
+        component: () => import('@/views/teacher/StudentComments.vue'),
+      },
+      {
+        path: 'talent-recommendations',
+        name: 'TeacherTalentRecommendations',
+        component: () => import('@/views/teacher/TalentRecommendations.vue'),
+      },
     ],
   },
   // 运营管理端路由
