@@ -43,6 +43,7 @@ class Department(Base):
     name = Column(String(100), nullable=False, comment="院系名称")
     code = Column(String(50), nullable=True, comment="院系代码")
     description = Column(Text, nullable=True, comment="描述")
+    honors = Column(Text, nullable=True, comment="资质荣誉")
     created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="创建时间")
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
     
