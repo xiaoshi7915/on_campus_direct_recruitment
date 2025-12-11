@@ -376,9 +376,12 @@
   - [x] 工作台页面（Dashboard.vue）
 - [x] 教师端页面
   - [x] 工作台页面（Dashboard.vue）
-  - [x] 学生管理页面（Students.vue）
-  - [x] 双选会/宣讲会管理页面（JobFairs.vue, InfoSessions.vue）
+  - [x] 学生管理页面（Students.vue）- 已增强：添加点评和移除功能
+  - [x] 双选会/宣讲会管理页面（JobFairs.vue, InfoSessions.vue）- 已增强：添加邀请企业功能
   - [x] 数据统计页面（Statistics.vue）
+  - [x] 院系管理页面（Departments.vue）
+  - [x] 学生点评管理页面（StudentComments.vue）
+  - [x] 推荐人才管理页面（TalentRecommendations.vue）
 - [x] 运营管理端页面
   - [x] 用户管理页面（Users.vue）
   - [x] 权益管理页面（Rights.vue）
