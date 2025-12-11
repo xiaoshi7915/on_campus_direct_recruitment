@@ -433,6 +433,34 @@ const handleDeleteInfoSession = async (sessionId: string) => {
   }
 }
 
+// 显示审批模态框
+const showApprovalModal = (session: InfoSession) => {
+  currentSession.value = session
+  approvalAction.value = 'APPROVE'
+  approvalComment.value = ''
+  showApprovalModalVisible.value = true
+}
+
+// 审批宣讲会
+const handleApproveInfoSession = async () => {
+  if (!currentSession.value) return
+  
+  try {
+    await approveInfoSession(currentSession.value.id, {
+      action: approvalAction.value,
+      comment: approvalComment.value || undefined
+    })
+    alert(approvalAction.value === 'APPROVE' ? '审批通过！' : '审批拒绝！')
+    showApprovalModalVisible.value = false
+    currentSession.value = null
+    approvalAction.value = 'APPROVE'
+    approvalComment.value = ''
+    loadInfoSessions()
+  } catch (error: any) {
+    alert('审批失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
 onMounted(() => {
   loadInfoSessions()
 })
