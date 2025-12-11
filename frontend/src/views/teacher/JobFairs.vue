@@ -386,11 +386,12 @@ const handleInviteEnterprise = async () => {
     await inviteEnterpriseToJobFair(currentJobFair.value.id, inviteEnterpriseId.value.trim())
     alert('邀请成功！')
     showInviteModalVisible.value = false
+    const invitedJobFairId = currentJobFair.value?.id
     inviteEnterpriseId.value = ''
     currentJobFair.value = null
     // 如果当前正在查看报名，刷新报名列表
-    if (showRegistrationsModal.value && currentJobFair.value) {
-      viewRegistrations(currentJobFair.value.id)
+    if (showRegistrationsModal.value && invitedJobFairId) {
+      viewRegistrations(invitedJobFairId)
     }
   } catch (error: any) {
     alert('邀请失败: ' + (error.response?.data?.detail || error.message))
