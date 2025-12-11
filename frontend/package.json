@@ -1,0 +1,36 @@
+{
+  "name": "college-zhaopin-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "vue": "^3.3.8",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "axios": "^1.6.2",
+    "@vueuse/core": "^10.7.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.0",
+    "typescript": "^5.3.2",
+    "vue-tsc": "^1.8.22",
+    "vite": "^5.0.4",
+    "tailwindcss": "^3.3.6",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.16",
+    "@types/node": "^20.10.4",
+    "vitest": "^1.0.4",
+    "@vue/test-utils": "^2.4.3",
+    "@playwright/test": "^1.40.1",
+    "jsdom": "^23.0.1",
+    "@vitest/ui": "^1.0.4"
+  }
+}
+
+

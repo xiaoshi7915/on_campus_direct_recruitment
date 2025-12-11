@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # MySQL数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: college_zhaopin_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: college_zhaopin
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - college_zhaopin_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: college_zhaopin_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - college_zhaopin_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: college_zhaopin_backend
+    environment:
+      DATABASE_URL: mysql+aiomysql://appuser:apppassword@mysql:3306/college_zhaopin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET_KEY: your-secret-key-change-in-production
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - college_zhaopin_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: college_zhaopin_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - college_zhaopin_network
+    command: npm run dev -- --host
+
+networks:
+  college_zhaopin_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+
+
+

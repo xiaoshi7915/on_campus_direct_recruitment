@@ -1,0 +1,43 @@
+# FastAPI core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database related
+sqlalchemy==2.0.23
+alembic==1.12.1
+pymysql==1.1.0
+aiomysql==0.2.0
+cryptography==41.0.7
+
+# Authentication and security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Redis cache
+redis==5.0.1
+hiredis==2.2.3
+
+# File upload and OSS
+oss2==2.18.4
+python-magic==0.4.27
+Pillow==10.1.0
+
+# Utility libraries
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Other
+python-dotenv==1.0.0
+email-validator==2.1.0
+
+# 阿里云短信服务
+aliyun-python-sdk-core==2.14.0
+aliyun-python-sdk-dysmsapi==2.1.1

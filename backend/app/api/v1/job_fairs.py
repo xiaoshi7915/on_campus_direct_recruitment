@@ -1,0 +1,453 @@
+"""
+双选会相关API路由
+"""
+from fastapi import APIRouter, Depends, Query, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, or_
+from typing import Optional
+from uuid import uuid4
+from datetime import datetime
+
+from app.core.database import get_db
+from app.api.v1.auth import get_current_user, get_current_user_optional
+from app.models.user import User
+from app.models.activity import JobFair, JobFairRegistration
+from app.models.profile import EnterpriseProfile, TeacherProfile
+from app.schemas.activity import (
+    JobFairCreate, JobFairUpdate, JobFairResponse, JobFairListResponse,
+    JobFairRegistrationCreate, JobFairRegistrationResponse
+)
+
+router = APIRouter()
+
+
+@router.get("", response_model=JobFairListResponse)
+async def get_job_fairs(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    keyword: Optional[str] = Query(None, description="关键词搜索"),
+    school_id: Optional[str] = Query(None, description="学校ID"),
+    status_filter: Optional[str] = Query(None, alias="status", description="状态过滤"),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取双选会列表
+    
+    Args:
+        page: 页码
+        page_size: 每页数量
+        keyword: 关键词
+        school_id: 学校ID
+        status_filter: 状态过滤
+        current_user: 当前登录用户（可选）
+        db: 数据库会话
+        
+    Returns:
+        JobFairListResponse: 双选会列表
+    """
+    # 构建查询
+    query = select(JobFair)
+    
+    # 关键词搜索
+    if keyword:
+        query = query.where(
+            or_(
+                JobFair.title.contains(keyword),
+                JobFair.description.contains(keyword)
+            )
+        )
+    
+    # 学校过滤
+    if school_id:
+        query = query.where(JobFair.school_id == school_id)
+    
+    # 状态过滤
+    if status_filter:
+        query = query.where(JobFair.status == status_filter)
+    elif status_filter is None:
+        # 如果未指定状态过滤，根据用户类型决定
+        # 教师和企业用户可以看到所有状态，未登录用户和学生只能看到已发布的
+        if current_user and current_user.user_type in ["TEACHER", "ENTERPRISE"]:
+            # 教师和企业用户可以看到所有状态，不添加状态过滤
+            pass
+        else:
+            # 未登录用户和学生只能看到已发布的双选会
+            query = query.where(JobFair.status == "PUBLISHED")
+    
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar()
+    
+    # 分页查询
+    offset = (page - 1) * page_size
+    query = query.order_by(JobFair.start_time.desc()).offset(offset).limit(page_size)
+    result = await db.execute(query)
+    job_fairs = result.scalars().all()
+    
+    # 将ORM对象转换为响应模型
+    job_fair_responses = [JobFairResponse.model_validate(jf) for jf in job_fairs]
+    
+    return {
+        "items": job_fair_responses,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
+@router.get("/{job_fair_id}", response_model=JobFairResponse)
+async def get_job_fair(
+    job_fair_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取双选会详情
+    
+    Args:
+        job_fair_id: 双选会ID
+        db: 数据库会话
+        
+    Returns:
+        JobFairResponse: 双选会详情
+        
+    Raises:
+        HTTPException: 如果双选会不存在
+    """
+    result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    return job_fair
+
+
+@router.post("", response_model=JobFairResponse, status_code=status.HTTP_201_CREATED)
+async def create_job_fair(
+    job_fair_data: JobFairCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    创建双选会（教师或企业用户）
+    
+    Args:
+        job_fair_data: 双选会数据
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        JobFairResponse: 创建的双选会
+        
+    Raises:
+        HTTPException: 如果用户类型不正确
+    """
+    # 检查用户类型（教师或企业）
+    if current_user.user_type not in ["TEACHER", "ENTERPRISE"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师或企业用户才能创建双选会"
+        )
+    
+    # 创建双选会
+    job_fair = JobFair(
+        id=str(uuid4()),
+        title=job_fair_data.title,
+        description=job_fair_data.description,
+        start_time=job_fair_data.start_time,
+        end_time=job_fair_data.end_time,
+        location=job_fair_data.location,
+        school_id=job_fair_data.school_id,
+        max_enterprises=job_fair_data.max_enterprises,
+        status="DRAFT"
+    )
+    
+    # 如果是企业用户，设置创建者
+    if current_user.user_type == "ENTERPRISE":
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        if enterprise:
+            job_fair.created_by = enterprise.id
+    
+    db.add(job_fair)
+    await db.commit()
+    await db.refresh(job_fair)
+    
+    return job_fair
+
+
+@router.put("/{job_fair_id}", response_model=JobFairResponse)
+async def update_job_fair(
+    job_fair_id: str,
+    job_fair_data: JobFairUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    更新双选会（仅创建者或教师）
+    
+    Args:
+        job_fair_id: 双选会ID
+        job_fair_data: 更新的双选会数据
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        JobFairResponse: 更新后的双选会
+        
+    Raises:
+        HTTPException: 如果双选会不存在或无权修改
+    """
+    # 获取双选会
+    result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    # 检查权限
+    if current_user.user_type == "TEACHER":
+        # 教师可以修改
+        pass
+    elif current_user.user_type == "ENTERPRISE":
+        # 企业只能修改自己创建的
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        if not enterprise or job_fair.created_by != enterprise.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权修改此双选会"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此双选会"
+        )
+    
+    # 更新双选会信息
+    update_data = job_fair_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(job_fair, field, value)
+    
+    await db.commit()
+    await db.refresh(job_fair)
+    
+    return job_fair
+
+
+@router.delete("/{job_fair_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_job_fair(
+    job_fair_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    删除双选会（仅创建者或教师）
+    
+    Args:
+        job_fair_id: 双选会ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Raises:
+        HTTPException: 如果双选会不存在或无权删除
+    """
+    # 获取双选会
+    result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    # 检查权限（同更新逻辑）
+    if current_user.user_type == "TEACHER":
+        pass
+    elif current_user.user_type == "ENTERPRISE":
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        if not enterprise or job_fair.created_by != enterprise.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权删除此双选会"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此双选会"
+        )
+    
+    await db.delete(job_fair)
+    await db.commit()
+
+
+# ==================== 双选会报名相关 ====================
+
+@router.post("/{job_fair_id}/register", response_model=JobFairRegistrationResponse, status_code=status.HTTP_201_CREATED)
+async def register_job_fair(
+    job_fair_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    企业报名参加双选会
+    
+    Args:
+        job_fair_id: 双选会ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        JobFairRegistrationResponse: 报名信息
+        
+    Raises:
+        HTTPException: 如果用户不是企业、双选会不存在或已报名
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能报名双选会"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在，请先完善企业信息"
+        )
+    
+    # 检查双选会是否存在
+    job_fair_result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = job_fair_result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    # 检查是否已报名
+    existing_result = await db.execute(
+        select(JobFairRegistration).where(
+            JobFairRegistration.job_fair_id == job_fair_id,
+            JobFairRegistration.enterprise_id == enterprise.id
+        )
+    )
+    existing = existing_result.scalar_one_or_none()
+    
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="已报名此双选会"
+        )
+    
+    # 创建报名记录
+    registration = JobFairRegistration(
+        id=str(uuid4()),
+        job_fair_id=job_fair_id,
+        enterprise_id=enterprise.id,
+        status="PENDING"
+    )
+    
+    db.add(registration)
+    await db.commit()
+    await db.refresh(registration)
+    
+    return registration
+
+
+@router.get("/{job_fair_id}/registrations", response_model=list[JobFairRegistrationResponse])
+async def get_job_fair_registrations(
+    job_fair_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取双选会报名列表（仅创建者或教师可查看）
+    
+    Args:
+        job_fair_id: 双选会ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        list[JobFairRegistrationResponse]: 报名列表
+    """
+    # 检查双选会是否存在
+    job_fair_result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = job_fair_result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    # 检查权限（创建者或教师可查看）
+    if current_user.user_type == "TEACHER":
+        # 教师可以查看所有双选会的报名
+        pass
+    elif current_user.user_type == "ENTERPRISE":
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        # 企业可以查看自己创建的双选会的报名，或者自己报名的双选会的报名
+        if enterprise:
+            # 检查是否是创建者
+            if job_fair.created_by and job_fair.created_by == enterprise.id:
+                pass  # 是创建者，可以查看
+            else:
+                # 检查是否已报名
+                registration_result = await db.execute(
+                    select(JobFairRegistration).where(
+                        JobFairRegistration.job_fair_id == job_fair_id,
+                        JobFairRegistration.enterprise_id == enterprise.id
+                    )
+                )
+                if not registration_result.scalar_one_or_none():
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="无权查看此双选会的报名信息"
+                    )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="企业信息不存在"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看此双选会的报名信息"
+        )
+    
+    # 获取报名列表
+    result = await db.execute(
+        select(JobFairRegistration).where(JobFairRegistration.job_fair_id == job_fair_id)
+    )
+    registrations = result.scalars().all()
+    
+    return registrations
+
