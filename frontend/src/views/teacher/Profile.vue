@@ -33,6 +33,33 @@
                 />
               </div>
               <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">职务名称</label>
+                <input
+                  v-model="profileForm.position"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="例如：系主任、副院长"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">授课专业</label>
+                <input
+                  v-model="profileForm.teaching_major"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="例如：计算机科学与技术"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">授课年级</label>
+                <input
+                  v-model="profileForm.teaching_grade"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="例如：2021级、2022级"
+                />
+              </div>
+              <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">学校ID</label>
                 <input
                   v-model="profileForm.school_id"
@@ -47,6 +74,33 @@
                   type="text"
                   class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+            </div>
+            <!-- 显示关联信息（只读） -->
+            <div v-if="profile" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">学校名称</label>
+                <div class="px-3 py-2 bg-white border rounded-lg text-gray-900">
+                  {{ profile.school_name || '未设置' }}
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">院系名称</label>
+                <div class="px-3 py-2 bg-white border rounded-lg text-gray-900">
+                  {{ profile.department_name || '未设置' }}
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">联系方式</label>
+                <div class="px-3 py-2 bg-white border rounded-lg text-gray-900">
+                  {{ profile.phone || '未设置' }}
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">电子邮箱</label>
+                <div class="px-3 py-2 bg-white border rounded-lg text-gray-900">
+                  {{ profile.email || '未设置' }}
+                </div>
               </div>
             </div>
             <div class="mt-6 flex justify-end">
@@ -91,6 +145,9 @@ const loading = ref(false)
 const profileForm = ref({
   real_name: '',
   title: '',
+  position: '',
+  teaching_major: '',
+  teaching_grade: '',
   school_id: '',
   department_id: '',
 })
@@ -107,6 +164,9 @@ const loadProfile = async () => {
       profileForm.value = {
         real_name: profile.value.real_name || '',
         title: profile.value.title || '',
+        position: profile.value.position || '',
+        teaching_major: profile.value.teaching_major || '',
+        teaching_grade: profile.value.teaching_grade || '',
         school_id: profile.value.school_id || '',
         department_id: profile.value.department_id || '',
       }

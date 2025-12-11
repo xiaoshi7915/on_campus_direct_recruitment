@@ -45,7 +45,14 @@ export interface TeacherProfile {
   school_id?: string
   department_id?: string
   title?: string
+  position?: string
+  teaching_major?: string
+  teaching_grade?: string
   avatar_url?: string
+  school_name?: string
+  department_name?: string
+  phone?: string
+  email?: string
   created_at: string
   updated_at: string
 }

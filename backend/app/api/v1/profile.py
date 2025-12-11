@@ -451,6 +451,9 @@ async def create_teacher_profile(
         school_id=school_id,
         department_id=department_id,
         title=profile_data.title,
+        position=getattr(profile_data, 'position', None),
+        teaching_major=getattr(profile_data, 'teaching_major', None),
+        teaching_grade=getattr(profile_data, 'teaching_grade', None),
         avatar_url=profile_data.avatar_url
     )
     
@@ -458,7 +461,47 @@ async def create_teacher_profile(
     await db.commit()
     await db.refresh(profile)
     
-    return profile
+    # 获取关联的学校名称和院系名称
+    school_name = None
+    department_name = None
+    if profile.school_id:
+        from app.models.school import School
+        school_result = await db.execute(select(School).where(School.id == profile.school_id))
+        school = school_result.scalar_one_or_none()
+        if school:
+            school_name = school.name
+    
+    if profile.department_id:
+        from app.models.school import Department
+        dept_result = await db.execute(select(Department).where(Department.id == profile.department_id))
+        department = dept_result.scalar_one_or_none()
+        if department:
+            department_name = department.name
+    
+    # 构建响应数据
+    response_data = {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "real_name": profile.real_name,
+        "school_id": profile.school_id,
+        "department_id": profile.department_id,
+        "title": profile.title,
+        "position": getattr(profile, 'position', None),
+        "teaching_major": getattr(profile, 'teaching_major', None),
+        "teaching_grade": getattr(profile, 'teaching_grade', None),
+        "avatar_url": profile.avatar_url,
+        "is_main_account": profile.is_main_account,
+        "main_account_id": profile.main_account_id,
+        "school_name": school_name,
+        "department_name": department_name,
+        "phone": current_user.phone,
+        "email": current_user.email,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at,
+    }
+    
+    from app.schemas.profile import TeacherProfileResponse
+    return TeacherProfileResponse(**response_data)
 
 
 @router.get("/teacher", response_model=TeacherProfileResponse)  # 兼容前端调用，放在最前面
@@ -511,7 +554,47 @@ async def get_my_teacher_profile(
             detail="教师档案不存在"
         )
     
-    return profile
+    # 获取关联的学校名称和院系名称
+    school_name = None
+    department_name = None
+    if profile.school_id:
+        from app.models.school import School
+        school_result = await db.execute(select(School).where(School.id == profile.school_id))
+        school = school_result.scalar_one_or_none()
+        if school:
+            school_name = school.name
+    
+    if profile.department_id:
+        from app.models.school import Department
+        dept_result = await db.execute(select(Department).where(Department.id == profile.department_id))
+        department = dept_result.scalar_one_or_none()
+        if department:
+            department_name = department.name
+    
+    # 构建响应数据
+    response_data = {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "real_name": profile.real_name,
+        "school_id": profile.school_id,
+        "department_id": profile.department_id,
+        "title": profile.title,
+        "position": getattr(profile, 'position', None),
+        "teaching_major": getattr(profile, 'teaching_major', None),
+        "teaching_grade": getattr(profile, 'teaching_grade', None),
+        "avatar_url": profile.avatar_url,
+        "is_main_account": profile.is_main_account,
+        "main_account_id": profile.main_account_id,
+        "school_name": school_name,
+        "department_name": department_name,
+        "phone": current_user.phone,
+        "email": current_user.email,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at,
+    }
+    
+    from app.schemas.profile import TeacherProfileResponse
+    return TeacherProfileResponse(**response_data)
 
 
 @router.put("/teacher/me", response_model=TeacherProfileResponse)
@@ -566,6 +649,46 @@ async def update_my_teacher_profile(
     await db.commit()
     await db.refresh(profile)
     
-    return profile
+    # 获取关联的学校名称和院系名称
+    school_name = None
+    department_name = None
+    if profile.school_id:
+        from app.models.school import School
+        school_result = await db.execute(select(School).where(School.id == profile.school_id))
+        school = school_result.scalar_one_or_none()
+        if school:
+            school_name = school.name
+    
+    if profile.department_id:
+        from app.models.school import Department
+        dept_result = await db.execute(select(Department).where(Department.id == profile.department_id))
+        department = dept_result.scalar_one_or_none()
+        if department:
+            department_name = department.name
+    
+    # 构建响应数据
+    response_data = {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "real_name": profile.real_name,
+        "school_id": profile.school_id,
+        "department_id": profile.department_id,
+        "title": profile.title,
+        "position": getattr(profile, 'position', None),
+        "teaching_major": getattr(profile, 'teaching_major', None),
+        "teaching_grade": getattr(profile, 'teaching_grade', None),
+        "avatar_url": profile.avatar_url,
+        "is_main_account": profile.is_main_account,
+        "main_account_id": profile.main_account_id,
+        "school_name": school_name,
+        "department_name": department_name,
+        "phone": current_user.phone,
+        "email": current_user.email,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at,
+    }
+    
+    from app.schemas.profile import TeacherProfileResponse
+    return TeacherProfileResponse(**response_data)
 
 

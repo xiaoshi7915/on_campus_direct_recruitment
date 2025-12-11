@@ -110,6 +110,9 @@ class TeacherProfileCreate(BaseModel):
     school_id: Optional[str] = Field(None, description="学校ID")
     department_id: Optional[str] = Field(None, description="院系ID")
     title: Optional[str] = Field(None, max_length=50, description="职称")
+    position: Optional[str] = Field(None, max_length=50, description="职务名称")
+    teaching_major: Optional[str] = Field(None, max_length=100, description="授课专业")
+    teaching_grade: Optional[str] = Field(None, max_length=50, description="授课年级")
     avatar_url: Optional[str] = Field(None, max_length=255, description="头像URL")
 
 
@@ -119,6 +122,9 @@ class TeacherProfileUpdate(BaseModel):
     school_id: Optional[str] = Field(None, description="学校ID")
     department_id: Optional[str] = Field(None, description="院系ID")
     title: Optional[str] = Field(None, max_length=50, description="职称")
+    position: Optional[str] = Field(None, max_length=50, description="职务名称")
+    teaching_major: Optional[str] = Field(None, max_length=100, description="授课专业")
+    teaching_grade: Optional[str] = Field(None, max_length=50, description="授课年级")
     avatar_url: Optional[str] = Field(None, max_length=255, description="头像URL")
 
 
@@ -130,9 +136,17 @@ class TeacherProfileResponse(BaseModel):
     school_id: Optional[str]
     department_id: Optional[str]
     title: Optional[str]
+    position: Optional[str]
+    teaching_major: Optional[str]
+    teaching_grade: Optional[str]
     avatar_url: Optional[str]
     is_main_account: bool
     main_account_id: Optional[str]
+    # 关联信息
+    school_name: Optional[str] = None
+    department_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     

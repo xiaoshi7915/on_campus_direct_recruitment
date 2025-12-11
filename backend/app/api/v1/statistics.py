@@ -24,7 +24,7 @@ async def get_student_activity_statistics(
     start_date: Optional[str] = Query(None, description="开始日期（YYYY-MM-DD）"),
     end_date: Optional[str] = Query(None, description="结束日期（YYYY-MM-DD）"),
     department_id: Optional[str] = Query(None, description="院系ID"),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(require_teacher()),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -251,7 +251,7 @@ async def get_job_fair_analysis(
     school_id: Optional[str] = Query(None, description="学校ID"),
     department_id: Optional[str] = Query(None, description="院系ID"),
     status_filter: Optional[str] = Query(None, alias="status", description="状态过滤"),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(require_teacher()),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -412,7 +412,7 @@ async def get_info_session_analysis(
     department_id: Optional[str] = Query(None, description="院系ID"),
     enterprise_id: Optional[str] = Query(None, description="企业ID"),
     status_filter: Optional[str] = Query(None, alias="status", description="状态过滤"),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(require_teacher()),
     db: AsyncSession = Depends(get_db)
 ):
     """
