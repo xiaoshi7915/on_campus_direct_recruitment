@@ -1,5 +1,5 @@
 """
-为指定教师添加管辖学生数据
+为陈中和老师设置学校和院系，并添加管辖学生数据
 """
 import sys
 import asyncio
@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.security import get_password_hash
 from app.models.user import User
 from app.models.profile import TeacherProfile, StudentProfile
 from app.models.school import School, Department, Class
@@ -32,9 +33,9 @@ AsyncSessionLocal = sessionmaker(
 )
 
 
-async def add_students_for_teacher(teacher_name: str = "陈中和", student_count: int = 20):
+async def setup_teacher_and_students(teacher_name: str = "陈中和", student_count: int = 20):
     """
-    为指定教师添加管辖学生数据
+    为指定教师设置学校和院系，并添加管辖学生数据
     
     Args:
         teacher_name: 教师姓名
@@ -54,16 +55,40 @@ async def add_students_for_teacher(teacher_name: str = "陈中和", student_coun
                 return
             
             print(f"✅ 找到教师：{teacher_profile.real_name} (ID: {teacher_profile.id})")
-            print(f"   学校ID: {teacher_profile.school_id}")
-            print(f"   院系ID: {teacher_profile.department_id}")
             
-            # 2. 获取教师的学校和院系信息
+            # 2. 如果教师没有学校和院系，先设置
+            if not teacher_profile.school_id or not teacher_profile.department_id:
+                print("教师尚未关联学校和院系，正在设置...")
+                
+                # 查找第一个可用的学校和院系
+                school_result = await db.execute(select(School).limit(1))
+                school = school_result.scalar_one_or_none()
+                
+                if not school:
+                    print("❌ 数据库中没有学校数据，请先运行数据填充脚本")
+                    return
+                
+                # 查找该学校的第一个院系
+                dept_result = await db.execute(
+                    select(Department).where(Department.school_id == school.id).limit(1)
+                )
+                department = dept_result.scalar_one_or_none()
+                
+                if not department:
+                    print("❌ 该学校没有院系数据")
+                    return
+                
+                # 更新教师的学校和院系
+                teacher_profile.school_id = school.id
+                teacher_profile.department_id = department.id
+                await db.commit()
+                await db.refresh(teacher_profile)
+                
+                print(f"✅ 已为教师设置学校：{school.name}")
+                print(f"✅ 已为教师设置院系：{department.name}")
+            
             school_id = teacher_profile.school_id
             department_id = teacher_profile.department_id
-            
-            if not school_id and not department_id:
-                print("❌ 该教师没有关联学校或院系，无法添加管辖学生")
-                return
             
             # 3. 查找该教师管辖范围内的现有学生
             student_query = select(StudentProfile)
@@ -86,13 +111,8 @@ async def add_students_for_teacher(teacher_name: str = "陈中和", student_coun
                 # 查找该教师管辖范围内的班级
                 class_query = select(Class)
                 if department_id:
-                    # 查找该院系的班级
-                    dept_result = await db.execute(select(Department).where(Department.id == department_id))
-                    dept = dept_result.scalar_one_or_none()
-                    if dept:
-                        class_query = class_query.where(Class.department_id == department_id)
+                    class_query = class_query.where(Class.department_id == department_id)
                 elif school_id:
-                    # 查找该学校的班级
                     dept_ids_result = await db.execute(
                         select(Department.id).where(Department.school_id == school_id)
                     )
@@ -132,7 +152,7 @@ async def add_students_for_teacher(teacher_name: str = "陈中和", student_coun
                     user = User(
                         id=str(uuid4()),
                         username=username,
-                        password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyY5Y5Y5Y5Y5Y",  # 默认密码：password
+                        password_hash=get_password_hash("password123"),  # 默认密码
                         user_type=UserType.STUDENT,
                         status="ACTIVE"
                     )
@@ -193,11 +213,10 @@ async def add_students_for_teacher(teacher_name: str = "陈中和", student_coun
 async def main():
     """主函数"""
     print("=" * 60)
-    print("为教师添加管辖学生数据")
+    print("为陈中和老师设置学校和院系，并添加管辖学生数据")
     print("=" * 60)
     
-    # 为陈中和老师添加20个学生
-    await add_students_for_teacher("陈中和", 20)
+    await setup_teacher_and_students("陈中和", 20)
     
     print("\n" + "=" * 60)
     print("完成！")
