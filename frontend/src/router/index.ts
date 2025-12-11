@@ -190,6 +190,11 @@ const routes: RouteRecordRaw[] = [
         name: 'TeacherTalentRecommendations',
         component: () => import('@/views/teacher/TalentRecommendations.vue'),
       },
+      {
+        path: 'sub-accounts',
+        name: 'TeacherSubAccounts',
+        component: () => import('@/views/teacher/SubAccounts.vue'),
+      },
     ],
   },
   // 运营管理端路由
@@ -216,6 +221,11 @@ const routes: RouteRecordRaw[] = [
         path: 'statistics',
         name: 'AdminStatistics',
         component: () => import('@/views/admin/Statistics.vue'),
+      },
+      {
+        path: 'teacher-approvals',
+        name: 'AdminTeacherApprovals',
+        component: () => import('@/views/admin/TeacherApprovals.vue'),
       },
     ],
   },

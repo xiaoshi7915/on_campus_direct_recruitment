@@ -138,13 +138,17 @@ async def register(
         )
     
     # 创建新用户（处理空字符串）
+    # 如果是教师注册，状态设为PENDING等待审批；其他用户类型设为ACTIVE
+    initial_status = "PENDING" if request.user_type == "TEACHER" else "ACTIVE"
+    
     user = User(
         id=str(uuid4()),
         username=request.username,
         password_hash=get_password_hash(request.password),
         phone=request.phone if request.phone and request.phone.strip() else None,
         email=request.email if request.email and request.email.strip() else None,
-        user_type=UserType(request.user_type)
+        user_type=UserType(request.user_type),
+        status=initial_status
     )
     
     db.add(user)

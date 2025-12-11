@@ -175,6 +175,9 @@ async def create_info_session(
         enterprise_id = enterprise.id
     
     # 创建宣讲会
+    # 如果是教师创建，状态设为PENDING等待审批；如果是企业创建，状态设为DRAFT
+    initial_status = "PENDING" if current_user.user_type == "TEACHER" else "DRAFT"
+    
     info_session = InfoSession(
         id=str(uuid4()),
         enterprise_id=enterprise_id,
@@ -187,7 +190,7 @@ async def create_info_session(
         live_url=session_data.live_url,
         school_id=session_data.school_id,
         max_students=session_data.max_students,
-        status="DRAFT"
+        status=initial_status
     )
     
     db.add(info_session)

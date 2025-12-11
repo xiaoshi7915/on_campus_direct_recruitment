@@ -31,6 +31,13 @@
               >
                 {{ getStatusText(session.status) }}
               </span>
+              <button
+                v-if="session.status === 'PENDING'"
+                @click="showApprovalModal(session)"
+                class="ml-2 px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
+              >
+                审批
+              </button>
             </div>
             <div class="text-gray-600 text-sm mb-3">
               <p>时间：{{ formatDateTime(session.start_time) }} - {{ formatDateTime(session.end_time) }}</p>
@@ -227,6 +234,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { getInfoSessions, createInfoSession, updateInfoSession, deleteInfoSession, getInfoSessionRegistrations, type InfoSession, type InfoSessionRegistration } from '@/api/infoSessions'
+import { approveInfoSession, type ApprovalRequest } from '@/api/approvals'
 import Pagination from '@/components/Pagination.vue'
 
 // 宣讲会列表
@@ -235,8 +243,11 @@ const loading = ref(false)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showRegistrationsModal = ref(false)
+const showApprovalModalVisible = ref(false)
 const currentSession = ref<InfoSession | null>(null)
 const registrations = ref<InfoSessionRegistration[]>([])
+const approvalAction = ref<'APPROVE' | 'REJECT'>('APPROVE')
+const approvalComment = ref('')
 const createForm = ref({
   title: '',
   description: '',
@@ -285,7 +296,9 @@ const getSessionTypeText = (type: string) => {
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
     DRAFT: '草稿',
+    PENDING: '待审批',
     PUBLISHED: '已发布',
+    REJECTED: '已拒绝',
     ONGOING: '进行中',
     ENDED: '已结束',
   }
@@ -296,7 +309,9 @@ const getStatusText = (status: string) => {
 const getStatusClass = (status: string) => {
   const classMap: Record<string, string> = {
     DRAFT: 'bg-gray-100 text-gray-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
     PUBLISHED: 'bg-green-100 text-green-800',
+    REJECTED: 'bg-red-100 text-red-800',
     ONGOING: 'bg-blue-100 text-blue-800',
     ENDED: 'bg-gray-100 text-gray-500',
   }

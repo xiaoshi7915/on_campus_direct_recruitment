@@ -133,6 +133,7 @@ const updateNavItems = () => {
         { name: '工作台', path: '/teacher' },
         { name: '学生管理', path: '/teacher/students' },
         { name: '我的院校', path: '/teacher/departments' },
+        { name: '子账号管理', path: '/teacher/sub-accounts' },
         { name: '双选会管理', path: '/teacher/job-fairs' },
         { name: '宣讲会管理', path: '/teacher/info-sessions' },
         { name: '数据统计', path: '/teacher/statistics' },
@@ -143,6 +144,7 @@ const updateNavItems = () => {
       navItems.value = [
         { name: '管理后台', path: '/admin' },
         { name: '用户管理', path: '/admin/users' },
+        { name: '教师审批', path: '/admin/teacher-approvals' },
         { name: '权益管理', path: '/admin/rights' },
         { name: '数据统计', path: '/admin/statistics' },
       ]

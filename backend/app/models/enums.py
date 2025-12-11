@@ -9,6 +9,8 @@ class UserStatus(str, Enum):
     ACTIVE = "ACTIVE"  # 活跃
     INACTIVE = "INACTIVE"  # 未激活
     BANNED = "BANNED"  # 已禁用
+    PENDING = "PENDING"  # 待审批（教师注册）
+    REJECTED = "REJECTED"  # 已拒绝（教师注册）
 
 
 class JobStatus(str, Enum):

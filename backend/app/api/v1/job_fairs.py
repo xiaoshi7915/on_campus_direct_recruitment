@@ -155,6 +155,9 @@ async def create_job_fair(
         )
     
     # 创建双选会
+    # 如果是教师创建，状态设为PENDING等待审批；如果是企业创建，状态设为DRAFT
+    initial_status = "PENDING" if current_user.user_type == "TEACHER" else "DRAFT"
+    
     job_fair = JobFair(
         id=str(uuid4()),
         title=job_fair_data.title,
@@ -164,7 +167,7 @@ async def create_job_fair(
         location=job_fair_data.location,
         school_id=job_fair_data.school_id,
         max_enterprises=job_fair_data.max_enterprises,
-        status="DRAFT"
+        status=initial_status
     )
     
     # 如果是企业用户，设置创建者

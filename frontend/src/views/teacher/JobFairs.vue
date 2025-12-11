@@ -31,6 +31,13 @@
               >
                 {{ getStatusText(jobFair.status) }}
               </span>
+              <button
+                v-if="jobFair.status === 'PENDING'"
+                @click="showApprovalModal(jobFair)"
+                class="ml-2 px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
+              >
+                审批
+              </button>
             </div>
             <div class="text-gray-600 text-sm mb-3">
               <p>时间：{{ formatDateTime(jobFair.start_time) }} - {{ formatDateTime(jobFair.end_time) }}</p>
@@ -207,6 +214,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, inviteEnterpriseToJobFair, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
+import { approveJobFair, type ApprovalRequest } from '@/api/approvals'
 import Pagination from '@/components/Pagination.vue'
 
 // 双选会列表
@@ -216,9 +224,12 @@ const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showRegistrationsModal = ref(false)
 const showInviteModalVisible = ref(false)
+const showApprovalModalVisible = ref(false)
 const currentJobFair = ref<JobFair | null>(null)
 const registrations = ref<JobFairRegistration[]>([])
 const inviteEnterpriseId = ref('')
+const approvalAction = ref<'APPROVE' | 'REJECT'>('APPROVE')
+const approvalComment = ref('')
 const createForm = ref({
   title: '',
   description: '',
@@ -253,7 +264,9 @@ const formatDateTime = (dateString: string) => {
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
     DRAFT: '草稿',
+    PENDING: '待审批',
     PUBLISHED: '已发布',
+    REJECTED: '已拒绝',
     ONGOING: '进行中',
     ENDED: '已结束',
   }
@@ -264,7 +277,9 @@ const getStatusText = (status: string) => {
 const getStatusClass = (status: string) => {
   const classMap: Record<string, string> = {
     DRAFT: 'bg-gray-100 text-gray-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
     PUBLISHED: 'bg-green-100 text-green-800',
+    REJECTED: 'bg-red-100 text-red-800',
     ONGOING: 'bg-blue-100 text-blue-800',
     ENDED: 'bg-gray-100 text-gray-500',
   }
@@ -395,6 +410,34 @@ const handleInviteEnterprise = async () => {
     }
   } catch (error: any) {
     alert('邀请失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 显示审批模态框
+const showApprovalModal = (jobFair: JobFair) => {
+  currentJobFair.value = jobFair
+  approvalAction.value = 'APPROVE'
+  approvalComment.value = ''
+  showApprovalModalVisible.value = true
+}
+
+// 审批双选会
+const handleApproveJobFair = async () => {
+  if (!currentJobFair.value) return
+  
+  try {
+    await approveJobFair(currentJobFair.value.id, {
+      action: approvalAction.value,
+      comment: approvalComment.value || undefined
+    })
+    alert(approvalAction.value === 'APPROVE' ? '审批通过！' : '审批拒绝！')
+    showApprovalModalVisible.value = false
+    currentJobFair.value = null
+    approvalAction.value = 'APPROVE'
+    approvalComment.value = ''
+    loadJobFairs()
+  } catch (error: any) {
+    alert('审批失败: ' + (error.response?.data?.detail || error.message))
   }
 }
 
