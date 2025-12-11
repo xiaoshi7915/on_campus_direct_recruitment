@@ -21,6 +21,7 @@ from app.models.common import Favorite, Schedule, Feedback
 from app.models.todo import Todo
 from app.models.mark import Mark
 from app.models.rights import Rights, RightsPackage, RightsPackageItem, UserRights, RightsPurchase
+from app.models.talent_pool import TalentPool
 
 __all__ = [
     # 用户相关
@@ -82,4 +83,6 @@ __all__ = [
     "PurchaseStatus",
     # 学生点评
     "StudentComment",
+    # 人才库
+    "TalentPool",
 ]

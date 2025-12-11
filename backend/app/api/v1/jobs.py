@@ -101,13 +101,15 @@ async def get_jobs(
         # 如果未指定状态过滤，根据用户类型决定
         # 企业用户可以看到自己的所有职位（包括草稿），其他用户只能看到已发布的
         if current_user and current_user.user_type == "ENTERPRISE":
-            # 企业用户只能看到自己企业的职位
+            # 企业用户：显示主账号和所有子账号的职位
             enterprise_result = await db.execute(
                 select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
             )
             enterprise = enterprise_result.scalar_one_or_none()
             if enterprise:
-                query = query.where(Job.enterprise_id == enterprise.id)
+                from app.services.enterprise_service import get_enterprise_ids_for_query
+                enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+                query = query.where(Job.enterprise_id.in_(enterprise_ids))
             else:
                 # 如果企业信息不存在，返回空列表
                 return {

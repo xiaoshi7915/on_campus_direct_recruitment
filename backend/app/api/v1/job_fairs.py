@@ -21,6 +21,121 @@ from app.schemas.activity import (
 router = APIRouter()
 
 
+@router.get("/my-registrations", response_model=JobFairListResponse)
+async def get_my_job_fair_registrations(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取企业报名的双选会列表
+    
+    Args:
+        page: 页码
+        page_size: 每页数量
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        JobFairListResponse: 双选会列表
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能查看报名的双选会"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 获取企业报名的双选会ID列表
+    registrations_result = await db.execute(
+        select(JobFairRegistration.job_fair_id).where(
+            JobFairRegistration.enterprise_id == enterprise.id
+        )
+    )
+    job_fair_ids = [row[0] for row in registrations_result.all()]
+    
+    if not job_fair_ids:
+        return {
+            "items": [],
+            "total": 0,
+            "page": page,
+            "page_size": page_size
+        }
+    
+    # 获取双选会列表
+    query = select(JobFair).where(JobFair.id.in_(job_fair_ids))
+    
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # 分页
+    offset = (page - 1) * page_size
+    query = query.order_by(JobFair.start_time.desc()).offset(offset).limit(page_size)
+    result = await db.execute(query)
+    job_fairs = result.scalars().all()
+    
+    # 构建响应
+    job_fair_list = []
+    for job_fair in job_fairs:
+        # 获取报名信息（包括签到时间）
+        registration_result = await db.execute(
+            select(JobFairRegistration).where(
+                JobFairRegistration.job_fair_id == job_fair.id,
+                JobFairRegistration.enterprise_id == enterprise.id
+            )
+        )
+        registration = registration_result.scalar_one_or_none()
+        
+        # 构建响应（注意：JobFairResponse不包含registration相关字段，所以我们需要扩展）
+        job_fair_dict = {
+            "id": job_fair.id,
+            "school_id": job_fair.school_id,
+            "title": job_fair.title,
+            "description": job_fair.description,
+            "start_time": job_fair.start_time,
+            "end_time": job_fair.end_time,
+            "location": job_fair.location,
+            "status": job_fair.status,
+            "max_enterprises": job_fair.max_enterprises,
+            "created_by": job_fair.created_by,
+            "created_at": job_fair.created_at,
+            "updated_at": job_fair.updated_at,
+        }
+        
+        # 创建响应对象
+        job_fair_response = JobFairResponse(**job_fair_dict)
+        
+        # 添加报名相关信息（通过动态属性，前端可以通过类型断言访问）
+        if registration:
+            job_fair_response.registration_id = registration.id  # type: ignore
+            job_fair_response.registration_status = registration.status  # type: ignore
+            job_fair_response.check_in_time = registration.check_in_time  # type: ignore
+        
+        job_fair_list.append(job_fair_response)
+    
+    return {
+        "items": job_fair_list,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
 @router.get("", response_model=JobFairListResponse)
 async def get_job_fairs(
     page: int = Query(1, ge=1, description="页码"),

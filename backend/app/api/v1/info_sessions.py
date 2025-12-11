@@ -1,7 +1,8 @@
 """
 宣讲会相关API路由
 """
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Body
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from typing import Optional
@@ -64,9 +65,21 @@ async def get_info_sessions(
     if school_id:
         query = query.where(InfoSession.school_id == school_id)
     
-    # 企业过滤
+    # 企业过滤（支持主账号、子账号逻辑）
     if enterprise_id:
         query = query.where(InfoSession.enterprise_id == enterprise_id)
+    elif current_user and current_user.user_type == "ENTERPRISE":
+        # 企业用户：显示主账号和所有子账号的宣讲会
+        from app.models.profile import EnterpriseProfile
+        from app.services.enterprise_service import get_enterprise_ids_for_query
+        
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        if enterprise:
+            enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+            query = query.where(InfoSession.enterprise_id.in_(enterprise_ids))
     
     # 状态过滤
     if status_filter:
@@ -160,7 +173,7 @@ async def create_info_session(
             detail="只有教师或企业用户才能创建宣讲会"
         )
     
-    # 如果是企业用户，获取企业信息
+    # 如果是企业用户，获取企业信息（子账号创建时使用主账号ID）
     enterprise_id = None
     if current_user.user_type == "ENTERPRISE":
         enterprise_result = await db.execute(
@@ -173,7 +186,9 @@ async def create_info_session(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="企业信息不存在，请先完善企业信息"
             )
-        enterprise_id = enterprise.id
+        # 子账号创建时使用主账号ID，主账号使用自己的ID
+        from app.services.enterprise_service import get_effective_enterprise_id
+        enterprise_id = await get_effective_enterprise_id(db, enterprise)
     
     # 创建宣讲会
     # 如果是教师创建，状态设为PENDING等待审批；如果是企业创建，状态设为DRAFT
@@ -250,7 +265,10 @@ async def update_info_session(
                 detail="企业信息不存在"
             )
         
-        if info_session.enterprise_id != enterprise.id:
+        # 检查权限（主账号和子账号都可以修改主账号创建的宣讲会）
+        from app.services.enterprise_service import get_effective_enterprise_id
+        effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
+        if info_session.enterprise_id != effective_enterprise_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="无权修改此宣讲会"
@@ -323,7 +341,10 @@ async def delete_info_session(
                 detail="企业信息不存在"
             )
         
-        if info_session.enterprise_id != enterprise.id:
+        # 检查权限（主账号和子账号都可以删除主账号创建的宣讲会）
+        from app.services.enterprise_service import get_effective_enterprise_id
+        effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
+        if info_session.enterprise_id != effective_enterprise_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="无权删除此宣讲会"
@@ -472,7 +493,15 @@ async def get_info_session_registrations(
             select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
         )
         enterprise = enterprise_result.scalar_one_or_none()
-        if not enterprise or info_session.enterprise_id != enterprise.id:
+        if not enterprise:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="企业信息不存在"
+            )
+        # 检查权限（主账号和子账号都可以查看主账号创建的宣讲会报名）
+        from app.services.enterprise_service import get_effective_enterprise_id
+        effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
+        if info_session.enterprise_id != effective_enterprise_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="无权查看此宣讲会的报名信息"
@@ -566,8 +595,10 @@ async def invite_student_to_info_session(
             detail="宣讲会不存在"
         )
     
-    # 检查权限（只有创建者可以邀请）
-    if info_session.enterprise_id != enterprise.id:
+    # 检查权限（主账号和子账号都可以邀请主账号创建的宣讲会）
+    from app.services.enterprise_service import get_effective_enterprise_id
+    effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
+    if info_session.enterprise_id != effective_enterprise_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权邀请学生参加此宣讲会"
@@ -629,5 +660,203 @@ async def invite_student_to_info_session(
     }
     
     return InfoSessionRegistrationResponse(**registration_dict)
+
+
+@router.get("/search-students", response_model=dict)
+async def search_students_for_invite(
+    keyword: Optional[str] = Query(None, description="关键词搜索（姓名、学号）"),
+    department_id: Optional[str] = Query(None, description="院系ID"),
+    grade: Optional[str] = Query(None, description="年级"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(100, ge=1, le=500, description="每页数量"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    搜索学生（供企业邀请宣讲会使用）
+    
+    Args:
+        keyword: 关键词搜索
+        department_id: 院系ID
+        grade: 年级
+        page: 页码
+        page_size: 每页数量
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        dict: 学生列表
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能搜索学生"
+        )
+    
+    from app.models.profile import StudentProfile
+    
+    # 构建查询
+    query = select(StudentProfile)
+    
+    # 关键词搜索
+    if keyword:
+        query = query.where(
+            or_(
+                StudentProfile.real_name.contains(keyword),
+                StudentProfile.student_id.contains(keyword)
+            )
+        )
+    
+    # 院系过滤
+    if department_id:
+        query = query.where(StudentProfile.department_id == department_id)
+    
+    # 年级过滤
+    if grade:
+        query = query.where(StudentProfile.grade == grade)
+    
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # 分页
+    offset = (page - 1) * page_size
+    query = query.order_by(StudentProfile.created_at.desc()).offset(offset).limit(page_size)
+    result = await db.execute(query)
+    students = result.scalars().all()
+    
+    # 构建响应
+    student_list = []
+    for student in students:
+        student_list.append({
+            "id": student.id,
+            "real_name": student.real_name,
+            "student_id": student.student_id,
+            "grade": student.grade,
+            "major": student.major,
+            "department_id": student.department_id,
+        })
+    
+    return {
+        "items": student_list,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
+class BatchInviteRequest(BaseModel):
+    student_ids: list[str]
+
+
+@router.post("/{session_id}/invite-students-batch", response_model=dict)
+async def invite_students_batch(
+    session_id: str,
+    request_data: BatchInviteRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    批量邀请学生参加宣讲会
+    
+    Args:
+        session_id: 宣讲会ID
+        student_ids: 学生ID列表
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        dict: 邀请结果
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能邀请学生"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 检查宣讲会是否存在
+    session_result = await db.execute(select(InfoSession).where(InfoSession.id == session_id))
+    info_session = session_result.scalar_one_or_none()
+    
+    if not info_session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="宣讲会不存在"
+        )
+    
+    # 检查权限（主账号和子账号都可以邀请主账号创建的宣讲会）
+    from app.services.enterprise_service import get_effective_enterprise_id
+    effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
+    if info_session.enterprise_id != effective_enterprise_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权邀请学生参加此宣讲会"
+        )
+    
+    success_count = 0
+    failed_count = 0
+    failed_reasons = []
+    
+    for student_id in request_data.student_ids:
+        try:
+            # 检查学生是否存在
+            student_result = await db.execute(select(StudentProfile).where(StudentProfile.id == student_id))
+            student = student_result.scalar_one_or_none()
+            
+            if not student:
+                failed_count += 1
+                failed_reasons.append(f"学生ID {student_id} 不存在")
+                continue
+            
+            # 检查是否已报名
+            existing_result = await db.execute(
+                select(InfoSessionRegistration).where(
+                    InfoSessionRegistration.session_id == session_id,
+                    InfoSessionRegistration.student_id == student_id
+                )
+            )
+            existing = existing_result.scalar_one_or_none()
+            
+            if existing:
+                failed_count += 1
+                failed_reasons.append(f"学生 {student.real_name} 已报名")
+                continue
+            
+            # 创建报名记录
+            registration = InfoSessionRegistration(
+                id=str(uuid4()),
+                session_id=session_id,
+                student_id=student_id,
+                status="ACCEPTED"
+            )
+            
+            db.add(registration)
+            success_count += 1
+        except Exception as e:
+            failed_count += 1
+            failed_reasons.append(f"学生ID {student_id}: {str(e)}")
+    
+    await db.commit()
+    
+    return {
+        "success_count": success_count,
+        "failed_count": failed_count,
+        "failed_reasons": failed_reasons
+    }
 
 

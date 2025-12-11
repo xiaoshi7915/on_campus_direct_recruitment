@@ -38,6 +38,7 @@ class StudentProfile(Base):
     info_session_registrations = relationship("InfoSessionRegistration", back_populates="student", cascade="all, delete-orphan", foreign_keys="InfoSessionRegistration.student_id")
     interviews = relationship("Interview", back_populates="student")
     offers = relationship("Offer", back_populates="student")
+    talent_pools = relationship("TalentPool", back_populates="student", cascade="all, delete-orphan")
 
 
 class TeacherProfile(Base):
@@ -99,5 +100,6 @@ class EnterpriseProfile(Base):
     job_fair_registrations = relationship("JobFairRegistration", back_populates="enterprise", cascade="all, delete-orphan")
     interviews = relationship("Interview", back_populates="enterprise")
     offers = relationship("Offer", back_populates="enterprise")
+    talent_pools = relationship("TalentPool", back_populates="enterprise", cascade="all, delete-orphan")
     main_account = relationship("EnterpriseProfile", remote_side=[id], backref="sub_accounts")
 

@@ -11,11 +11,12 @@ from pydantic import BaseModel, Field
 from app.core.database import get_db
 from app.api.v1.auth import get_current_user
 from app.models.user import User
-from app.models.profile import EnterpriseProfile
+from app.models.profile import EnterpriseProfile, StudentProfile
 from app.models.job import Job, JobApplication, Resume
 from app.models.interview import Interview, Offer
 from app.models.common import Favorite
 from app.models.chat import ChatSession, Message
+from app.models.talent_pool import TalentPool
 
 router = APIRouter()
 
@@ -241,11 +242,12 @@ async def create_sub_account(
     await db.flush()
     
     # 创建子账号企业档案
+    # 注意：unified_code是unique的，子账号不能继承主账号的unified_code，应该设置为None
     sub_account = EnterpriseProfile(
         id=str(uuid4()),
         user_id=new_user.id,
         company_name=enterprise.company_name,  # 继承主账号的公司名称
-        unified_code=enterprise.unified_code,  # 继承主账号的统一社会信用代码
+        unified_code=None,  # 子账号不继承统一社会信用代码（因为unique约束）
         industry=enterprise.industry,
         scale=enterprise.scale,
         address=enterprise.address,
@@ -382,188 +384,72 @@ async def get_talents(
             detail="企业信息不存在"
         )
     
-    # 获取企业触达过的学生（通过申请、面试、Offer、收藏、聊天）
-    from app.models.profile import StudentProfile
+    # 从人才库表读取数据（主账号和子账号都可以查看主账号的人才库）
+    from app.services.enterprise_service import get_enterprise_ids_for_query
+    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+    query = select(TalentPool).where(TalentPool.enterprise_id.in_(enterprise_ids))
     
-    # 1. 通过职位申请触达的学生（JobApplication.student_id是user_id，需要转换为student_profiles.id）
-    applications_result = await db.execute(
-        select(StudentProfile.id).join(
-            JobApplication, StudentProfile.user_id == JobApplication.student_id
-        ).where(
-            JobApplication.job_id.in_(
-                select(Job.id).where(Job.enterprise_id == enterprise.id)
+    # 状态过滤
+    if status_filter and status_filter != "ALL":
+        query = query.where(TalentPool.status == status_filter)
+    
+    # 关键词搜索
+    if keyword:
+        keyword_lower = keyword.lower()
+        # 通过学生姓名和手机号搜索
+        query = query.join(StudentProfile, TalentPool.student_id == StudentProfile.id)
+        query = query.join(User, StudentProfile.user_id == User.id)
+        query = query.where(
+            or_(
+                StudentProfile.real_name.like(f"%{keyword}%"),
+                User.phone.like(f"%{keyword}%"),
+                User.email.like(f"%{keyword}%")
             )
-        ).distinct()
-    )
-    application_student_ids = set(row[0] for row in applications_result.all() if row[0])
-    
-    # 2. 通过面试触达的学生
-    interviews_result = await db.execute(
-        select(Interview.student_id).where(Interview.enterprise_id == enterprise.id).distinct()
-    )
-    interview_student_ids = set(row[0] for row in interviews_result.all() if row[0])
-    
-    # 3. 通过Offer触达的学生
-    offers_result = await db.execute(
-        select(Offer.student_id).where(Offer.enterprise_id == enterprise.id).distinct()
-    )
-    offer_student_ids = set(row[0] for row in offers_result.all() if row[0])
-    
-    # 4. 通过收藏触达的学生（收藏简历）
-    favorites_result = await db.execute(
-        select(Favorite.target_id).where(
-            Favorite.user_id == current_user.id,
-            Favorite.target_type == "RESUME"
-        ).distinct()
-    )
-    favorite_resume_ids = set(row[0] for row in favorites_result.all() if row[0])
-    # 通过简历ID获取学生ID
-    favorite_student_ids = set()
-    if favorite_resume_ids:
-        resumes_result = await db.execute(
-            select(Resume.student_id).where(Resume.id.in_(favorite_resume_ids)).distinct()
         )
-        favorite_student_ids = set(row[0] for row in resumes_result.all() if row[0])
     
-    # 5. 通过聊天触达的学生（ChatSession使用user1_id和user2_id）
-    chat_sessions_result = await db.execute(
-        select(ChatSession.user2_id).where(
-            ChatSession.user1_id == current_user.id
-        ).distinct()
-    )
-    chat_student_user_ids1 = set(row[0] for row in chat_sessions_result.all() if row[0])
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
     
-    # 也查询user2_id为当前用户的会话
-    chat_sessions_result2 = await db.execute(
-        select(ChatSession.user1_id).where(
-            ChatSession.user2_id == current_user.id
-        ).distinct()
-    )
-    chat_student_user_ids2 = set(row[0] for row in chat_sessions_result2.all() if row[0])
+    # 排序和分页
+    # MySQL在降序排序时，NULL值默认排在最后，无需特殊处理
+    offset = (page - 1) * page_size
+    query = query.order_by(TalentPool.last_contact_time.desc(), TalentPool.created_at.desc())
+    query = query.offset(offset).limit(page_size)
     
-    chat_student_user_ids = chat_student_user_ids1 | chat_student_user_ids2
+    result = await db.execute(query)
+    talent_pools = result.scalars().all()
     
-    # 获取这些用户对应的学生档案ID
-    chat_student_ids = set()
-    if chat_student_user_ids:
-        chat_students_result = await db.execute(
-            select(StudentProfile.id).where(StudentProfile.user_id.in_(chat_student_user_ids)).distinct()
-        )
-        chat_student_ids = set(row[0] for row in chat_students_result.all() if row[0])
-    
-    # 合并所有触达的学生ID
-    all_student_ids = application_student_ids | interview_student_ids | offer_student_ids | favorite_student_ids | chat_student_ids
-    
-    if not all_student_ids:
-        return {
-            "items": [],
-            "total": 0,
-            "page": page,
-            "page_size": page_size
-        }
-    
-    # 获取学生信息
-    students_result = await db.execute(
-        select(StudentProfile).where(StudentProfile.id.in_(all_student_ids))
-    )
-    students = students_result.scalars().all()
-    
-    # 构建人才库项
+    # 构建响应数据
     talents = []
-    for student in students:
+    for talent_pool in talent_pools:
+        # 获取学生信息
+        student_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.id == talent_pool.student_id)
+        )
+        student = student_result.scalar_one_or_none()
+        
+        if not student:
+            continue
+        
         student_user_result = await db.execute(select(User).where(User.id == student.user_id))
         student_user = student_user_result.scalar_one_or_none()
         
-        # 获取最新简历
-        resume_result = await db.execute(
-            select(Resume).where(Resume.student_id == student.id).order_by(Resume.created_at.desc()).limit(1)
-        )
-        resume = resume_result.scalar_one_or_none()
-        
-        # 判断状态
-        talent_status = "ALL"
-        last_contact_time = None
-        
-        # 检查是否收藏
-        if resume:
-            favorite_check = await db.execute(
-                select(Favorite).where(
-                    Favorite.user_id == current_user.id,
-                    Favorite.target_type == "RESUME",
-                    Favorite.target_id == resume.id
-                )
+        # 获取简历信息
+        resume = None
+        if talent_pool.resume_id:
+            resume_result = await db.execute(
+                select(Resume).where(Resume.id == talent_pool.resume_id)
             )
-            if favorite_check.scalar_one_or_none():
-                talent_status = "FAVORITED"
+            resume = resume_result.scalar_one_or_none()
         
-        # 检查是否有聊天记录（ChatSession使用user1_id和user2_id）
-        chat_check = await db.execute(
-            select(ChatSession).where(
-                or_(
-                    and_(ChatSession.user1_id == current_user.id, ChatSession.user2_id == student.user_id),
-                    and_(ChatSession.user1_id == student.user_id, ChatSession.user2_id == current_user.id)
-                )
-            ).order_by(ChatSession.last_message_at.desc()).limit(1)
-        )
-        chat_session = chat_check.scalar_one_or_none()
-        if chat_session:
-            talent_status = "COMMUNICATING"
-            if chat_session.last_message_at:
-                last_contact_time = chat_session.last_message_at.isoformat()
-        
-        # 检查是否有面试
-        interview_check = await db.execute(
-            select(Interview).where(
-                Interview.enterprise_id == enterprise.id,
-                Interview.student_id == student.id
-            ).order_by(Interview.created_at.desc()).limit(1)
-        )
-        interview = interview_check.scalar_one_or_none()
-        if interview:
-            talent_status = "INTERVIEWED"
-            if interview.created_at:
-                last_contact_time = interview.created_at.isoformat()
-        
-        # 检查是否有Offer
-        offer_check = await db.execute(
-            select(Offer).where(
-                Offer.enterprise_id == enterprise.id,
-                Offer.student_id == student.id,
-                Offer.status == "ACCEPTED"
-            ).order_by(Offer.created_at.desc()).limit(1)
-        )
-        offer = offer_check.scalar_one_or_none()
-        if offer:
-            talent_status = "HIRED"
-            if offer.created_at:
-                last_contact_time = offer.created_at.isoformat()
-        
-        # 获取申请ID（JobApplication.student_id是user_id）
-        application_check = await db.execute(
-            select(JobApplication).where(
-                JobApplication.student_id == student.user_id,
-                JobApplication.job_id.in_(
-                    select(Job.id).where(Job.enterprise_id == enterprise.id)
-                )
-            ).order_by(JobApplication.created_at.desc()).limit(1)
-        )
-        application = application_check.scalar_one_or_none()
-        
-        # 关键词过滤
-        if keyword:
-            keyword_lower = keyword.lower()
-            student_name = (student.real_name or "").lower()
-            student_phone = (student_user.phone or "").lower() if student_user and student_user.phone else ""
-            student_email = (student_user.email or "").lower() if student_user and student_user.email else ""
-            if not (keyword_lower in student_name or 
-                   keyword_lower in student_phone or
-                   keyword_lower in student_email):
-                continue
-        
-        # 状态过滤
-        if status_filter and status_filter != "ALL":
-            if talent_status != status_filter:
-                continue
+        # 如果没有简历ID，获取最新简历
+        if not resume:
+            resume_result = await db.execute(
+                select(Resume).where(Resume.student_id == student.id).order_by(Resume.created_at.desc()).limit(1)
+            )
+            resume = resume_result.scalar_one_or_none()
         
         talents.append(TalentItem(
             student_id=student.id,
@@ -572,23 +458,15 @@ async def get_talents(
             student_email=student_user.email if student_user else None,
             resume_id=resume.id if resume else None,
             resume_title=resume.title if resume else None,
-            status=talent_status,
-            last_contact_time=last_contact_time,
-            application_id=application.id if application else None,
-            interview_id=interview.id if interview else None,
-            offer_id=offer.id if offer else None
+            status=talent_pool.status,
+            last_contact_time=talent_pool.last_contact_time.isoformat() if talent_pool.last_contact_time else None,
+            application_id=talent_pool.application_id,
+            interview_id=talent_pool.interview_id,
+            offer_id=talent_pool.offer_id
         ))
     
-    # 排序（按最后联系时间倒序）
-    talents.sort(key=lambda x: x.last_contact_time or "", reverse=True)
-    
-    # 分页
-    total = len(talents)
-    offset = (page - 1) * page_size
-    paginated_talents = talents[offset:offset + page_size]
-    
     return {
-        "items": paginated_talents,
+        "items": talents,
         "total": total,
         "page": page,
         "page_size": page_size

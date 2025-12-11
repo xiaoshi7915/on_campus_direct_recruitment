@@ -89,14 +89,22 @@ export const downloadResume = async (id: string): Promise<void> => {
       redirect: 'follow'
     })
     
-    if (response.status === 307 || response.status === 302 || response.redirected) {
-      // 如果是重定向，获取Location头或最终URL
-      const redirectUrl = response.headers.get('Location') || response.url
+    // 处理重定向（后端返回RedirectResponse）
+    if (response.status === 307 || response.status === 302 || response.status === 301) {
+      // 获取重定向URL
+      const redirectUrl = response.headers.get('Location')
       if (redirectUrl) {
-        // 直接打开重定向后的URL（签名URL）
+        // 直接打开重定向后的URL（签名URL，此时是刚生成的，有效期24小时）
         window.open(redirectUrl, '_blank')
         return
       }
+    }
+    
+    // 如果响应是重定向但已自动跟随（response.redirected为true）
+    if (response.redirected && response.url) {
+      // 使用最终URL（签名URL）
+      window.open(response.url, '_blank')
+      return
     }
     
     if (response.ok) {
@@ -111,12 +119,38 @@ export const downloadResume = async (id: string): Promise<void> => {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(blobUrl)
     } else {
-      const errorText = await response.text()
-      throw new Error(`下载失败: ${response.status} - ${errorText}`)
+      // 尝试解析错误信息
+      let errorMessage = `下载失败: ${response.status}`
+      try {
+        const errorData = await response.json()
+        if (errorData.detail) {
+          errorMessage = `下载失败: ${errorData.detail}`
+        }
+      } catch {
+        const errorText = await response.text()
+        if (errorText) {
+          try {
+            const errorData = JSON.parse(errorText)
+            if (errorData.detail) {
+              errorMessage = `下载失败: ${errorData.detail}`
+            }
+          } catch {
+            errorMessage = `下载失败: ${response.status} - ${errorText}`
+          }
+        }
+      }
+      throw new Error(errorMessage)
     }
   } catch (error: any) {
     console.error('下载失败:', error)
-    alert('下载失败: ' + (error.message || '未知错误'))
+    const errorMessage = error.message || '未知错误'
+    // 如果是404或提示没有电子版文件，给出更友好的提示
+    if (errorMessage.includes('404') || errorMessage.includes('没有电子版文件')) {
+      alert('该简历没有电子版文件，无法下载。')
+    } else {
+      alert('下载失败: ' + errorMessage)
+    }
+    throw error
   }
 }
 

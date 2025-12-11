@@ -58,4 +58,46 @@ export const refreshToken = (refreshToken: string) => {
   return request.post('/auth/refresh', { refresh_token: refreshToken })
 }
 
+// 忘记密码请求
+export interface ForgotPasswordRequest {
+  phone?: string
+  email?: string
+  username?: string
+}
+
+// 重置密码请求
+export interface ResetPasswordRequest {
+  phone?: string
+  email?: string
+  username?: string
+  verification_code: string
+  new_password: string
+}
+
+// 修改密码请求
+export interface ChangePasswordRequest {
+  old_password: string
+  new_password: string
+}
+
+/**
+ * 忘记密码 - 发送验证码
+ */
+export const forgotPassword = (data: ForgotPasswordRequest) => {
+  return request.post('/auth/forgot-password', data)
+}
+
+/**
+ * 重置密码
+ */
+export const resetPassword = (data: ResetPasswordRequest) => {
+  return request.post('/auth/reset-password', data)
+}
+
+/**
+ * 修改密码（需要登录）
+ */
+export const changePassword = (data: ChangePasswordRequest) => {
+  return request.post('/auth/change-password', data)
+}
 

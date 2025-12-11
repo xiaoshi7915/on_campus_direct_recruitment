@@ -18,6 +18,7 @@ export interface InfoSession {
   status: string
   max_students?: number
   check_in_count: number
+  materials?: string[]
   created_at: string
   updated_at: string
 }
@@ -51,6 +52,7 @@ export interface InfoSessionCreateRequest {
   session_type: string
   live_url?: string
   max_students?: number
+  materials?: string[]
 }
 
 export const createInfoSession = async (data: InfoSessionCreateRequest): Promise<InfoSession> => {
@@ -97,5 +99,51 @@ export interface InfoSessionRegistration {
 
 export const getInfoSessionRegistrations = async (sessionId: string): Promise<InfoSessionRegistration[]> => {
   return request.get(`/info-sessions/${sessionId}/registrations`)
+}
+
+// 搜索学生（供邀请使用）
+export interface StudentSearchItem {
+  id: string
+  real_name: string
+  student_id: string
+  grade?: string
+  major?: string
+  department_id?: string
+}
+
+export interface StudentSearchResponse {
+  items: StudentSearchItem[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export const searchStudents = async (params?: {
+  keyword?: string
+  department_id?: string
+  grade?: string
+  page?: number
+  page_size?: number
+}): Promise<StudentSearchResponse> => {
+  return request.get('/info-sessions/search-students', { params })
+}
+
+// 邀请学生参加宣讲会
+export const inviteStudentToInfoSession = async (sessionId: string, studentId: string): Promise<InfoSessionRegistration> => {
+  return request.post(`/info-sessions/${sessionId}/invite-student?student_id=${studentId}`)
+}
+
+// 批量邀请学生参加宣讲会
+export interface BatchInviteResponse {
+  success_count: number
+  failed_count: number
+  failed_reasons: string[]
+}
+
+export const inviteStudentsBatch = async (sessionId: string, studentIds: string[]): Promise<BatchInviteResponse> => {
+  // 使用POST body传递student_ids数组
+  return request.post(`/info-sessions/${sessionId}/invite-students-batch`, {
+    student_ids: studentIds
+  })
 }
 

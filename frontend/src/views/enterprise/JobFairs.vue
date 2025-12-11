@@ -2,19 +2,37 @@
   <div class="enterprise-job-fairs">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">双选会管理</h1>
-      <button
-        @click="showCreateModal = true"
-        class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-      >
-        创建双选会
-      </button>
+      <div class="flex space-x-3">
+        <button
+          v-if="!showBrowseMode"
+          @click="showMyRegistrations = !showMyRegistrations"
+          :class="showMyRegistrations ? 'bg-green-500' : 'bg-gray-500'"
+          class="px-6 py-2 text-white rounded-lg hover:opacity-90"
+        >
+          {{ showMyRegistrations ? '我的报名' : '查看我的报名' }}
+        </button>
+        <button
+          v-if="!showBrowseMode"
+          @click="showCreateModal = true"
+          class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        >
+          创建双选会
+        </button>
+        <button
+          @click="showBrowseMode = !showBrowseMode"
+          :class="showBrowseMode ? 'bg-purple-500' : 'bg-gray-500'"
+          class="px-6 py-2 text-white rounded-lg hover:opacity-90"
+        >
+          {{ showBrowseMode ? '我的双选会' : '浏览双选会' }}
+        </button>
+      </div>
     </div>
 
     <!-- 双选会列表 -->
     <div class="space-y-4">
       <div v-if="loading" class="text-center py-12">加载中...</div>
       <div v-else-if="jobFairs.length === 0" class="text-center py-12 text-gray-500">
-        暂无双选会信息
+        {{ showBrowseMode ? '暂无可报名的双选会' : (showMyRegistrations ? '暂无报名的双选会' : '暂无双选会信息') }}
       </div>
       <div
         v-for="jobFair in jobFairs"
@@ -31,35 +49,75 @@
               >
                 {{ getStatusText(jobFair.status) }}
               </span>
+              <span v-if="(jobFair as any).check_in_time" class="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
+                已签到
+              </span>
             </div>
             <div class="text-gray-600 text-sm mb-3">
               <p>时间：{{ formatDateTime(jobFair.start_time) }} - {{ formatDateTime(jobFair.end_time) }}</p>
               <p v-if="jobFair.location">地点：{{ jobFair.location }}</p>
               <p v-if="jobFair.max_enterprises">最大企业数：{{ jobFair.max_enterprises }}</p>
+              <p v-if="(jobFair as any).check_in_time">签到时间：{{ formatDateTime((jobFair as any).check_in_time) }}</p>
             </div>
             <p v-if="jobFair.description" class="text-gray-700 line-clamp-2">
               {{ jobFair.description }}
             </p>
           </div>
           <div class="ml-6 flex flex-col space-y-2">
-            <button
-              @click="editJobFair(jobFair)"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              编辑
-            </button>
-            <button
-              @click="viewRegistrations(jobFair.id)"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              查看报名
-            </button>
-            <button
-              @click="handleDeleteJobFair(jobFair.id)"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-            >
-              删除
-            </button>
+            <template v-if="showMyRegistrations">
+              <button
+                v-if="!(jobFair as any).check_in_time"
+                @click="handleCheckIn(jobFair.id)"
+                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                签到
+              </button>
+              <button
+                v-else
+                disabled
+                class="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+              >
+                已签到
+              </button>
+            </template>
+            <template v-else-if="showBrowseMode">
+              <!-- 浏览模式：显示报名按钮 -->
+              <button
+                v-if="!registeredJobFairIds.has(jobFair.id)"
+                @click="handleRegisterJobFair(jobFair.id)"
+                :disabled="jobFair.status !== 'PUBLISHED'"
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                报名
+              </button>
+              <button
+                v-else
+                disabled
+                class="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+              >
+                已报名
+              </button>
+            </template>
+            <template v-else>
+              <button
+                @click="editJobFair(jobFair)"
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                编辑
+              </button>
+              <button
+                @click="viewRegistrations(jobFair.id)"
+                class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                查看报名
+              </button>
+              <button
+                @click="handleDeleteJobFair(jobFair.id)"
+                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                删除
+              </button>
+            </template>
           </div>
         </div>
       </div>
@@ -199,8 +257,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
+import { ref, onMounted, computed, watch } from 'vue'
+import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, getMyJobFairRegistrations, checkInJobFair, registerJobFair, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
 import Pagination from '@/components/Pagination.vue'
 
 // 双选会列表
@@ -209,6 +267,9 @@ const loading = ref(false)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showRegistrationsModal = ref(false)
+const showMyRegistrations = ref(false)
+const showBrowseMode = ref(false) // 浏览模式：true=浏览所有双选会，false=我的双选会
+const registeredJobFairIds = ref<Set<string>>(new Set()) // 已报名的双选会ID集合
 const currentJobFair = ref<JobFair | null>(null)
 const registrations = ref<JobFairRegistration[]>([])
 const createForm = ref({
@@ -272,11 +333,36 @@ const total = ref(0)
 const loadJobFairs = async () => {
   loading.value = true
   try {
-    const response = await getJobFairs({ 
-      page: currentPage.value,
-      page_size: pageSize.value,
-      status: undefined 
-    })
+    let response
+    if (showBrowseMode.value) {
+      // 浏览模式：加载所有已发布的双选会
+      response = await getJobFairs({ 
+        page: currentPage.value,
+        page_size: pageSize.value,
+        status: 'PUBLISHED' // 只显示已发布的
+      })
+      // 加载已报名的双选会ID列表
+      try {
+        const myRegistrations = await getMyJobFairRegistrations({ page: 1, page_size: 1000 })
+        registeredJobFairIds.value = new Set(myRegistrations.items.map(jf => jf.id))
+      } catch (error) {
+        console.error('加载已报名列表失败:', error)
+        registeredJobFairIds.value = new Set()
+      }
+    } else if (showMyRegistrations.value) {
+      // 加载企业报名的双选会
+      response = await getMyJobFairRegistrations({ 
+        page: currentPage.value,
+        page_size: pageSize.value
+      })
+    } else {
+      // 加载企业创建的双选会
+      response = await getJobFairs({ 
+        page: currentPage.value,
+        page_size: pageSize.value,
+        status: undefined 
+      })
+    }
     jobFairs.value = response.items
     total.value = response.total
   } catch (error) {
@@ -286,12 +372,53 @@ const loadJobFairs = async () => {
   }
 }
 
+// 双选会签到
+const handleCheckIn = async (jobFairId: string) => {
+  if (!confirm('确定要签到吗？')) {
+    return
+  }
+  try {
+    await checkInJobFair(jobFairId)
+    alert('签到成功！')
+    loadJobFairs()
+  } catch (error: any) {
+    alert('签到失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
 // 分页变化处理
 const handlePaginationChange = (page: number, size: number) => {
   currentPage.value = page
   pageSize.value = size
   loadJobFairs()
 }
+
+// 报名双选会
+const handleRegisterJobFair = async (jobFairId: string) => {
+  if (!confirm('确定要报名这个双选会吗？')) {
+    return
+  }
+  try {
+    await registerJobFair(jobFairId)
+    alert('报名成功！')
+    // 添加到已报名列表
+    registeredJobFairIds.value.add(jobFairId)
+    loadJobFairs()
+  } catch (error: any) {
+    alert('报名失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 监听显示模式变化
+watch(showMyRegistrations, () => {
+  currentPage.value = 1
+  loadJobFairs()
+})
+
+watch(showBrowseMode, () => {
+  currentPage.value = 1
+  loadJobFairs()
+})
 
 // 保存创建
 const saveCreate = async () => {

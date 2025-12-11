@@ -86,9 +86,16 @@
                     查看简历
                   </button>
                   <button
+                    v-if="talent.resume_id"
+                    @click="downloadResumeFile(talent.resume_id)"
+                    class="text-green-600 hover:text-green-900"
+                  >
+                    下载简历
+                  </button>
+                  <button
                     v-if="talent.application_id"
                     @click="viewApplication(talent.application_id)"
-                    class="text-green-600 hover:text-green-900"
+                    class="text-purple-600 hover:text-purple-900"
                   >
                     查看申请
                   </button>
@@ -116,6 +123,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getTalents, type TalentItem } from '@/api/enterpriseManagement'
+import { downloadResume } from '@/api/resumes'
 import Pagination from '@/components/Pagination.vue'
 
 const router = useRouter()
@@ -201,6 +209,17 @@ const handlePaginationChange = (page: number, size: number) => {
 // 查看简历
 const viewResume = (resumeId: string) => {
   router.push(`/teacher/resumes/${resumeId}`)
+}
+
+// 下载简历
+const downloadResumeFile = async (resumeId: string) => {
+  try {
+    await downloadResume(resumeId)
+  } catch (error: any) {
+    // 错误信息已经在downloadResume中处理并显示，这里不需要再次alert
+    // 但如果需要，可以在这里添加额外的处理逻辑
+    console.error('下载简历失败:', error)
+  }
 }
 
 // 查看申请

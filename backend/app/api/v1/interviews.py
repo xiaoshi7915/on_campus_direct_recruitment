@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.api.v1.auth import get_current_user
 from app.models.user import User
 from app.models.interview import Interview, Offer
-from app.models.job import JobApplication
+from app.models.job import JobApplication, Job
 from app.models.profile import EnterpriseProfile, StudentProfile
 from app.schemas.interview import (
     InterviewCreate, InterviewUpdate, InterviewResponse, InterviewListResponse,
@@ -292,10 +292,32 @@ async def create_interview(
         )
     
     # 检查权限（只能为申请自己企业职位的学生创建面试）
-    if application.enterprise_id != enterprise.id:
+    # JobApplication没有enterprise_id字段，需要通过job获取
+    job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+    job = job_result.scalar_one_or_none()
+    
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="职位不存在"
+        )
+    
+    if job.enterprise_id != enterprise.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权为此申请创建面试"
+        )
+    
+    # 获取学生档案ID（JobApplication.student_id关联的是users.id，需要转换为student_profiles.id）
+    student_profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == application.student_id)
+    )
+    student_profile = student_profile_result.scalar_one_or_none()
+    
+    if not student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="学生档案不存在"
         )
     
     # 创建面试
@@ -303,7 +325,7 @@ async def create_interview(
         id=str(uuid4()),
         application_id=interview_data.application_id,
         enterprise_id=enterprise.id,
-        student_id=application.student_id,
+        student_id=student_profile.id,  # 使用student_profiles.id而不是users.id
         interview_type=interview_data.interview_type,
         scheduled_time=interview_data.scheduled_time,
         duration=interview_data.duration,
@@ -509,10 +531,32 @@ async def create_offer(
         )
     
     # 检查权限（只能为申请自己企业职位的学生创建Offer）
-    if application.enterprise_id != enterprise.id:
+    # JobApplication没有enterprise_id字段，需要通过job获取
+    job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+    job = job_result.scalar_one_or_none()
+    
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="职位不存在"
+        )
+    
+    if job.enterprise_id != enterprise.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权为此申请创建Offer"
+        )
+    
+    # 获取学生档案ID（JobApplication.student_id关联的是users.id，需要转换为student_profiles.id）
+    student_profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == application.student_id)
+    )
+    student_profile = student_profile_result.scalar_one_or_none()
+    
+    if not student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="学生档案不存在"
         )
     
     # 创建Offer
@@ -520,7 +564,7 @@ async def create_offer(
         id=str(uuid4()),
         application_id=offer_data.application_id,
         enterprise_id=enterprise.id,
-        student_id=application.student_id,
+        student_id=student_profile.id,  # 使用student_profiles.id而不是users.id
         job_title=offer_data.job_title,
         salary=offer_data.salary,
         start_date=offer_data.start_date,

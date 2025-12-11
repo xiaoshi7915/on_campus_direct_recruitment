@@ -270,6 +270,89 @@ async def create_application(
     return application
 
 
+@router.get("/{application_id}", response_model=ApplicationResponse)
+async def get_application(
+    application_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取申请详情
+    
+    Args:
+        application_id: 申请ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        ApplicationResponse: 申请详情
+        
+    Raises:
+        HTTPException: 如果申请不存在或无权查看
+    """
+    # 获取申请
+    result = await db.execute(select(JobApplication).where(JobApplication.id == application_id))
+    application = result.scalar_one_or_none()
+    
+    if not application:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="申请不存在"
+        )
+    
+    # 检查权限
+    if current_user.user_type == "STUDENT":
+        # 学生只能查看自己的申请
+        if application.student_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看此申请"
+            )
+    elif current_user.user_type == "ENTERPRISE":
+        # 企业只能查看自己职位的申请
+        job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+        job = job_result.scalar_one_or_none()
+        
+        if not job:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="职位不存在"
+            )
+        
+        from app.models.profile import EnterpriseProfile
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        
+        if not enterprise or job.enterprise_id != enterprise.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看此申请"
+            )
+    elif current_user.user_type != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看此申请"
+        )
+    
+    # 填充关联信息用于前端显示
+    job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+    job = job_result.scalar_one_or_none()
+    if job:
+        application.job_title = job.title  # type: ignore
+    
+    # 获取学生姓名
+    student_profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == application.student_id)
+    )
+    student_profile = student_profile_result.scalar_one_or_none()
+    if student_profile:
+        application.student_name = student_profile.name  # type: ignore
+    
+    return application
+
+
 @router.put("/{application_id}", response_model=ApplicationResponse)
 async def update_application_status(
     application_id: str,

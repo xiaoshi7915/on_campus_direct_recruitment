@@ -84,9 +84,9 @@ async def get_resumes(
     resume_responses = []
     for resume in resumes:
         resume_dict = ResumeResponse.model_validate(resume).model_dump()
-        # 如果file_url存在，生成签名URL
+        # 如果file_url存在，生成签名URL（有效期24小时）
         if resume_dict.get('file_url'):
-            resume_dict['file_url'] = oss_service.get_file_url(resume_dict['file_url'], signed=True, expires=3600)
+            resume_dict['file_url'] = oss_service.get_file_url(resume_dict['file_url'], signed=True, expires=86400)  # 24小时
         resume_responses.append(ResumeResponse(**resume_dict))
     
     return {
@@ -144,10 +144,10 @@ async def get_resume(
     await db.commit()
     await db.refresh(resume)
     
-    # 如果file_url存在，生成签名URL用于预览
+    # 如果file_url存在，生成签名URL用于预览（有效期24小时）
     if resume.file_url:
         from app.core.oss import oss_service
-        resume.file_url = oss_service.get_file_url(resume.file_url, signed=True, expires=3600)
+        resume.file_url = oss_service.get_file_url(resume.file_url, signed=True, expires=86400)  # 24小时
     # 如果没有file_url，也要正常返回简历信息（不报错）
     
     return resume
@@ -205,9 +205,9 @@ async def download_resume(
     resume.download_count += 1
     await db.commit()
     
-    # 生成签名URL用于下载（有效期1小时）
+    # 生成签名URL用于下载（有效期24小时，避免用户点击时过期）
     from app.core.oss import oss_service
-    signed_url = oss_service.get_file_url(resume.file_url, signed=True, expires=3600)
+    signed_url = oss_service.get_file_url(resume.file_url, signed=True, expires=86400)  # 24小时 = 86400秒
     
     # 重定向到签名URL
     from fastapi.responses import RedirectResponse
@@ -262,9 +262,9 @@ async def get_resume_preview_url(
             detail="该简历没有电子版文件"
         )
     
-    # 生成签名URL用于预览（有效期1小时）
+    # 生成签名URL用于预览（有效期24小时，避免用户点击时过期）
     from app.core.oss import oss_service
-    signed_url = oss_service.get_file_url(resume.file_url, signed=True, expires=3600)
+    signed_url = oss_service.get_file_url(resume.file_url, signed=True, expires=86400)  # 24小时 = 86400秒
     
     return {"preview_url": signed_url}
 

@@ -21,6 +21,18 @@ const routes: RouteRecordRaw[] = [
     name: 'Register',
     component: () => import('@/views/auth/Register.vue'),
   },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/ForgotPassword.vue'),
+    meta: { title: '忘记密码' },
+  },
+  {
+    path: '/change-password',
+    name: 'ChangePassword',
+    component: () => import('@/views/ChangePassword.vue'),
+    meta: { title: '修改密码', requiresAuth: true },
+  },
   // 学生端路由
   {
     path: '/student',
@@ -137,6 +149,11 @@ const routes: RouteRecordRaw[] = [
         path: 'applications/:id',
         name: 'EnterpriseApplicationDetail',
         component: () => import('@/views/enterprise/ApplicationDetail.vue'),
+      },
+      {
+        path: 'interviews/create',
+        name: 'EnterpriseCreateInterview',
+        component: () => import('@/views/enterprise/CreateInterview.vue'),
       },
       {
         path: 'talents',

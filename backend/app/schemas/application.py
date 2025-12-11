@@ -23,6 +23,9 @@ class ApplicationResponse(BaseModel):
     message: Optional[str]
     created_at: datetime
     updated_at: datetime
+    # 关联信息（可选，用于前端显示）
+    job_title: Optional[str] = None
+    student_name: Optional[str] = None
     
     class Config:
         from_attributes = True

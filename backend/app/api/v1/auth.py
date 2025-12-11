@@ -9,6 +9,7 @@ from sqlalchemy import select
 from datetime import timedelta
 from uuid import uuid4
 from typing import Optional
+from pydantic import BaseModel, Field
 
 from app.core.database import get_db
 from app.core.security import (
@@ -278,5 +279,209 @@ async def refresh_token(
     return {
         "access_token": access_token,
         "token_type": "bearer"
+    }
+
+
+# ==================== 密码管理 ====================
+
+class ForgotPasswordRequest(BaseModel):
+    """忘记密码请求"""
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    username: Optional[str] = None
+
+
+class ResetPasswordRequest(BaseModel):
+    """重置密码请求"""
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    username: Optional[str] = None
+    verification_code: str = Field(..., description="验证码")
+    new_password: str = Field(..., min_length=6, description="新密码")
+
+
+class ChangePasswordRequest(BaseModel):
+    """修改密码请求"""
+    old_password: str = Field(..., description="旧密码")
+    new_password: str = Field(..., min_length=6, description="新密码")
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    忘记密码 - 发送验证码
+    
+    Args:
+        request: 忘记密码请求（手机号、邮箱或用户名）
+        db: 数据库会话
+        
+    Returns:
+        dict: 发送结果
+    """
+    # 查询用户
+    query = select(User)
+    conditions = []
+    
+    if request.phone:
+        conditions.append(User.phone == request.phone)
+    if request.email:
+        conditions.append(User.email == request.email)
+    if request.username:
+        conditions.append(User.username == request.username)
+    
+    if not conditions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="请提供手机号、邮箱或用户名"
+        )
+    
+    from sqlalchemy import or_
+    query = query.where(or_(*conditions))
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在"
+        )
+    
+    # 发送验证码（优先使用手机号）
+    if user.phone:
+        from app.services.sms import send_sms_code
+        code = await send_sms_code(user.phone)
+        return {
+            "success": True,
+            "message": "验证码已发送到手机",
+            "phone": user.phone[:3] + "****" + user.phone[-4:] if user.phone else None,
+            "code": code if settings.DEBUG else None  # 开发环境返回验证码
+        }
+    elif user.email:
+        # TODO: 实现邮箱验证码发送
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="邮箱验证码功能暂未实现，请使用手机号"
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="用户未绑定手机号或邮箱，无法发送验证码"
+        )
+
+
+@router.post("/reset-password")
+async def reset_password(
+    request: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    重置密码
+    
+    Args:
+        request: 重置密码请求
+        db: 数据库会话
+        
+    Returns:
+        dict: 重置结果
+    """
+    # 查询用户
+    query = select(User)
+    conditions = []
+    
+    if request.phone:
+        conditions.append(User.phone == request.phone)
+    if request.email:
+        conditions.append(User.email == request.email)
+    if request.username:
+        conditions.append(User.username == request.username)
+    
+    if not conditions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="请提供手机号、邮箱或用户名"
+        )
+    
+    from sqlalchemy import or_
+    query = query.where(or_(*conditions))
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在"
+        )
+    
+    # 验证验证码（优先使用手机号）
+    if user.phone:
+        from app.services.sms import verify_sms_code
+        if not await verify_sms_code(user.phone, request.verification_code):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="验证码错误或已过期"
+            )
+    elif user.email:
+        # TODO: 实现邮箱验证码验证
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="邮箱验证码功能暂未实现"
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="用户未绑定手机号或邮箱"
+        )
+    
+    # 更新密码
+    user.password_hash = get_password_hash(request.new_password)
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": "密码重置成功"
+    }
+
+
+@router.post("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    修改密码（需要登录）
+    
+    Args:
+        request: 修改密码请求
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        dict: 修改结果
+    """
+    # 验证旧密码
+    if not verify_password(request.old_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="旧密码错误"
+        )
+    
+    # 检查新密码是否与旧密码相同
+    if verify_password(request.new_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="新密码不能与旧密码相同"
+        )
+    
+    # 更新密码
+    current_user.password_hash = get_password_hash(request.new_password)
+    await db.commit()
+    
+    return {
+        "success": True,
+        "message": "密码修改成功"
     }
 

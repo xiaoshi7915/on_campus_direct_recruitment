@@ -27,3 +27,4 @@ def downgrade():
     # 删除materials字段
     op.drop_column('info_sessions', 'materials')
 
+
