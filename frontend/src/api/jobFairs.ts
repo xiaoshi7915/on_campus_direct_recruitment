@@ -84,3 +84,8 @@ export const getJobFairRegistrations = async (jobFairId: string): Promise<JobFai
   return request.get(`/job-fairs/${jobFairId}/registrations`)
 }
 
+// 邀请企业参加双选会
+export const inviteEnterpriseToJobFair = async (jobFairId: string, enterpriseId: string): Promise<JobFairRegistration> => {
+  return request.post(`/job-fairs/${jobFairId}/invite`, null, { params: { enterprise_id: enterpriseId } })
+}
+

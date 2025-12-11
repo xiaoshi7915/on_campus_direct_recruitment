@@ -239,3 +239,72 @@ async def get_student_detail(
         "updated_at": student.updated_at.isoformat() if student.updated_at else None
     }
 
+
+@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_student(
+    student_id: str,
+    current_user: User = Depends(require_teacher()),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    移除学生（仅教师，从管辖范围内移除，不删除学生数据）
+    
+    注意：此操作不会删除学生数据，只是将学生的department_id或class_id设置为None，
+    使其不再属于该教师的管辖范围。实际应用中可能需要更复杂的逻辑。
+    
+    Args:
+        student_id: 学生ID（student_profiles.id）
+        current_user: 当前登录用户（教师）
+        db: 数据库会话
+    """
+    # 获取教师信息
+    teacher_result = await db.execute(
+        select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+    )
+    teacher = teacher_result.scalar_one_or_none()
+    
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教师信息不存在"
+        )
+    
+    # 获取学生信息
+    student_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.id == student_id)
+    )
+    student = student_result.scalar_one_or_none()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="学生不存在"
+        )
+    
+    # 数据权限检查
+    can_access = False
+    if teacher.department_id and student.department_id:
+        if teacher.department_id == student.department_id:
+            can_access = True
+    elif teacher.school_id and student.school_id:
+        if teacher.school_id == student.school_id:
+            can_access = True
+    
+    if not can_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权移除此学生"
+        )
+    
+    # 移除学生：将学生的department_id设置为None（如果教师有department_id）
+    # 或者将class_id设置为None（如果学生有class_id）
+    # 注意：这里只是示例实现，实际业务逻辑可能需要更复杂的处理
+    if teacher.department_id and student.department_id == teacher.department_id:
+        # 如果教师有部门，将学生的部门设置为None
+        student.department_id = None
+    elif teacher.school_id and student.school_id == teacher.school_id:
+        # 如果教师只有学校，将学生的学校设置为None
+        student.school_id = None
+    
+    await db.commit()
+

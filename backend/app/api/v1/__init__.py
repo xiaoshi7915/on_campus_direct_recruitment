@@ -4,7 +4,7 @@ API v1版本路由
 from fastapi import APIRouter
 from app.api.v1 import (
     auth, users, jobs, resumes, applications, profile,
-    job_fairs, info_sessions, interviews, schedules, favorites, upload, chat, statistics, sms, students, rights, departments, schools
+    job_fairs, info_sessions, interviews, schedules, favorites, upload, chat, statistics, sms, students, rights, departments, schools, student_comments, talent_recommendations
 )
 
 # 创建API路由器
@@ -30,3 +30,5 @@ api_router.include_router(students.router, prefix="/students", tags=["学生管�
 api_router.include_router(rights.router, prefix="/rights", tags=["权益管理"])
 api_router.include_router(departments.router, prefix="/departments", tags=["院系管理"])
 api_router.include_router(schools.router, prefix="/schools", tags=["学校管理"])
+api_router.include_router(student_comments.router, prefix="/student-comments", tags=["学生点评"])
+api_router.include_router(talent_recommendations.router, prefix="/talent-recommendations", tags=["人才推荐"])

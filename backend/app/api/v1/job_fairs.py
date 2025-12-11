@@ -451,3 +451,112 @@ async def get_job_fair_registrations(
     
     return registrations
 
+
+@router.post("/{job_fair_id}/invite", response_model=JobFairRegistrationResponse, status_code=status.HTTP_201_CREATED)
+async def invite_enterprise_to_job_fair(
+    job_fair_id: str,
+    enterprise_id: str = Query(..., description="企业ID"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    邀请企业参加双选会（教师或创建者）
+    
+    Args:
+        job_fair_id: 双选会ID
+        enterprise_id: 企业ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        JobFairRegistrationResponse: 邀请/报名信息
+    """
+    # 检查用户类型（教师或企业创建者）
+    if current_user.user_type not in ["TEACHER", "ENTERPRISE"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师或企业创建者才能邀请企业"
+        )
+    
+    # 获取双选会信息
+    job_fair_result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = job_fair_result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    # 权限检查
+    if current_user.user_type == "ENTERPRISE":
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        if not enterprise or job_fair.created_by != enterprise.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="只有创建者才能邀请企业"
+            )
+    elif current_user.user_type == "TEACHER":
+        # 教师可以邀请企业
+        teacher_result = await db.execute(
+            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+        )
+        teacher = teacher_result.scalar_one_or_none()
+        if not teacher:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="教师信息不存在"
+            )
+        # 验证双选会是否属于教师的学校
+        if teacher.school_id and job_fair.school_id != teacher.school_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权邀请企业参加此双选会"
+            )
+    
+    # 验证企业是否存在
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.id == enterprise_id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业不存在"
+        )
+    
+    # 检查是否已存在报名或邀请
+    existing_result = await db.execute(
+        select(JobFairRegistration).where(
+            JobFairRegistration.job_fair_id == job_fair_id,
+            JobFairRegistration.enterprise_id == enterprise_id
+        )
+    )
+    existing = existing_result.scalar_one_or_none()
+    
+    if existing:
+        # 如果已存在，更新状态为INVITED（如果当前是PENDING）
+        if existing.status == "PENDING":
+            existing.status = "INVITED"
+            await db.commit()
+            await db.refresh(existing)
+        return existing
+    
+    # 创建邀请记录（状态为INVITED）
+    invitation = JobFairRegistration(
+        id=str(uuid4()),
+        job_fair_id=job_fair_id,
+        enterprise_id=enterprise_id,
+        status="INVITED"  # 邀请状态
+    )
+    
+    db.add(invitation)
+    await db.commit()
+    await db.refresh(invitation)
+    
+    return invitation
+
