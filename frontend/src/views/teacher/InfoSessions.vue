@@ -191,32 +191,86 @@
 
     <!-- 报名列表模态框 -->
     <div v-if="showRegistrationsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">报名列表</h2>
+      <div class="bg-white rounded-lg p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold">报名列表</h2>
+          <button
+            v-if="registrations.length > 0"
+            @click="exportInfoSessionRegistrations"
+            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            导出清单
+          </button>
+        </div>
         <div v-if="registrations.length === 0" class="text-center py-8 text-gray-500">
           暂无报名信息
         </div>
-        <div v-else class="space-y-2">
-          <div v-for="reg in registrations" :key="reg.id" class="border rounded-lg p-4">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="font-medium">学生ID: {{ reg.student_id }}</p>
-                <p class="text-sm text-gray-600">状态: {{ reg.status }}</p>
-                <p v-if="reg.check_in_time" class="text-sm text-gray-600">签到时间: {{ new Date(reg.check_in_time).toLocaleString() }}</p>
-              </div>
-              <span :class="{
-                'bg-yellow-100 text-yellow-800': reg.status === 'PENDING',
-                'bg-green-100 text-green-800': reg.status === 'CONFIRMED',
-                'bg-red-100 text-red-800': reg.status === 'CANCELLED',
-                'bg-blue-100 text-blue-800': reg.status === 'CHECKED_IN'
-              }" class="px-2 py-1 rounded text-xs">
-                {{ reg.status }}
-              </span>
-            </div>
-          </div>
+        <div v-else>
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="border px-4 py-2 text-left">学生姓名</th>
+                <th class="border px-4 py-2 text-left">报名时间</th>
+                <th class="border px-4 py-2 text-left">状态</th>
+                <th class="border px-4 py-2 text-left">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="reg in registrations" :key="reg.id" class="hover:bg-gray-50">
+                <td class="border px-4 py-2">{{ reg.student_name || reg.student_id }}</td>
+                <td class="border px-4 py-2">{{ new Date(reg.created_at).toLocaleString('zh-CN') }}</td>
+                <td class="border px-4 py-2">
+                  <span :class="{
+                    'bg-yellow-100 text-yellow-800': reg.status === 'PENDING',
+                    'bg-green-100 text-green-800': reg.status === 'CONFIRMED',
+                    'bg-red-100 text-red-800': reg.status === 'CANCELLED',
+                    'bg-blue-100 text-blue-800': reg.status === 'CHECKED_IN'
+                  }" class="px-2 py-1 rounded text-xs">
+                    {{ reg.status }}
+                  </span>
+                </td>
+                <td class="border px-4 py-2">
+                  <button
+                    @click="viewStudentDetail(reg)"
+                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                  >
+                    查看详情
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="mt-6 flex justify-end">
           <button @click="showRegistrationsModal = false" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 学生详情模态框 -->
+    <div v-if="showStudentDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <h2 class="text-2xl font-bold mb-4">学生详情</h2>
+        <div v-if="selectedStudentDetail" class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">姓名</label>
+            <p class="mt-1 text-gray-900">{{ selectedStudentDetail.name }}</p>
+          </div>
+          <div v-if="selectedStudentDetail.student_id">
+            <label class="block text-sm font-medium text-gray-700">学号</label>
+            <p class="mt-1 text-gray-900">{{ selectedStudentDetail.student_id }}</p>
+          </div>
+          <div v-if="selectedStudentDetail.major">
+            <label class="block text-sm font-medium text-gray-700">专业</label>
+            <p class="mt-1 text-gray-900">{{ selectedStudentDetail.major }}</p>
+          </div>
+          <div v-if="selectedStudentDetail.grade">
+            <label class="block text-sm font-medium text-gray-700">年级</label>
+            <p class="mt-1 text-gray-900">{{ selectedStudentDetail.grade }}</p>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button @click="showStudentDetailModal = false; selectedStudentDetail = null" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">关闭</button>
         </div>
       </div>
     </div>
@@ -244,6 +298,8 @@ const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showRegistrationsModal = ref(false)
 const showApprovalModalVisible = ref(false)
+const showStudentDetailModal = ref(false)
+const selectedStudentDetail = ref<any>(null)
 const currentSession = ref<InfoSession | null>(null)
 const registrations = ref<InfoSessionRegistration[]>([])
 const approvalAction = ref<'APPROVE' | 'REJECT'>('APPROVE')
@@ -417,6 +473,61 @@ const viewRegistrations = async (sessionId: string) => {
   } catch (error: any) {
     alert('加载报名信息失败: ' + (error.response?.data?.detail || error.message))
   }
+}
+
+// 查看学生详情
+const viewStudentDetail = (reg: InfoSessionRegistration) => {
+  if (reg.student_detail) {
+    selectedStudentDetail.value = {
+      name: reg.student_detail.name || reg.student_name,
+      student_id: reg.student_detail.student_id,
+      major: reg.student_detail.major,
+      grade: reg.student_detail.grade
+    }
+    showStudentDetailModal.value = true
+  } else {
+    selectedStudentDetail.value = {
+      name: reg.student_name || '未知'
+    }
+    showStudentDetailModal.value = true
+  }
+}
+
+// 导出宣讲会报名列表
+const exportInfoSessionRegistrations = () => {
+  if (registrations.value.length === 0) {
+    alert('没有可导出的数据')
+    return
+  }
+  
+  // 准备CSV数据（包括学生详情）
+  const headers = ['学生姓名', '学号', '专业', '年级', '报名时间', '状态']
+  const rows = registrations.value.map(reg => [
+    reg.student_name || reg.student_id,
+    reg.student_detail?.student_id || '',
+    reg.student_detail?.major || '',
+    reg.student_detail?.grade || '',
+    new Date(reg.created_at).toLocaleString('zh-CN'),
+    reg.status
+  ])
+  
+  // 转换为CSV格式
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+  ].join('\n')
+  
+  // 添加BOM以支持中文
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', `宣讲会报名列表_${currentSession.value?.title || '未命名'}_${new Date().toISOString().slice(0, 10)}.csv`)
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 // 删除宣讲会

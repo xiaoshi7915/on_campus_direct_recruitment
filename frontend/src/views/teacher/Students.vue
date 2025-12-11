@@ -299,7 +299,7 @@ const viewStudentResumes = async (studentId: string) => {
     // 获取学生信息以获取user_id
     const student = await getStudent(studentId)
     // 跳转到简历列表页面，通过student_id过滤
-    router.push(`/teacher/resumes?student_id=${studentId}`)
+    router.push({ path: '/teacher/resumes', query: { student_id: studentId } })
   } catch (error: any) {
     alert('查看简历失败: ' + (error.response?.data?.detail || error.message))
   }

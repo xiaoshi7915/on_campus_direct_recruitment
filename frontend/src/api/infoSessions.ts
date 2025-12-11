@@ -82,6 +82,14 @@ export interface InfoSessionRegistration {
   id: string
   session_id: string
   student_id: string
+  student_name?: string
+  student_detail?: {
+    id?: string
+    name?: string
+    student_id?: string
+    major?: string
+    grade?: string
+  }
   status: string
   check_in_time?: string
   created_at: string

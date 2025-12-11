@@ -409,7 +409,12 @@ const viewRegistrations = async (sessionId: string) => {
     registrations.value = await getInfoSessionRegistrations(sessionId)
     showRegistrationsModal.value = true
   } catch (error: any) {
-    alert('加载报名信息失败: ' + (error.response?.data?.detail || error.message))
+    const errorMessage = error.response?.data?.detail || error.message
+    if (error.response?.status === 403) {
+      alert('权限不足：只能查看自己创建的宣讲会的报名信息。')
+    } else {
+      alert('加载报名信息失败: ' + errorMessage)
+    }
   }
 }
 

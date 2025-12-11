@@ -3,7 +3,8 @@ FastAPI应用主入口文件
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.openapi.docs import get_swagger_ui_html
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
@@ -47,13 +48,14 @@ async def lifespan(app: FastAPI):
     pass
 
 
-# 创建FastAPI应用实例
+# 创建FastAPI应用实例（禁用默认docs，稍后自定义）
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="校园直聘平台API服务",
-    docs_url="/docs",
+    docs_url=None,  # 禁用默认docs，使用自定义
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
     lifespan=lifespan
 )
 
@@ -74,6 +76,25 @@ app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
 
 # 注册API路由
 app.include_router(api_router, prefix="/api/v1")
+
+
+# 自定义Swagger UI，使用国内CDN或本地资源
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    """
+    自定义Swagger UI页面，使用国内CDN或本地资源
+    """
+    # 使用unpkg.com的CDN（如果无法访问，可以改用jsdelivr.com或其他国内CDN）
+    # 备选方案：使用jsdelivr.com CDN
+    # swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"
+    # swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css"
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} - Swagger UI",
+        swagger_js_url="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
+        swagger_css_url="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css",
+        swagger_favicon_url="https://fastapi.tiangolo.com/img/favicon.png",
+    )
 
 
 # 全局异常处理

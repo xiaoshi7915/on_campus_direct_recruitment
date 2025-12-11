@@ -225,8 +225,8 @@ const handlePaginationChange = (page: number, size: number) => {
 
 // 查看简历
 const viewResume = (resumeId: string) => {
-  // TODO: 打开简历查看窗口
-  alert(`查看简历：${resumeId}`)
+  // 跳转到简历详情页面
+  window.open(`/teacher/resumes/${resumeId}`, '_blank')
 }
 
 // 通过申请

@@ -83,6 +83,7 @@ class InfoSession(Base):
     status = Column(String(20), default="DRAFT", nullable=False, index=True, comment="状态")
     max_students = Column(Integer, nullable=True, comment="最大学生数")
     check_in_count = Column(Integer, default=0, nullable=False, comment="签到人数")
+    materials = Column(Text, nullable=True, comment="宣讲会资料URLs（JSON数组，存储多个文件URL）")
     created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="创建时间")
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
     

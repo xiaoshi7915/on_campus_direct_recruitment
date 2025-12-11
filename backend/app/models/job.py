@@ -18,6 +18,7 @@ class Resume(Base):
     student_id = Column(String(36), ForeignKey("student_profiles.id", ondelete="CASCADE"), nullable=False, index=True, comment="学生ID")
     title = Column(String(100), nullable=False, comment="简历标题")
     content = Column(Text, nullable=False, comment="简历内容")
+    file_url = Column(String(500), nullable=True, comment="电子版简历文件URL（PDF、Word等）")
     is_default = Column(Boolean, default=False, nullable=False, index=True, comment="是否默认简历")
     view_count = Column(Integer, default=0, nullable=False, comment="查看次数")
     download_count = Column(Integer, default=0, nullable=False, comment="下载次数")

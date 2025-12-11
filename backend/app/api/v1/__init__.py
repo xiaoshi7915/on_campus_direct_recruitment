@@ -4,7 +4,7 @@ API v1版本路由
 from fastapi import APIRouter
 from app.api.v1 import (
     auth, users, jobs, resumes, applications, profile,
-    job_fairs, info_sessions, interviews, schedules, favorites, upload, chat, statistics, sms, students, rights, departments, schools, student_comments, talent_recommendations, approvals, teacher_management
+    job_fairs, info_sessions, interviews, schedules, favorites, upload, chat, statistics, sms, students, rights, departments, schools, student_comments, talent_recommendations, approvals, teacher_management, enterprises, enterprise_management, job_intentions, feedbacks, system_messages, todos, marks
 )
 
 # 创建API路由器
@@ -34,3 +34,10 @@ api_router.include_router(student_comments.router, prefix="/student-comments", t
 api_router.include_router(talent_recommendations.router, prefix="/talent-recommendations", tags=["人才推荐"])
 api_router.include_router(approvals.router, prefix="/approvals", tags=["审批流程"])
 api_router.include_router(teacher_management.router, prefix="/teacher-management", tags=["教师管理"])
+api_router.include_router(enterprises.router, prefix="/enterprises", tags=["企业"])
+api_router.include_router(enterprise_management.router, prefix="/enterprise-management", tags=["企业管理"])
+api_router.include_router(job_intentions.router, prefix="/job-intentions", tags=["求职意向"])
+api_router.include_router(feedbacks.router, prefix="/feedbacks", tags=["反馈建议"])
+api_router.include_router(system_messages.router, prefix="/system-messages", tags=["系统消息"])
+api_router.include_router(todos.router, prefix="/todos", tags=["待办事项"])
+api_router.include_router(marks.router, prefix="/marks", tags=["标记"])

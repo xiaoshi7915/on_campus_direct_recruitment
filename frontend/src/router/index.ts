@@ -76,6 +76,31 @@ const routes: RouteRecordRaw[] = [
         name: 'StudentFavorites',
         component: () => import('@/views/student/Favorites.vue'),
       },
+      {
+        path: 'offers',
+        name: 'StudentOffers',
+        component: () => import('@/views/student/Offers.vue'),
+      },
+      {
+        path: 'job-intentions',
+        name: 'StudentJobIntentions',
+        component: () => import('@/views/student/JobIntentions.vue'),
+      },
+      {
+        path: 'feedback',
+        name: 'StudentFeedback',
+        component: () => import('@/views/student/Feedback.vue'),
+      },
+      {
+        path: 'system-messages',
+        name: 'StudentSystemMessages',
+        component: () => import('@/views/student/SystemMessages.vue'),
+      },
+      {
+        path: 'todos',
+        name: 'StudentTodos',
+        component: () => import('@/views/student/Todos.vue'),
+      },
     ],
   },
   // 企业端路由
@@ -138,6 +163,41 @@ const routes: RouteRecordRaw[] = [
         name: 'EnterpriseProfile',
         component: () => import('@/views/enterprise/Profile.vue'),
       },
+      {
+        path: 'sub-accounts',
+        name: 'EnterpriseSubAccounts',
+        component: () => import('@/views/enterprise/SubAccounts.vue'),
+      },
+      {
+        path: 'talent-library',
+        name: 'EnterpriseTalentLibrary',
+        component: () => import('@/views/enterprise/TalentLibrary.vue'),
+      },
+      {
+        path: 'statistics',
+        name: 'EnterpriseStatistics',
+        component: () => import('@/views/enterprise/Statistics.vue'),
+      },
+      {
+        path: 'system-messages',
+        name: 'EnterpriseSystemMessages',
+        component: () => import('@/views/enterprise/SystemMessages.vue'),
+      },
+      {
+        path: 'feedback',
+        name: 'EnterpriseFeedback',
+        component: () => import('@/views/enterprise/Feedback.vue'),
+      },
+      {
+        path: 'schedules',
+        name: 'EnterpriseSchedules',
+        component: () => import('@/views/enterprise/Schedules.vue'),
+      },
+      {
+        path: 'preview',
+        name: 'EnterprisePreview',
+        component: () => import('@/views/enterprise/PreviewPage.vue'),
+      },
     ],
   },
   // 教师端路由
@@ -169,6 +229,16 @@ const routes: RouteRecordRaw[] = [
         path: 'statistics',
         name: 'TeacherStatistics',
         component: () => import('@/views/teacher/Statistics.vue'),
+      },
+      {
+        path: 'resumes',
+        name: 'TeacherResumes',
+        component: () => import('@/views/teacher/Resumes.vue'),
+      },
+      {
+        path: 'resumes/:id',
+        name: 'ResumeDetail',
+        component: () => import('@/views/common/ResumeDetail.vue'),
       },
       {
         path: 'profile',

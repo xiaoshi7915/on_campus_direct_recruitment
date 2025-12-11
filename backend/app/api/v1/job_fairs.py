@@ -446,13 +446,137 @@ async def get_job_fair_registrations(
             detail="无权查看此双选会的报名信息"
         )
     
-    # 获取报名列表
+    # 获取报名列表，并关联企业信息
     result = await db.execute(
-        select(JobFairRegistration).where(JobFairRegistration.job_fair_id == job_fair_id)
+        select(JobFairRegistration, EnterpriseProfile)
+        .join(EnterpriseProfile, JobFairRegistration.enterprise_id == EnterpriseProfile.id)
+        .where(JobFairRegistration.job_fair_id == job_fair_id)
     )
-    registrations = result.scalars().all()
+    rows = result.all()
     
-    return registrations
+    # 构建响应列表
+    registration_list = []
+    for registration, enterprise in rows:
+        registration_dict = {
+            "id": registration.id,
+            "job_fair_id": registration.job_fair_id,
+            "enterprise_id": registration.enterprise_id,
+            "enterprise_name": enterprise.company_name if enterprise else None,
+            "enterprise_detail": {
+                "id": enterprise.id if enterprise else None,
+                "company_name": enterprise.company_name if enterprise else None,
+                "industry": enterprise.industry if enterprise else None,
+                "scale": enterprise.scale if enterprise else None,
+                "address": enterprise.address if enterprise else None,
+                "website": enterprise.website if enterprise else None,
+                "description": enterprise.description if enterprise else None,
+            } if enterprise else None,
+            "status": registration.status,
+            "check_in_time": registration.check_in_time,
+            "created_at": registration.created_at,
+        }
+        registration_list.append(JobFairRegistrationResponse(**registration_dict))
+    
+    return registration_list
+
+
+@router.post("/{job_fair_id}/check-in", response_model=JobFairRegistrationResponse)
+async def check_in_job_fair(
+    job_fair_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    企业双选会签到
+    
+    Args:
+        job_fair_id: 双选会ID
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        JobFairRegistrationResponse: 签到后的报名信息
+        
+    Raises:
+        HTTPException: 如果企业未报名或已签到
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能签到"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 检查双选会是否存在
+    job_fair_result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
+    job_fair = job_fair_result.scalar_one_or_none()
+    
+    if not job_fair:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="双选会不存在"
+        )
+    
+    # 查找报名记录
+    registration_result = await db.execute(
+        select(JobFairRegistration).where(
+            JobFairRegistration.job_fair_id == job_fair_id,
+            JobFairRegistration.enterprise_id == enterprise.id
+        )
+    )
+    registration = registration_result.scalar_one_or_none()
+    
+    if not registration:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="您尚未报名此双选会"
+        )
+    
+    # 检查是否已签到
+    if registration.check_in_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="您已经签到过了"
+        )
+    
+    # 执行签到
+    registration.check_in_time = datetime.now()
+    await db.commit()
+    await db.refresh(registration)
+    
+    # 构建响应
+    registration_dict = {
+        "id": registration.id,
+        "job_fair_id": registration.job_fair_id,
+        "enterprise_id": registration.enterprise_id,
+        "enterprise_name": enterprise.company_name if enterprise else None,
+        "enterprise_detail": {
+            "id": enterprise.id if enterprise else None,
+            "company_name": enterprise.company_name if enterprise else None,
+            "industry": enterprise.industry if enterprise else None,
+            "scale": enterprise.scale if enterprise else None,
+            "address": enterprise.address if enterprise else None,
+            "website": enterprise.website if enterprise else None,
+            "description": enterprise.description if enterprise else None,
+        } if enterprise else None,
+        "status": registration.status,
+        "check_in_time": registration.check_in_time,
+        "created_at": registration.created_at,
+    }
+    
+    return JobFairRegistrationResponse(**registration_dict)
 
 
 @router.post("/{job_fair_id}/invite", response_model=JobFairRegistrationResponse, status_code=status.HTTP_201_CREATED)

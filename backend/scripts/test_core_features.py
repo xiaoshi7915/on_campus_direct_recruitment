@@ -127,7 +127,7 @@ async def test_sub_account_management():
         login_response = await client.post(
             f"{BASE_URL}/api/v1/auth/login",
             data={
-                "username": "teacher1",  # 假设有一个主账号教师
+                "username": "main_teacher",  # 使用创建的主账号教师
                 "password": "teacher123"
             }
         )

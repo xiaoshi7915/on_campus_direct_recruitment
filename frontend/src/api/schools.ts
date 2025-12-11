@@ -36,3 +36,5 @@ export const requestSchoolVerification = async (data: SchoolVerificationRequest)
   return request.post('/schools/my-school/verify', data)
 }
 
+
+

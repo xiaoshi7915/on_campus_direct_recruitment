@@ -30,6 +30,8 @@ class StudentProfileUpdate(BaseModel):
     grade: Optional[str] = Field(None, max_length=20, description="年级")
     major: Optional[str] = Field(None, max_length=100, description="专业")
     avatar_url: Optional[str] = Field(None, max_length=255, description="头像URL")
+    phone: Optional[str] = Field(None, max_length=20, description="联系方式")
+    email: Optional[str] = Field(None, max_length=100, description="电子邮箱")
 
 
 class StudentProfileResponse(BaseModel):
@@ -44,6 +46,11 @@ class StudentProfileResponse(BaseModel):
     grade: Optional[str]
     major: Optional[str]
     avatar_url: Optional[str]
+    # 关联信息
+    school_name: Optional[str] = None
+    department_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     
@@ -126,6 +133,8 @@ class TeacherProfileUpdate(BaseModel):
     teaching_major: Optional[str] = Field(None, max_length=100, description="授课专业")
     teaching_grade: Optional[str] = Field(None, max_length=50, description="授课年级")
     avatar_url: Optional[str] = Field(None, max_length=255, description="头像URL")
+    phone: Optional[str] = Field(None, max_length=20, description="联系方式")
+    email: Optional[str] = Field(None, max_length=100, description="电子邮箱")
 
 
 class TeacherProfileResponse(BaseModel):

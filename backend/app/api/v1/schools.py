@@ -93,7 +93,12 @@ async def get_my_school(
             detail="学校信息不存在"
         )
     
-    return school
+    # 转换为响应格式，确保 datetime 字段序列化为字符串
+    return SchoolResponse.model_validate({
+        **school.__dict__,
+        "created_at": school.created_at.isoformat() if school.created_at else "",
+        "updated_at": school.updated_at.isoformat() if school.updated_at else ""
+    })
 
 
 @router.post("/my-school/verify", response_model=SchoolResponse)
@@ -145,12 +150,20 @@ async def request_school_verification(
     
     # 如果已经认证，直接返回
     if school.is_verified:
-        return school
+        return SchoolResponse.model_validate({
+            **school.__dict__,
+            "created_at": school.created_at.isoformat() if school.created_at else "",
+            "updated_at": school.updated_at.isoformat() if school.updated_at else ""
+        })
     
     # 这里可以添加认证申请记录到数据库的逻辑
     # 目前只是返回学校信息，实际认证需要管理员审核
     # 可以创建一个 school_verification_requests 表来记录申请
     
     # 返回学校信息（认证状态仍为未认证，等待管理员审核）
-    return school
+    return SchoolResponse.model_validate({
+        **school.__dict__,
+        "created_at": school.created_at.isoformat() if school.created_at else "",
+        "updated_at": school.updated_at.isoformat() if school.updated_at else ""
+    })
 

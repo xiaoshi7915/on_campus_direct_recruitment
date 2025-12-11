@@ -66,3 +66,5 @@ export const deleteDepartment = async (id: string): Promise<void> => {
   return request.delete(`/departments/${id}`)
 }
 
+
+

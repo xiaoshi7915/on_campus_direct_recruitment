@@ -15,6 +15,10 @@ export interface StudentProfile {
   grade?: string
   major?: string
   avatar_url?: string
+  school_name?: string
+  department_name?: string
+  phone?: string
+  email?: string
   created_at: string
   updated_at: string
 }

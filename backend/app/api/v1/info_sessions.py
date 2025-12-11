@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from typing import Optional
 from uuid import uuid4
+import json
 
 from app.core.database import get_db
 from app.api.v1.auth import get_current_user, get_current_user_optional
@@ -263,7 +264,14 @@ async def update_info_session(
     # 更新宣讲会信息
     update_data = session_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(info_session, field, value)
+        if field == "materials":
+            # 处理materials字段（将list转换为JSON字符串）
+            if value is not None:
+                setattr(info_session, field, json.dumps(value, ensure_ascii=False))
+            else:
+                setattr(info_session, field, None)
+        else:
+            setattr(info_session, field, value)
     
     await db.commit()
     await db.refresh(info_session)
@@ -475,12 +483,151 @@ async def get_info_session_registrations(
             detail="无权查看此宣讲会的报名信息"
         )
     
-    # 获取报名列表
+    # 获取报名列表，并关联学生信息
     result = await db.execute(
-        select(InfoSessionRegistration).where(InfoSessionRegistration.session_id == session_id)
+        select(InfoSessionRegistration, StudentProfile)
+        .join(StudentProfile, InfoSessionRegistration.student_id == StudentProfile.id)
+        .where(InfoSessionRegistration.session_id == session_id)
     )
-    registrations = result.scalars().all()
+    rows = result.all()
     
-    return registrations
+    # 构建响应列表
+    registration_list = []
+    for registration, student in rows:
+        registration_dict = {
+            "id": registration.id,
+            "session_id": registration.session_id,
+            "student_id": registration.student_id,
+            "student_name": student.real_name if student else None,
+            "student_detail": {
+                "id": student.id if student else None,
+                "name": student.real_name if student else None,
+                "student_id": student.student_id if student else None,
+                "major": student.major if student else None,
+                "grade": student.grade if student else None,
+            } if student else None,
+            "status": registration.status,
+            "check_in_time": registration.check_in_time,
+            "created_at": registration.created_at,
+        }
+        registration_list.append(InfoSessionRegistrationResponse(**registration_dict))
+    
+    return registration_list
+
+
+@router.post("/{session_id}/invite-student", response_model=InfoSessionRegistrationResponse, status_code=status.HTTP_201_CREATED)
+async def invite_student_to_info_session(
+    session_id: str,
+    student_id: str = Query(..., description="学生ID"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    邀请学生参加宣讲会（企业用户）
+    
+    Args:
+        session_id: 宣讲会ID
+        student_id: 学生ID
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        InfoSessionRegistrationResponse: 创建的报名记录
+        
+    Raises:
+        HTTPException: 如果宣讲会不存在、无权邀请或学生已报名
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能邀请学生"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 检查宣讲会是否存在
+    session_result = await db.execute(select(InfoSession).where(InfoSession.id == session_id))
+    info_session = session_result.scalar_one_or_none()
+    
+    if not info_session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="宣讲会不存在"
+        )
+    
+    # 检查权限（只有创建者可以邀请）
+    if info_session.enterprise_id != enterprise.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权邀请学生参加此宣讲会"
+        )
+    
+    # 检查学生是否存在
+    student_result = await db.execute(select(StudentProfile).where(StudentProfile.id == student_id))
+    student = student_result.scalar_one_or_none()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="学生不存在"
+        )
+    
+    # 检查是否已报名
+    existing_result = await db.execute(
+        select(InfoSessionRegistration).where(
+            InfoSessionRegistration.session_id == session_id,
+            InfoSessionRegistration.student_id == student_id
+        )
+    )
+    existing = existing_result.scalar_one_or_none()
+    
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="该学生已报名此宣讲会"
+        )
+    
+    # 创建报名记录（邀请状态为ACCEPTED）
+    registration = InfoSessionRegistration(
+        id=str(uuid4()),
+        session_id=session_id,
+        student_id=student_id,
+        status="ACCEPTED"  # 邀请自动接受
+    )
+    
+    db.add(registration)
+    await db.commit()
+    await db.refresh(registration)
+    
+    # 构建响应
+    registration_dict = {
+        "id": registration.id,
+        "session_id": registration.session_id,
+        "student_id": registration.student_id,
+        "student_name": student.real_name if student else None,
+        "student_detail": {
+            "id": student.id if student else None,
+            "real_name": student.real_name if student else None,
+            "major": student.major if student else None,
+            "education": student.education if student else None,
+            "graduation_year": student.graduation_year if student else None,
+        } if student else None,
+        "status": registration.status,
+        "check_in_time": registration.check_in_time,
+        "created_at": registration.created_at,
+    }
+    
+    return InfoSessionRegistrationResponse(**registration_dict)
 
 

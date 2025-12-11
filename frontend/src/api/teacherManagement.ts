@@ -94,3 +94,5 @@ export const transferClass = async (data: ClassTransferRequest): Promise<{ succe
   return request.post('/teacher-management/class-transfer', data)
 }
 
+
+

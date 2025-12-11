@@ -70,4 +70,45 @@ class JobListResponse(BaseModel):
     page_size: int
 
 
+# ==================== 求职意向相关Schema ====================
+
+class JobIntentionCreate(BaseModel):
+    """创建求职意向请求模式"""
+    job_type: Optional[str] = Field(None, max_length=50, description="职位类型")
+    industry: Optional[str] = Field(None, max_length=100, description="行业")
+    salary_expect: Optional[int] = Field(None, ge=0, description="期望薪资")
+    work_location: Optional[str] = Field(None, max_length=100, description="工作地点")
+
+
+class JobIntentionUpdate(BaseModel):
+    """更新求职意向请求模式"""
+    job_type: Optional[str] = Field(None, max_length=50, description="职位类型")
+    industry: Optional[str] = Field(None, max_length=100, description="行业")
+    salary_expect: Optional[int] = Field(None, ge=0, description="期望薪资")
+    work_location: Optional[str] = Field(None, max_length=100, description="工作地点")
+
+
+class JobIntentionResponse(BaseModel):
+    """求职意向响应模式"""
+    id: str
+    student_id: str
+    job_type: Optional[str]
+    industry: Optional[str]
+    salary_expect: Optional[int]
+    work_location: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class JobIntentionListResponse(BaseModel):
+    """求职意向列表响应模式"""
+    items: list[JobIntentionResponse]
+    total: int
+    page: int
+    page_size: int
+
+
 

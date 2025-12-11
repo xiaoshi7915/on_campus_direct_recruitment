@@ -76,4 +76,13 @@ export const deleteSchedule = async (id: string): Promise<void> => {
   return request.delete(`/schedules/${id}`)
 }
 
+// 标记日程为已完成
+export const completeSchedule = async (id: string): Promise<Schedule> => {
+  return request.post(`/schedules/${id}/complete`)
+}
+
+// 取消日程完成标记
+export const uncompleteSchedule = async (id: string): Promise<Schedule> => {
+  return request.post(`/schedules/${id}/uncomplete`)
+}
 

@@ -18,6 +18,8 @@ from app.models.activity import JobFair, JobFairRegistration, InfoSession, InfoS
 from app.models.interview import Interview, Offer
 from app.models.chat import ChatSession, Message
 from app.models.common import Favorite, Schedule, Feedback
+from app.models.todo import Todo
+from app.models.mark import Mark
 from app.models.rights import Rights, RightsPackage, RightsPackageItem, UserRights, RightsPurchase
 
 __all__ = [
@@ -66,6 +68,10 @@ __all__ = [
     "ScheduleType",
     "Feedback",
     "FeedbackStatus",
+    # 待办事项
+    "Todo",
+    # 标记
+    "Mark",
     # 权益相关
     "Rights",
     "RightsType",
@@ -74,4 +80,6 @@ __all__ = [
     "UserRights",
     "RightsPurchase",
     "PurchaseStatus",
+    # 学生点评
+    "StudentComment",
 ]

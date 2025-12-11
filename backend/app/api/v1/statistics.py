@@ -3,20 +3,134 @@
 """
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, or_
 from typing import Optional
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
 from app.api.v1.auth import get_current_user
 from app.core.permissions import require_teacher, require_admin
+from app.models.profile import EnterpriseProfile
 from app.models.user import User
 from app.models.profile import StudentProfile, TeacherProfile
-from app.models.job import JobApplication, Resume
+from app.models.job import JobApplication, Resume, Job
+from app.models.interview import Interview, Offer
 from app.models.activity import JobFair, InfoSession, JobFairRegistration, InfoSessionRegistration
 from app.models.school import School, Department
+from app.models.chat import ChatSession
+from app.models.common import Favorite
 
 router = APIRouter()
+
+
+# ==================== 学生个人数据统计 ====================
+
+@router.get("/student/personal")
+async def get_student_personal_statistics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取学生个人数据统计
+    
+    Args:
+        current_user: 当前登录用户（学生）
+        db: 数据库会话
+        
+    Returns:
+        dict: 个人统计数据
+    """
+    # 检查用户类型
+    if current_user.user_type != "STUDENT":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生用户才能查看个人统计"
+        )
+    
+    # 获取学生信息
+    student_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+    )
+    student = student_result.scalar_one_or_none()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="学生信息不存在"
+        )
+    
+    # 统计职位申请
+    applications_result = await db.execute(
+        select(func.count()).where(JobApplication.student_id == student.id)
+    )
+    total_applications = applications_result.scalar() or 0
+    
+    # 统计已通过的申请
+    accepted_applications_result = await db.execute(
+        select(func.count()).where(
+            JobApplication.student_id == student.id,
+            JobApplication.status == "ACCEPTED"
+        )
+    )
+    accepted_applications = accepted_applications_result.scalar() or 0
+    
+    # 统计面试
+    from app.models.interview import Interview
+    interviews_result = await db.execute(
+        select(func.count()).where(Interview.student_id == student.id)
+    )
+    total_interviews = interviews_result.scalar() or 0
+    
+    # 统计Offer
+    from app.models.interview import Offer
+    offers_result = await db.execute(
+        select(func.count()).where(Offer.student_id == student.id)
+    )
+    total_offers = offers_result.scalar() or 0
+    
+    # 统计已接受的Offer
+    accepted_offers_result = await db.execute(
+        select(func.count()).where(
+            Offer.student_id == student.id,
+            Offer.status == "ACCEPTED"
+        )
+    )
+    accepted_offers = accepted_offers_result.scalar() or 0
+    
+    # 统计收藏
+    from app.models.common import Favorite
+    favorites_result = await db.execute(
+        select(func.count()).where(Favorite.user_id == current_user.id)
+    )
+    total_favorites = favorites_result.scalar() or 0
+    
+    # 统计简历
+    from app.models.job import Resume
+    resumes_result = await db.execute(
+        select(func.count()).where(Resume.student_id == student.id)
+    )
+    total_resumes = resumes_result.scalar() or 0
+    
+    # 统计待办事项
+    from app.models.common import Schedule
+    todos_result = await db.execute(
+        select(func.count()).where(
+            Schedule.user_id == current_user.id,
+            Schedule.is_completed == False
+        )
+    )
+    total_todos = todos_result.scalar() or 0
+    
+    return {
+        "total_applications": total_applications,
+        "accepted_applications": accepted_applications,
+        "total_interviews": total_interviews,
+        "total_offers": total_offers,
+        "accepted_offers": accepted_offers,
+        "total_favorites": total_favorites,
+        "total_resumes": total_resumes,
+        "total_todos": total_todos
+    }
 
 
 @router.get("/students/activity")
@@ -543,5 +657,247 @@ async def get_info_session_analysis(
         "registered_students": registered_students,
         "by_status": by_status,
         "by_enterprise": by_enterprise
+    }
+
+
+# ==================== 企业端数据统计 ====================
+
+@router.get("/enterprise/personal")
+async def get_enterprise_personal_statistics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取企业个人数据统计
+    
+    Args:
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        dict: 企业统计数据
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能查看企业统计"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 统计职位数
+    from app.models.job import Job
+    jobs_result = await db.execute(
+        select(func.count(Job.id)).where(Job.enterprise_id == enterprise.id)
+    )
+    total_jobs = jobs_result.scalar() or 0
+    
+    # 统计已发布职位数
+    published_jobs_result = await db.execute(
+        select(func.count(Job.id)).where(
+            Job.enterprise_id == enterprise.id,
+            Job.status == "PUBLISHED"
+        )
+    )
+    published_jobs = published_jobs_result.scalar() or 0
+    
+    # 统计职位申请数
+    applications_result = await db.execute(
+        select(func.count(JobApplication.id)).where(
+            JobApplication.job_id.in_(
+                select(Job.id).where(Job.enterprise_id == enterprise.id)
+            )
+        )
+    )
+    total_applications = applications_result.scalar() or 0
+    
+    # 统计已通过申请数
+    accepted_applications_result = await db.execute(
+        select(func.count(JobApplication.id)).where(
+            JobApplication.job_id.in_(
+                select(Job.id).where(Job.enterprise_id == enterprise.id)
+            ),
+            JobApplication.status == "ACCEPTED"
+        )
+    )
+    accepted_applications = accepted_applications_result.scalar() or 0
+    
+    # 统计面试数
+    interviews_result = await db.execute(
+        select(func.count(Interview.id)).where(Interview.enterprise_id == enterprise.id)
+    )
+    total_interviews = interviews_result.scalar() or 0
+    
+    # 统计Offer数
+    offers_result = await db.execute(
+        select(func.count(Offer.id)).where(Offer.enterprise_id == enterprise.id)
+    )
+    total_offers = offers_result.scalar() or 0
+    
+    # 统计已接受Offer数
+    accepted_offers_result = await db.execute(
+        select(func.count(Offer.id)).where(
+            Offer.enterprise_id == enterprise.id,
+            Offer.status == "ACCEPTED"
+        )
+    )
+    accepted_offers = accepted_offers_result.scalar() or 0
+    
+    # 统计收藏数（收藏的简历）
+    favorites_result = await db.execute(
+        select(func.count(Favorite.id)).where(
+            Favorite.user_id == current_user.id,
+            Favorite.target_type == "RESUME"
+        )
+    )
+    total_favorites = favorites_result.scalar() or 0
+    
+    # 统计宣讲会数
+    info_sessions_result = await db.execute(
+        select(func.count(InfoSession.id)).where(InfoSession.enterprise_id == enterprise.id)
+    )
+    total_info_sessions = info_sessions_result.scalar() or 0
+    
+    # 统计双选会报名数
+    job_fair_registrations_result = await db.execute(
+        select(func.count(JobFairRegistration.id)).where(
+            JobFairRegistration.enterprise_id == enterprise.id
+        )
+    )
+    total_job_fair_registrations = job_fair_registrations_result.scalar() or 0
+    
+    # 统计聊天会话数（ChatSession使用user1_id和user2_id）
+    chat_sessions_result = await db.execute(
+        select(func.count(ChatSession.id)).where(
+            or_(
+                ChatSession.user1_id == current_user.id,
+                ChatSession.user2_id == current_user.id
+            )
+        )
+    )
+    total_chat_sessions = chat_sessions_result.scalar() or 0
+    
+    # 统计触达人才数（通过申请、面试、Offer、收藏、聊天）
+    from app.models.profile import StudentProfile
+    
+    # 通过申请触达的学生（JobApplication.student_id是user_id，需要转换为student_profiles.id）
+    application_student_ids = set()
+    if total_applications > 0:
+        app_students_result = await db.execute(
+            select(StudentProfile.id).join(
+                JobApplication, StudentProfile.user_id == JobApplication.student_id
+            ).where(
+                JobApplication.job_id.in_(
+                    select(Job.id).where(Job.enterprise_id == enterprise.id)
+                )
+            ).distinct()
+        )
+        application_student_ids = set(row[0] for row in app_students_result.all() if row[0])
+    
+    # 通过面试触达的学生
+    interview_student_ids = set()
+    if total_interviews > 0:
+        interview_students_result = await db.execute(
+            select(Interview.student_id).where(Interview.enterprise_id == enterprise.id).distinct()
+        )
+        interview_student_ids = set(row[0] for row in interview_students_result.all() if row[0])
+    
+    # 通过Offer触达的学生
+    offer_student_ids = set()
+    if total_offers > 0:
+        offer_students_result = await db.execute(
+            select(Offer.student_id).where(Offer.enterprise_id == enterprise.id).distinct()
+        )
+        offer_student_ids = set(row[0] for row in offer_students_result.all() if row[0])
+    
+    # 通过收藏触达的学生
+    favorite_student_ids = set()
+    if total_favorites > 0:
+        favorite_resume_ids_result = await db.execute(
+            select(Favorite.target_id).where(
+                Favorite.user_id == current_user.id,
+                Favorite.target_type == "RESUME"
+            ).distinct()
+        )
+        favorite_resume_ids = set(row[0] for row in favorite_resume_ids_result.all() if row[0])
+        if favorite_resume_ids:
+            favorite_students_result = await db.execute(
+                select(Resume.student_id).where(Resume.id.in_(favorite_resume_ids)).distinct()
+            )
+            favorite_student_ids = set(row[0] for row in favorite_students_result.all() if row[0])
+    
+    # 通过聊天触达的学生（ChatSession使用user1_id和user2_id）
+    chat_student_ids = set()
+    if total_chat_sessions > 0:
+        # 查询user1_id为当前用户的会话
+        chat_user_ids_result1 = await db.execute(
+            select(ChatSession.user2_id).where(
+                ChatSession.user1_id == current_user.id
+            ).distinct()
+        )
+        chat_user_ids1 = set(row[0] for row in chat_user_ids_result1.all() if row[0])
+        
+        # 查询user2_id为当前用户的会话
+        chat_user_ids_result2 = await db.execute(
+            select(ChatSession.user1_id).where(
+                ChatSession.user2_id == current_user.id
+            ).distinct()
+        )
+        chat_user_ids2 = set(row[0] for row in chat_user_ids_result2.all() if row[0])
+        
+        chat_user_ids = chat_user_ids1 | chat_user_ids2
+        if chat_user_ids:
+            chat_students_result = await db.execute(
+                select(StudentProfile.id).where(StudentProfile.user_id.in_(chat_user_ids)).distinct()
+            )
+            chat_student_ids = set(row[0] for row in chat_students_result.all() if row[0])
+    
+    # 合并去重
+    all_talent_ids = application_student_ids | interview_student_ids | offer_student_ids | favorite_student_ids | chat_student_ids
+    total_talents = len(all_talent_ids)
+    
+    # 按职位统计申请数
+    applications_by_job = []
+    if total_applications > 0:
+        job_applications_result = await db.execute(
+            select(
+                JobApplication.job_id,
+                func.count(JobApplication.id).label("count")
+            ).where(
+                JobApplication.job_id.in_(
+                    select(Job.id).where(Job.enterprise_id == enterprise.id)
+                )
+            ).group_by(JobApplication.job_id)
+        )
+        applications_by_job = [
+            {"job_id": row[0], "count": row[1]}
+            for row in job_applications_result.all()
+        ]
+    
+    return {
+        "total_jobs": total_jobs,
+        "published_jobs": published_jobs,
+        "total_applications": total_applications,
+        "accepted_applications": accepted_applications,
+        "total_interviews": total_interviews,
+        "total_offers": total_offers,
+        "accepted_offers": accepted_offers,
+        "total_favorites": total_favorites,
+        "total_info_sessions": total_info_sessions,
+        "total_job_fair_registrations": total_job_fair_registrations,
+        "total_chat_sessions": total_chat_sessions,
+        "total_talents": total_talents,
+        "applications_by_job": applications_by_job
     }
 

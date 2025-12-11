@@ -25,3 +25,5 @@ export const approveInfoSession = async (sessionId: string, data: ApprovalReques
   return request.post(`/approvals/info-sessions/${sessionId}/approve`, data)
 }
 
+
+

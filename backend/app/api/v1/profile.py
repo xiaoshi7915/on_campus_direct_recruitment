@@ -134,7 +134,45 @@ async def _get_student_profile_logic(
             detail="学生档案不存在"
         )
     
-    return profile
+    # 获取关联的学校名称和院系名称
+    school_name = None
+    department_name = None
+    if profile.school_id:
+        from app.models.school import School
+        school_result = await db.execute(select(School).where(School.id == profile.school_id))
+        school = school_result.scalar_one_or_none()
+        if school:
+            school_name = school.name
+    
+    if profile.department_id:
+        from app.models.school import Department
+        dept_result = await db.execute(select(Department).where(Department.id == profile.department_id))
+        department = dept_result.scalar_one_or_none()
+        if department:
+            department_name = department.name
+    
+    # 构建响应数据
+    response_data = {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "real_name": profile.real_name,
+        "student_id": profile.student_id,
+        "school_id": profile.school_id,
+        "department_id": profile.department_id,
+        "class_id": profile.class_id,
+        "grade": profile.grade,
+        "major": profile.major,
+        "avatar_url": profile.avatar_url,
+        "school_name": school_name,
+        "department_name": department_name,
+        "phone": current_user.phone,
+        "email": current_user.email,
+        "created_at": profile.created_at,
+        "updated_at": profile.updated_at,
+    }
+    
+    from app.schemas.profile import StudentProfileResponse
+    return StudentProfileResponse(**response_data)
 
 
 async def _update_student_profile_logic(
@@ -643,6 +681,17 @@ async def update_my_teacher_profile(
         if not dept_id_val or (isinstance(dept_id_val, str) and not dept_id_val.strip()):
             update_data['department_id'] = None
     
+    # 处理phone和email（这些字段在User表中，不在TeacherProfile表中）
+    phone = update_data.pop('phone', None)
+    email = update_data.pop('email', None)
+    
+    # 更新User表的phone和email
+    if phone is not None:
+        current_user.phone = phone
+    if email is not None:
+        current_user.email = email
+    
+    # 更新TeacherProfile表的其他字段
     for field, value in update_data.items():
         setattr(profile, field, value)
     

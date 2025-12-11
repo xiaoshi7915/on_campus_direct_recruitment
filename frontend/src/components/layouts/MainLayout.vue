@@ -109,10 +109,15 @@ const updateNavItems = () => {
         { name: '职位搜索', path: '/student/jobs' },
         { name: '我的简历', path: '/student/resumes' },
         { name: '我的申请', path: '/student/applications' },
+        { name: '我的Offer', path: '/student/offers' },
+        { name: '求职意向', path: '/student/job-intentions' },
         { name: '我的收藏', path: '/student/favorites' },
         { name: '双选会', path: '/student/job-fairs' },
         { name: '宣讲会', path: '/student/info-sessions' },
         { name: '聊天', path: '/student/chat' },
+        { name: '系统消息', path: '/student/system-messages' },
+        { name: '待办中心', path: '/student/todos' },
+        { name: '意见反馈', path: '/student/feedback' },
         { name: '个人中心', path: '/student/profile' },
       ]
       break
@@ -121,10 +126,17 @@ const updateNavItems = () => {
         { name: '首页', path: '/enterprise' },
         { name: '职位管理', path: '/enterprise/jobs' },
         { name: '人才搜索', path: '/enterprise/talents' },
+        { name: '人才库', path: '/enterprise/talent-library' },
         { name: '申请管理', path: '/enterprise/applications' },
         { name: '双选会', path: '/enterprise/job-fairs' },
         { name: '宣讲会', path: '/enterprise/info-sessions' },
         { name: '聊天', path: '/enterprise/chat' },
+        { name: '日程管理', path: '/enterprise/schedules' },
+        { name: '系统消息', path: '/enterprise/system-messages' },
+        { name: '数据报表', path: '/enterprise/statistics' },
+        { name: '子账号管理', path: '/enterprise/sub-accounts' },
+        { name: '意见反馈', path: '/enterprise/feedback' },
+        { name: '宣传页预览', path: '/enterprise/preview' },
         { name: '企业中心', path: '/enterprise/profile' },
       ]
       break

@@ -30,7 +30,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=F
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    token: Optional[str] = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
@@ -38,7 +38,7 @@ async def get_current_user(
     从JWT令牌中解析用户信息并返回用户对象
     
     Args:
-        token: JWT访问令牌
+        token: JWT访问令牌（可为None）
         db: 数据库会话
         
     Returns:
@@ -52,6 +52,9 @@ async def get_current_user(
         detail="无法验证凭据",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    if not token:
+        raise credentials_exception
     
     payload = verify_token(token)
     if payload is None:

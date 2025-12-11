@@ -75,6 +75,16 @@ export interface JobFairRegistration {
   id: string
   job_fair_id: string
   enterprise_id: string
+  enterprise_name?: string
+  enterprise_detail?: {
+    id?: string
+    company_name?: string
+    industry?: string
+    scale?: string
+    address?: string
+    website?: string
+    description?: string
+  }
   status: string
   check_in_time?: string
   created_at: string

@@ -48,3 +48,11 @@ export const getPlatformOverview = async () => {
   return request.get('/statistics/platform/overview')
 }
 
+/**
+ * 获取企业个人数据统计
+ */
+export const getEnterprisePersonalStatistics = async () => {
+  return request.get('/statistics/enterprise/personal')
+}
+
+

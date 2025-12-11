@@ -280,7 +280,12 @@ const loadSubAccounts = async () => {
     total.value = response.total
   } catch (error: any) {
     console.error('加载子账号列表失败:', error)
-    alert('加载子账号列表失败: ' + (error.response?.data?.detail || error.message))
+    const errorMessage = error.response?.data?.detail || error.message
+    if (error.response?.status === 403) {
+      alert('权限不足：只有主账号才能查看子账号列表。如果您需要此功能，请联系管理员。')
+    } else {
+      alert('加载子账号列表失败: ' + errorMessage)
+    }
   } finally {
     loading.value = false
   }
@@ -311,7 +316,12 @@ const saveSubAccount = async () => {
     loadSubAccounts()
   } catch (error: any) {
     console.error('创建子账号失败:', error)
-    alert('创建失败: ' + (error.response?.data?.detail || error.message))
+    const errorMessage = error.response?.data?.detail || error.message
+    if (error.response?.status === 403) {
+      alert('权限不足：只有主账号才能创建子账号。如果您需要此功能，请联系管理员。')
+    } else {
+      alert('创建失败: ' + errorMessage)
+    }
   }
 }
 
@@ -348,4 +358,5 @@ onMounted(() => {
   margin: 0 auto;
 }
 </style>
+
 

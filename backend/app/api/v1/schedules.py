@@ -237,4 +237,68 @@ async def delete_schedule(
     await db.commit()
 
 
+@router.post("/{schedule_id}/complete", response_model=ScheduleResponse)
+async def complete_schedule(
+    schedule_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    标记日程为已完成
+    
+    Args:
+        schedule_id: 日程ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        ScheduleResponse: 更新后的日程
+    """
+    result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
+    schedule = result.scalar_one_or_none()
+    
+    if not schedule or schedule.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="日程不存在或无权操作"
+        )
+    
+    schedule.is_completed = True
+    await db.commit()
+    await db.refresh(schedule)
+    
+    return schedule
+
+
+@router.post("/{schedule_id}/uncomplete", response_model=ScheduleResponse)
+async def uncomplete_schedule(
+    schedule_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    取消日程完成标记
+    
+    Args:
+        schedule_id: 日程ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        ScheduleResponse: 更新后的日程
+    """
+    result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
+    schedule = result.scalar_one_or_none()
+    
+    if not schedule or schedule.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="日程不存在或无权操作"
+        )
+    
+    schedule.is_completed = False
+    await db.commit()
+    await db.refresh(schedule)
+    
+    return schedule
 

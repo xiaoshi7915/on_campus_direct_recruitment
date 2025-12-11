@@ -79,8 +79,15 @@ async def get_resumes(
     result = await db.execute(query)
     resumes = result.scalars().all()
     
-    # 将ORM对象转换为响应模型
-    resume_responses = [ResumeResponse.model_validate(resume) for resume in resumes]
+    # 将ORM对象转换为响应模型，并为file_url生成签名URL
+    from app.core.oss import oss_service
+    resume_responses = []
+    for resume in resumes:
+        resume_dict = ResumeResponse.model_validate(resume).model_dump()
+        # 如果file_url存在，生成签名URL
+        if resume_dict.get('file_url'):
+            resume_dict['file_url'] = oss_service.get_file_url(resume_dict['file_url'], signed=True, expires=3600)
+        resume_responses.append(ResumeResponse(**resume_dict))
     
     return {
         "items": resume_responses,
@@ -137,7 +144,129 @@ async def get_resume(
     await db.commit()
     await db.refresh(resume)
     
+    # 如果file_url存在，生成签名URL用于预览
+    if resume.file_url:
+        from app.core.oss import oss_service
+        resume.file_url = oss_service.get_file_url(resume.file_url, signed=True, expires=3600)
+    # 如果没有file_url，也要正常返回简历信息（不报错）
+    
     return resume
+
+
+@router.get("/{resume_id}/download")
+async def download_resume(
+    resume_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    下载简历文件（电子版）
+    
+    Args:
+        resume_id: 简历ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        RedirectResponse: 重定向到文件URL
+        
+    Raises:
+        HTTPException: 如果简历不存在或无权下载
+    """
+    result = await db.execute(select(Resume).where(Resume.id == resume_id))
+    resume = result.scalar_one_or_none()
+    
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="简历不存在"
+        )
+    
+    # 检查权限：学生只能下载自己的简历，企业和管理员可以下载
+    if current_user.user_type == "STUDENT":
+        student_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+        )
+        student = student_result.scalar_one_or_none()
+        
+        if not student or resume.student_id != student.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权下载此简历"
+            )
+    
+    if not resume.file_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="该简历没有电子版文件"
+        )
+    
+    # 增加下载次数
+    resume.download_count += 1
+    await db.commit()
+    
+    # 生成签名URL用于下载（有效期1小时）
+    from app.core.oss import oss_service
+    signed_url = oss_service.get_file_url(resume.file_url, signed=True, expires=3600)
+    
+    # 重定向到签名URL
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=signed_url)
+
+
+@router.get("/{resume_id}/preview_url", response_model=dict)
+async def get_resume_preview_url(
+    resume_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取简历文件预览的签名URL
+    
+    Args:
+        resume_id: 简历ID
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        dict: 包含签名URL的字典
+        
+    Raises:
+        HTTPException: 如果简历不存在或无权查看
+    """
+    result = await db.execute(select(Resume).where(Resume.id == resume_id))
+    resume = result.scalar_one_or_none()
+    
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="简历不存在"
+        )
+    
+    # 检查权限：学生只能查看自己的简历，企业和管理员可以查看
+    if current_user.user_type == "STUDENT":
+        student_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+        )
+        student = student_result.scalar_one_or_none()
+        
+        if not student or resume.student_id != student.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看此简历"
+            )
+    
+    if not resume.file_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="该简历没有电子版文件"
+        )
+    
+    # 生成签名URL用于预览（有效期1小时）
+    from app.core.oss import oss_service
+    signed_url = oss_service.get_file_url(resume.file_url, signed=True, expires=3600)
+    
+    return {"preview_url": signed_url}
 
 
 @router.post("", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED)
@@ -202,6 +331,7 @@ async def create_resume(
         student_id=student.id,
         title=resume_data.title,
         content=resume_data.content,
+        file_url=getattr(resume_data, 'file_url', None),
         is_default=resume_data.is_default
     )
     

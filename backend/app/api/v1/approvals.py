@@ -213,7 +213,7 @@ async def approve_info_session(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"当前状态为{info_session.status}，无法拒绝"
-            }
+            )
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

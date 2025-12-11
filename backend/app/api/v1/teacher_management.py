@@ -623,3 +623,5 @@ async def transfer_class(
         "message": f"班级移交成功，已移交{transferred_count}个学生的管理权限"
     }
 
+
+

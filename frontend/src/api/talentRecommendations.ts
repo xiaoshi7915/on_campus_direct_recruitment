@@ -47,3 +47,5 @@ export const getTalentRecommendations = async (params?: {
   return request.get('/talent-recommendations', { params })
 }
 
+
+

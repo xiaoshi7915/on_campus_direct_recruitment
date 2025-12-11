@@ -105,6 +105,36 @@
             />
           </div>
           <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">电子版简历文件（PDF、Word等）</label>
+            <div class="flex items-center space-x-4">
+              <input
+                type="file"
+                ref="fileInput"
+                @change="handleFileSelect"
+                accept=".pdf,.doc,.docx"
+                class="hidden"
+              />
+              <button
+                type="button"
+                @click="fileInput?.click()"
+                class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                选择文件
+              </button>
+              <span v-if="selectedFile" class="text-sm text-gray-600">{{ selectedFile.name }}</span>
+              <button
+                v-if="resumeForm.file_url"
+                type="button"
+                @click="previewFile"
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+              >
+                预览当前文件
+              </button>
+            </div>
+            <p v-if="uploading" class="text-sm text-blue-600 mt-2">上传中...</p>
+            <p v-if="resumeForm.file_url" class="text-sm text-gray-600 mt-2">已上传文件：{{ resumeForm.file_url }}</p>
+          </div>
+          <div class="mb-4">
             <label class="flex items-center">
               <input
                 v-model="resumeForm.is_default"
@@ -138,6 +168,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getResumes, createResume, updateResume, deleteResume, type Resume } from '@/api/resumes'
+import { uploadDocument } from '@/api/upload'
 import Pagination from '@/components/Pagination.vue'
 
 // 简历列表
@@ -153,8 +184,14 @@ const total = ref(0)
 const resumeForm = ref({
   title: '',
   content: '',
+  file_url: '',
   is_default: false,
 })
+
+// 文件上传
+const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
+const uploading = ref(false)
 
 // 格式化日期
 const formatDate = (dateString: string) => {
@@ -190,13 +227,47 @@ const handlePaginationChange = (page: number, size: number) => {
   loadResumes()
 }
 
+// 选择文件
+const handleFileSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  
+  selectedFile.value = file
+  uploading.value = true
+  
+  try {
+    // 上传文件
+    const response = await uploadDocument(file, 'resume')
+    resumeForm.value.file_url = response.url
+    alert('文件上传成功！')
+  } catch (error: any) {
+    alert('文件上传失败: ' + (error.response?.data?.detail || error.message))
+    selectedFile.value = null
+  } finally {
+    uploading.value = false
+  }
+}
+
+// 预览文件
+const previewFile = () => {
+  if (resumeForm.value.file_url) {
+    window.open(resumeForm.value.file_url, '_blank')
+  }
+}
+
 // 编辑简历
 const editResume = (resume: Resume) => {
   editingResume.value = resume
   resumeForm.value = {
     title: resume.title,
     content: resume.content,
+    file_url: resume.file_url || '',
     is_default: resume.is_default,
+  }
+  selectedFile.value = null
+  if (fileInput.value) {
+    fileInput.value.value = ''
   }
 }
 

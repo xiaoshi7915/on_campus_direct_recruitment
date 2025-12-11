@@ -441,3 +441,5 @@ async def delete_department(
     await db.delete(department)
     await db.commit()
 
+
+

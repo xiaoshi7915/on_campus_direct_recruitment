@@ -93,19 +93,22 @@ def create_refresh_token(data: dict) -> str:
     return encoded_jwt
 
 
-def verify_token(token: str) -> Optional[dict]:
+def verify_token(token: Optional[str]) -> Optional[dict]:
     """
     验证JWT令牌
     
     Args:
-        token: JWT令牌字符串
+        token: JWT令牌字符串（可为None）
         
     Returns:
-        Optional[dict]: 解码后的令牌数据，如果验证失败则返回None
+        Optional[dict]: 解码后的令牌数据，如果验证失败或token为None则返回None
     """
+    if not token:
+        return None
+    
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
-    except JWTError:
+    except (JWTError, Exception):
         return None
 

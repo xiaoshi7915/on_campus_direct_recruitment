@@ -12,14 +12,47 @@
             <p class="text-yellow-800 text-sm">您还没有创建学生档案，请填写下方信息创建档案</p>
           </div>
           <form @submit.prevent="saveProfile">
+            <!-- 头像上传 -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">头像</label>
+              <div class="flex items-center space-x-4">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                  <img
+                    v-if="profileForm.avatar_url"
+                    :src="profileForm.avatar_url"
+                    alt="头像"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else class="text-gray-400 text-2xl">头像</span>
+                </div>
+                <div class="flex-1">
+                  <input
+                    type="file"
+                    ref="avatarInput"
+                    @change="handleAvatarSelect"
+                    accept="image/*"
+                    class="hidden"
+                  />
+                  <button
+                    type="button"
+                    @click="avatarInput?.click()"
+                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    上传头像
+                  </button>
+                  <p v-if="uploadingAvatar" class="text-sm text-blue-600 mt-2">上传中...</p>
+                </div>
+              </div>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">真实姓名</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">真实姓名 *</label>
                 <input
                   v-model="profileForm.real_name"
                   type="text"
                   required
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -27,7 +60,7 @@
                 <input
                   v-model="profileForm.student_id"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -35,7 +68,7 @@
                 <input
                   v-model="profileForm.grade"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -43,9 +76,51 @@
                 <input
                   v-model="profileForm.major"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">学校</label>
+                <select
+                  v-model="profileForm.school_id"
+                  @change="onSchoolChange"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                >
+                  <option value="">请选择学校</option>
+                  <option v-if="mySchool" :value="mySchool.id">{{ mySchool.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">院系</label>
+                <select
+                  v-model="profileForm.department_id"
+                  :disabled="!profileForm.school_id"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 text-gray-900"
+                >
+                  <option value="">请选择院系</option>
+                  <option v-for="dept in departmentList" :key="dept.id" :value="dept.id">
+                    {{ dept.name }}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">联系方式</label>
+                <input
+                  v-model="profileForm.phone"
+                  type="text"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  placeholder="请输入手机号"
+                />
+              </div>
+            </div>
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">电子邮箱</label>
+              <input
+                v-model="profileForm.email"
+                type="email"
+                class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                placeholder="请输入电子邮箱"
+              />
             </div>
             <div class="mt-6 flex justify-end">
               <button
@@ -89,11 +164,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getStudentProfile, updateStudentProfile, type StudentProfile } from '@/api/profile'
+import { getStudentProfile, updateStudentProfile, createStudentProfile, type StudentProfile } from '@/api/profile'
+import { uploadImage } from '@/api/upload'
 import { getResumes } from '@/api/resumes'
 import { getApplications } from '@/api/applications'
 import { getInterviews } from '@/api/interviews'
 import { getFavorites } from '@/api/favorites'
+import type { School } from '@/api/schools'
+import { getDepartments, type Department } from '@/api/departments'
 
 // 档案数据
 const profile = ref<StudentProfile | null>(null)
@@ -105,13 +183,113 @@ const profileForm = ref({
   student_id: '',
   grade: '',
   major: '',
+  school_id: '',
+  department_id: '',
+  phone: '',
+  email: '',
+  avatar_url: '',
 })
+
+// 学校院系列表
+const mySchool = ref<School | null>(null)
+const departmentList = ref<Department[]>([])
+
+// 头像上传
+const avatarInput = ref<HTMLInputElement | null>(null)
+const uploadingAvatar = ref(false)
 
 // 统计数据
 const resumeCount = ref(0)
 const applicationCount = ref(0)
 const interviewCount = ref(0)
 const favoriteCount = ref(0)
+
+// 加载学校信息
+const loadSchool = async (schoolId?: string) => {
+  try {
+    // 如果学生已经有school_id，使用profile中的学校信息
+    if (schoolId && profile.value?.school_name) {
+      // 如果profile中有school_name，创建一个临时的school对象用于显示
+      mySchool.value = {
+        id: schoolId,
+        name: profile.value.school_name,
+        code: '',
+        province: '',
+        city: '',
+        address: '',
+        website: '',
+        logo_url: '',
+        description: '',
+        is_verified: false,
+        created_at: '',
+        updated_at: ''
+      }
+    } else {
+      // 学生没有权限调用getMySchool API（该API仅限教师），直接设为null
+      mySchool.value = null
+    }
+  } catch (error: any) {
+    console.error('加载学校信息失败:', error)
+    mySchool.value = null
+  }
+}
+
+// 加载院系列表
+const loadDepartments = async (schoolId: string) => {
+  if (!schoolId) {
+    departmentList.value = []
+    return
+  }
+  try {
+    const response = await getDepartments({ school_id: schoolId, page_size: 100 })
+    departmentList.value = response.items
+  } catch (error: any) {
+    console.error('加载院系列表失败:', error)
+    departmentList.value = []
+  }
+}
+
+// 学校选择变化时加载院系列表
+const onSchoolChange = () => {
+  profileForm.value.department_id = '' // 清空院系选择
+  if (profileForm.value.school_id) {
+    loadDepartments(profileForm.value.school_id)
+  } else {
+    departmentList.value = []
+  }
+}
+
+// 选择头像文件
+const handleAvatarSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  
+  uploadingAvatar.value = true
+  
+  try {
+    // 上传头像
+    const response = await uploadImage(file, 'avatar')
+    profileForm.value.avatar_url = response.url
+    // 上传成功后立即保存profile
+    if (profile.value) {
+      await updateStudentProfile({ avatar_url: response.url })
+      alert('头像上传成功！')
+      // 重新加载profile以更新显示
+      await loadProfile()
+    } else {
+      alert('头像上传成功！请保存档案以应用更改。')
+    }
+  } catch (error: any) {
+    alert('头像上传失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    uploadingAvatar.value = false
+    // 清空input，允许重复选择同一文件
+    if (target) {
+      target.value = ''
+    }
+  }
+}
 
 // 加载档案数据
 const loadProfile = async () => {
@@ -124,6 +302,20 @@ const loadProfile = async () => {
         student_id: profile.value.student_id || '',
         grade: profile.value.grade || '',
         major: profile.value.major || '',
+        school_id: profile.value.school_id || '',
+        department_id: profile.value.department_id || '',
+        phone: profile.value.phone || '',
+        email: profile.value.email || '',
+        avatar_url: profile.value.avatar_url || '',
+      }
+      
+      // 如果已有学校ID，加载学校信息和院系列表
+      if (profile.value.school_id) {
+        await loadSchool(profile.value.school_id)
+        await loadDepartments(profile.value.school_id)
+      } else {
+        // 如果没有学校，尝试获取学生可能所属的学校（如果有API）
+        await loadSchool()
       }
     }
 
@@ -162,7 +354,6 @@ const saveProfile = async () => {
       alert('保存成功！')
     } else {
       // 创建新档案
-      const { createStudentProfile } = await import('@/api/profile')
       await createStudentProfile(profileForm.value as any)
       alert('档案创建成功！')
     }
@@ -184,5 +375,3 @@ onMounted(() => {
   margin: 0 auto;
 }
 </style>
-
-

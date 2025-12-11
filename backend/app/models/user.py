@@ -41,4 +41,6 @@ class User(Base):
     schedules = relationship("Schedule", back_populates="user", cascade="all, delete-orphan")
     job_applications = relationship("JobApplication", back_populates="user", foreign_keys="JobApplication.student_id", cascade="all, delete-orphan")
     feedbacks = relationship("Feedback", back_populates="user", cascade="all, delete-orphan")
+    todos = relationship("Todo", back_populates="user", cascade="all, delete-orphan")
+    marks = relationship("Mark", back_populates="user", cascade="all, delete-orphan")
 

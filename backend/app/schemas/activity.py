@@ -1,9 +1,10 @@
 """
 活动相关Pydantic模式（双选会、宣讲会）
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
+import json
 
 
 # ==================== 双选会相关 ====================
@@ -68,6 +69,8 @@ class JobFairRegistrationResponse(BaseModel):
     id: str
     job_fair_id: str
     enterprise_id: str
+    enterprise_name: Optional[str] = None  # 企业名称
+    enterprise_detail: Optional[dict] = None  # 企业详情
     status: str
     check_in_time: Optional[datetime]
     created_at: datetime
@@ -89,6 +92,7 @@ class InfoSessionCreate(BaseModel):
     live_url: Optional[str] = Field(None, max_length=255, description="直播链接")
     school_id: Optional[str] = Field(None, description="学校ID")
     max_students: Optional[int] = Field(None, ge=1, description="最大学生数")
+    materials: Optional[list[str]] = Field(None, description="宣讲会资料URLs（文件URL列表）")
 
 
 class InfoSessionUpdate(BaseModel):
@@ -102,6 +106,7 @@ class InfoSessionUpdate(BaseModel):
     live_url: Optional[str] = Field(None, max_length=255, description="直播链接")
     school_id: Optional[str] = Field(None, description="学校ID")
     max_students: Optional[int] = Field(None, ge=1, description="最大学生数")
+    materials: Optional[list[str]] = Field(None, description="宣讲会资料URLs（文件URL列表）")
     status: Optional[str] = Field(None, description="状态：DRAFT, PUBLISHED, ONGOING, ENDED, CANCELLED")
 
 
@@ -120,8 +125,24 @@ class InfoSessionResponse(BaseModel):
     status: str
     max_students: Optional[int]
     check_in_count: int
+    materials: Optional[list[str]]
     created_at: datetime
     updated_at: datetime
+    
+    @field_validator('materials', mode='before')
+    @classmethod
+    def parse_materials(cls, v):
+        """解析materials字段（从JSON字符串转换为list）"""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except (json.JSONDecodeError, TypeError):
+                return None
+        if isinstance(v, list):
+            return v
+        return None
     
     class Config:
         from_attributes = True
@@ -145,12 +166,11 @@ class InfoSessionRegistrationResponse(BaseModel):
     id: str
     session_id: str
     student_id: str
+    student_name: Optional[str] = None  # 学生姓名
+    student_detail: Optional[dict] = None  # 学生详情
     status: str
     check_in_time: Optional[datetime]
     created_at: datetime
     
     class Config:
         from_attributes = True
-
-
-

@@ -13,6 +13,39 @@
         <div class="bg-white rounded-lg shadow p-6">
           <h2 class="text-xl font-semibold mb-4">企业信息</h2>
           <form @submit.prevent="saveProfile">
+            <!-- Logo上传 -->
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">企业Logo</label>
+              <div class="flex items-center space-x-4">
+                <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center border">
+                  <img
+                    v-if="profileForm.logo_url"
+                    :src="profileForm.logo_url"
+                    alt="Logo"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else class="text-gray-400 text-sm">Logo</span>
+                </div>
+                <div class="flex-1">
+                  <input
+                    type="file"
+                    ref="logoInput"
+                    @change="handleLogoSelect"
+                    accept="image/*"
+                    class="hidden"
+                  />
+                  <button
+                    type="button"
+                    @click="logoInput?.click()"
+                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    上传Logo
+                  </button>
+                  <p v-if="uploadingLogo" class="text-sm text-blue-600 mt-2">上传中...</p>
+                </div>
+              </div>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">公司名称 *</label>
@@ -20,7 +53,7 @@
                   v-model="profileForm.company_name"
                   type="text"
                   required
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -28,7 +61,7 @@
                 <input
                   v-model="profileForm.unified_code"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -36,7 +69,7 @@
                 <input
                   v-model="profileForm.legal_person"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -44,7 +77,7 @@
                 <input
                   v-model="profileForm.industry"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="例如：互联网"
                 />
               </div>
@@ -52,7 +85,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">规模</label>
                 <select
                   v-model="profileForm.scale"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 >
                   <option value="">请选择</option>
                   <option value="1-50人">1-50人</option>
@@ -67,7 +100,7 @@
                 <input
                   v-model="profileForm.address"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                 />
               </div>
               <div>
@@ -75,7 +108,7 @@
                 <input
                   v-model="profileForm.website"
                   type="url"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   placeholder="https://"
                 />
               </div>
@@ -143,6 +176,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getEnterpriseProfile, updateEnterpriseProfile, createEnterpriseProfile, type EnterpriseProfile } from '@/api/profile'
+import { uploadImage } from '@/api/upload'
 import { getJobs } from '@/api/jobs'
 import { getApplications } from '@/api/applications'
 import { getInterviews } from '@/api/interviews'
@@ -161,7 +195,12 @@ const profileForm = ref({
   address: '',
   website: '',
   description: '',
+  logo_url: '',
 })
+
+// Logo上传
+const logoInput = ref<HTMLInputElement | null>(null)
+const uploadingLogo = ref(false)
 
 // 统计数据
 const jobCount = ref(0)
@@ -184,6 +223,7 @@ const loadProfile = async () => {
         address: profile.value.address || '',
         website: profile.value.website || '',
         description: profile.value.description || '',
+        logo_url: profile.value.logo_url || '',
       }
     }
 
@@ -209,6 +249,26 @@ const loadProfile = async () => {
     }
   } finally {
     loading.value = false
+  }
+}
+
+// 选择Logo文件
+const handleLogoSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  
+  uploadingLogo.value = true
+  
+  try {
+    // 上传Logo
+    const response = await uploadImage(file, 'logo')
+    profileForm.value.logo_url = response.url
+    alert('Logo上传成功！')
+  } catch (error: any) {
+    alert('Logo上传失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    uploadingLogo.value = false
   }
 }
 

@@ -356,7 +356,12 @@ const viewRegistrations = async (jobFairId: string) => {
     registrations.value = await getJobFairRegistrations(jobFairId)
     showRegistrationsModal.value = true
   } catch (error: any) {
-    alert('加载报名信息失败: ' + (error.response?.data?.detail || error.message))
+    const errorMessage = error.response?.data?.detail || error.message
+    if (error.response?.status === 403) {
+      alert('权限不足：只能查看自己创建或已报名的双选会的报名信息。')
+    } else {
+      alert('加载报名信息失败: ' + errorMessage)
+    }
   }
 }
 
