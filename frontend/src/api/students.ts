@@ -43,4 +43,9 @@ export const getStudent = async (id: string): Promise<Student> => {
   return request.get(`/students/${id}`)
 }
 
+// 移除学生（从管辖范围内移除）
+export const removeStudent = async (id: string): Promise<void> => {
+  return request.delete(`/students/${id}`)
+}
+
 
