@@ -8,6 +8,7 @@ env/
 venv/
 ENV/
 .venv
+py312/
 *.egg-info/
 dist/
 build/
@@ -76,6 +77,9 @@ htmlcov/
 logs/
 *.log
 *.log.*
+nohup.out
+backend/nohup.out
+frontend/nohup.out
 
 # 临时文件
 tmp/

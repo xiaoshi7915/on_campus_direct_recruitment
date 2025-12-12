@@ -1,7 +1,7 @@
 <template>
   <div :class="['main-layout', isChatPage ? 'h-screen flex flex-col' : '']">
     <!-- 顶部导航栏 -->
-    <header :class="['bg-white shadow-sm', isChatPage ? 'flex-shrink-0' : '']">
+    <header :class="['bg-white bg-opacity-95 shadow-sm relative z-20', isChatPage ? 'flex-shrink-0' : '']">
       <nav class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
           <!-- Logo -->
@@ -58,15 +58,15 @@
     </header>
 
     <!-- 主要内容区域 -->
-    <main :class="isChatPage ? 'flex-1 flex flex-col min-h-0' : 'container mx-auto px-4 py-8'">
+    <main :class="['relative z-10', isChatPage ? 'flex-1 flex flex-col min-h-0' : 'container mx-auto px-4 py-8']">
       <router-view />
     </main>
 
     <!-- 底部（聊天页面不显示） -->
-    <footer v-if="!isChatPage" class="bg-gray-800 text-white mt-auto">
+    <footer v-if="!isChatPage" class="bg-gray-800 bg-opacity-95 text-white mt-auto relative z-20">
       <div class="container mx-auto px-4 py-8">
         <div class="text-center">
-          <p>&copy; 2024 校园直聘平台. All rights reserved.</p>
+          <p>&copy; 2025 mr stone的个人网站. All rights reserved.</p>
         </div>
       </div>
     </footer>

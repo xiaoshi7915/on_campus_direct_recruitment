@@ -139,7 +139,7 @@ main() {
     echo "=========================================="
     echo ""
     echo "服务访问地址:"
-    echo "  前端: http://$(hostname -I | awk '{print $1}'):5173"
+    echo "  前端: http://$(hostname -I | awk '{print $1}'):8008"
     echo "  后端API: http://$(hostname -I | awk '{print $1}'):5001"
     echo "  API文档: http://$(hostname -I | awk '{print $1}'):5001/docs"
     echo ""

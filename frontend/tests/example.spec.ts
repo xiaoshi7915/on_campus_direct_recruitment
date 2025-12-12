@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('首页测试', () => {
   test('应该显示首页内容', async ({ page }) => {
-    await page.goto('http://localhost:5173')
+    await page.goto('http://localhost:8008')
     
     // 检查页面标题
     await expect(page).toHaveTitle(/校园直聘/)
@@ -19,7 +19,7 @@ test.describe('首页测试', () => {
 
 test.describe('登录测试', () => {
   test('应该能够登录', async ({ page }) => {
-    await page.goto('http://localhost:5173/login')
+    await page.goto('http://localhost:8008/login')
     
     // 填写登录表单
     await page.fill('input[name="username"]', 'test_student')

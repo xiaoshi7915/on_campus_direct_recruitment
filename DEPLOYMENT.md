@@ -78,7 +78,7 @@ docker-compose exec backend python scripts/seed_data.py
 
 ### 5. 访问服务
 
-- 前端: http://your-server-ip:5173
+- 前端: http://your-server-ip:8008
 - 后端API: http://your-server-ip:5001
 - API文档: http://your-server-ip:5001/docs
 
@@ -167,7 +167,7 @@ server {
 
     # 前端
     location / {
-        proxy_pass http://localhost:5173;
+        proxy_pass http://localhost:8008;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

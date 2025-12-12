@@ -84,17 +84,17 @@ describe('API调用测试', () => {
 // 测试路由
 describe('路由测试', () => {
   it('应该能够访问首页', async () => {
-    const response = await fetch('http://localhost:5173/')
+    const response = await fetch('http://localhost:8008/')
     expect(response.ok).toBe(true)
   })
 
   it('应该能够访问登录页', async () => {
-    const response = await fetch('http://localhost:5173/login')
+    const response = await fetch('http://localhost:8008/login')
     expect(response.ok).toBe(true)
   })
 
   it('应该能够访问注册页', async () => {
-    const response = await fetch('http://localhost:5173/register')
+    const response = await fetch('http://localhost:8008/register')
     expect(response.ok).toBe(true)
   })
 })

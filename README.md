@@ -68,7 +68,7 @@ docker-compose exec backend alembic upgrade head
 ```
 
 访问地址：
-- 前端: http://localhost:5173
+- 前端: http://localhost:8008
 - 后端API: http://localhost:5001
 - API文档: http://localhost:5001/docs
 

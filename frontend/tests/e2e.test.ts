@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('首页测试', () => {
   test('应该显示首页内容', async ({ page }) => {
-    await page.goto('http://localhost:5173')
+    await page.goto('http://localhost:8008')
     
     // 检查页面标题
     await expect(page).toHaveTitle(/校园直聘/)
@@ -19,7 +19,7 @@ test.describe('首页测试', () => {
 
 test.describe('登录页面测试', () => {
   test('应该能够访问登录页面', async ({ page }) => {
-    await page.goto('http://localhost:5173/login')
+    await page.goto('http://localhost:8008/login')
     
     // 检查页面标题
     await expect(page).toHaveTitle(/登录/)
@@ -36,7 +36,7 @@ test.describe('登录页面测试', () => {
 
 test.describe('注册页面测试', () => {
   test('应该能够访问注册页面', async ({ page }) => {
-    await page.goto('http://localhost:5173/register')
+    await page.goto('http://localhost:8008/register')
     
     // 检查页面标题
     await expect(page).toHaveTitle(/注册/)
@@ -45,7 +45,7 @@ test.describe('注册页面测试', () => {
 
 test.describe('职位列表测试', () => {
   test('应该能够访问职位列表页面', async ({ page }) => {
-    await page.goto('http://localhost:5173/jobs')
+    await page.goto('http://localhost:8008/jobs')
     
     // 检查页面是否加载
     await page.waitForLoadState('networkidle')

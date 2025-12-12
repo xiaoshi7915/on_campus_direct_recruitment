@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # 服务器配置
     HOST: str = "0.0.0.0"
-    PORT: int = 5001
+    PORT: int = 5011
     
     # 数据库配置（使用utf8mb4字符集）
     # 生产环境请通过环境变量配置，不要硬编码
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     OSS_REGION: str = "cn-hangzhou"
     
     # CORS配置
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:8008,http://localhost:3000"
     
     @property
     def cors_origins_list(self) -> List[str]:

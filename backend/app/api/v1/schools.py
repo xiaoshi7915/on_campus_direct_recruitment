@@ -244,7 +244,7 @@ async def get_school_share_link(
     # 生成分享链接（前端URL）
     from app.core.config import settings
     # 如果没有配置FRONTEND_URL，使用默认值
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:8008')
     share_url = f"{frontend_url}/schools/{school_id}"
     
     return {
