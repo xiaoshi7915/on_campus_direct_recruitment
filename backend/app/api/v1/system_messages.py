@@ -39,6 +39,23 @@ async def get_system_messages(
     """
     # 查找系统消息会话（使用特殊的系统用户ID或通过消息类型筛选）
     # 这里我们通过message_type为SYSTEM来筛选系统消息
+    # 系统消息需要有一个特殊的会话，如果没有则创建一个
+    # 首先查找或创建系统消息会话
+    system_session_query = select(ChatSession).where(
+        and_(
+            ChatSession.user1_id == current_user.id,
+            ChatSession.user2_id.is_(None),
+            ChatSession.school_id.is_(None)
+        )
+    )
+    system_session_result = await db.execute(system_session_query)
+    system_session = system_session_result.scalar_one_or_none()
+    
+    # 如果没有系统消息会话，创建一个（但这里我们不自动创建，而是直接查询消息）
+    # 系统消息的session_id可以是None，或者使用一个特殊的系统会话
+    # 为了简化，我们直接查询消息，不依赖会话
+    
+    # 查找系统消息（通过message_type为SYSTEM来筛选）
     query = select(Message).where(
         and_(
             Message.receiver_id == current_user.id,
@@ -143,4 +160,115 @@ async def mark_all_messages_read(
     return {"message": f"已标记{len(messages)}条消息为已读"}
 
 
+@router.get("/unread-count")
+async def get_unread_count(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取未读系统消息数量
+    
+    Args:
+        current_user: 当前登录用户
+        db: 数据库会话
+        
+    Returns:
+        未读消息数量
+    """
+    result = await db.execute(
+        select(func.count()).select_from(Message).where(
+            and_(
+                Message.receiver_id == current_user.id,
+                Message.message_type == MessageType.SYSTEM,
+                Message.is_read == False
+            )
+        )
+    )
+    count = result.scalar() or 0
+    
+    return {"unread_count": count}
+
+
+@router.post("")
+async def create_system_message(
+    receiver_id: str = Query(..., description="接收者用户ID"),
+    content: str = Query(..., description="消息内容"),
+    title: Optional[str] = Query(None, description="消息标题"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    创建系统消息（仅管理员或系统可以调用）
+    
+    Args:
+        receiver_id: 接收者用户ID
+        content: 消息内容
+        title: 消息标题（可选）
+        current_user: 当前登录用户（必须是管理员）
+        db: 数据库会话
+        
+    Returns:
+        创建的系统消息
+    """
+    # 检查权限：只有管理员可以创建系统消息
+    if current_user.user_type != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有管理员可以创建系统消息"
+        )
+    
+    # 检查接收者是否存在
+    receiver_result = await db.execute(select(User).where(User.id == receiver_id))
+    receiver = receiver_result.scalar_one_or_none()
+    if not receiver:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="接收者不存在"
+        )
+    
+    # 查找或创建系统消息会话
+    # 系统消息使用一个特殊的会话，每个用户有一个系统消息会话
+    system_session_query = select(ChatSession).where(
+        and_(
+            ChatSession.user1_id == receiver_id,
+            ChatSession.user2_id.is_(None),
+            ChatSession.school_id.is_(None)
+        )
+    )
+    system_session_result = await db.execute(system_session_query)
+    system_session = system_session_result.scalar_one_or_none()
+    
+    if not system_session:
+        # 创建系统消息会话（使用系统用户ID作为sender_id，或者使用当前管理员ID）
+        system_session = ChatSession(
+            id=str(uuid4()),
+            user1_id=receiver_id,
+            user2_id=None,
+            school_id=None
+        )
+        db.add(system_session)
+        await db.flush()
+    
+    # 创建系统消息
+    # 系统消息的sender_id可以是管理员ID，或者使用一个特殊的系统用户ID
+    from datetime import datetime
+    message = Message(
+        id=str(uuid4()),
+        session_id=system_session.id,
+        sender_id=current_user.id,  # 使用管理员ID作为发送者
+        receiver_id=receiver_id,
+        content=content,
+        message_type=MessageType.SYSTEM,
+        is_read=False
+    )
+    
+    db.add(message)
+    
+    # 更新会话的最后消息时间
+    system_session.last_message_at = datetime.utcnow()
+    
+    await db.commit()
+    await db.refresh(message)
+    
+    return message
 

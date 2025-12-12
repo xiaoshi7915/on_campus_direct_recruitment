@@ -304,6 +304,16 @@ const routes: RouteRecordRaw[] = [
         name: 'TeacherSubAccounts',
         component: () => import('@/views/teacher/SubAccounts.vue'),
       },
+      {
+        path: 'chat',
+        name: 'TeacherChat',
+        component: () => import('@/views/teacher/Chat.vue'),
+      },
+      {
+        path: 'system-messages',
+        name: 'TeacherSystemMessages',
+        component: () => import('@/views/teacher/SystemMessages.vue'),
+      },
     ],
   },
   // 运营管理端路由

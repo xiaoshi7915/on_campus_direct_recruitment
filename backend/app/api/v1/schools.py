@@ -158,6 +158,62 @@ async def get_schools(
     }
 
 
+# ==================== 教师端学校功能 ====================
+# 注意：这些路由必须在 /{school_id} 路由之前定义，避免路由冲突
+
+@router.get("/my-school", response_model=SchoolResponse)
+async def get_my_school(
+    current_user: User = Depends(require_teacher()),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取当前教师所属的学校信息
+    
+    Args:
+        current_user: 当前登录用户（教师）
+        db: 数据库会话
+        
+    Returns:
+        SchoolResponse: 学校信息
+    """
+    # 获取教师信息
+    teacher_result = await db.execute(
+        select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+    )
+    teacher = teacher_result.scalar_one_or_none()
+    
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教师信息不存在"
+        )
+    
+    if not teacher.school_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教师尚未关联学校"
+        )
+    
+    # 获取学校信息
+    school_result = await db.execute(
+        select(School).where(School.id == teacher.school_id)
+    )
+    school = school_result.scalar_one_or_none()
+    
+    if not school:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="学校信息不存在"
+        )
+    
+    # 转换为响应格式，确保 datetime 字段序列化为字符串
+    return SchoolResponse.model_validate({
+        **school.__dict__,
+        "created_at": school.created_at.isoformat() if school.created_at else "",
+        "updated_at": school.updated_at.isoformat() if school.updated_at else ""
+    })
+
+
 @router.get("/{school_id}/share-link", response_model=dict)
 async def get_school_share_link(
     school_id: str,
@@ -251,61 +307,6 @@ async def get_school(
     }
     
     return SchoolResponse.model_validate(school_dict)
-
-
-# ==================== 教师端学校功能 ====================
-
-@router.get("/my-school", response_model=SchoolResponse)
-async def get_my_school(
-    current_user: User = Depends(require_teacher()),
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    获取当前教师所属的学校信息
-    
-    Args:
-        current_user: 当前登录用户（教师）
-        db: 数据库会话
-        
-    Returns:
-        SchoolResponse: 学校信息
-    """
-    # 获取教师信息
-    teacher_result = await db.execute(
-        select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
-    )
-    teacher = teacher_result.scalar_one_or_none()
-    
-    if not teacher:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="教师信息不存在"
-        )
-    
-    if not teacher.school_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="教师尚未关联学校"
-        )
-    
-    # 获取学校信息
-    school_result = await db.execute(
-        select(School).where(School.id == teacher.school_id)
-    )
-    school = school_result.scalar_one_or_none()
-    
-    if not school:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="学校信息不存在"
-        )
-    
-    # 转换为响应格式，确保 datetime 字段序列化为字符串
-    return SchoolResponse.model_validate({
-        **school.__dict__,
-        "created_at": school.created_at.isoformat() if school.created_at else "",
-        "updated_at": school.updated_at.isoformat() if school.updated_at else ""
-    })
 
 
 @router.post("/my-school/verify", response_model=SchoolResponse)

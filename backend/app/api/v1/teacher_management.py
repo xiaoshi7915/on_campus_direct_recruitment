@@ -112,14 +112,13 @@ async def get_sub_accounts(
         )
     
     # 检查是否是主账号
+    # 如果是子账号，允许查看（但只能看到自己的信息）
     if not teacher.is_main_account:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有主账号才能查看子账号列表"
-        )
-    
-    # 获取子账号列表
-    query = select(TeacherProfile).where(TeacherProfile.main_account_id == teacher.id)
+        # 子账号只能看到自己的信息
+        query = select(TeacherProfile).where(TeacherProfile.id == teacher.id)
+    else:
+        # 主账号可以查看所有子账号
+        query = select(TeacherProfile).where(TeacherProfile.main_account_id == teacher.id)
     
     # 获取总数
     count_query = select(func.count()).select_from(query.subquery())

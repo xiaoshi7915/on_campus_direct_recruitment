@@ -180,6 +180,25 @@ async def get_chat_sessions(
         school = schools.get(session.school_id) if session.school_id else None
         
         # 构建响应对象
+        # 处理用户类型：确保返回的是枚举值（如 'ENTERPRISE'）而不是字符串表示（如 'UserType.ENTERPRISE'）
+        user1_type_value = None
+        if user1 and user1.user_type:
+            if hasattr(user1.user_type, 'value'):
+                user1_type_value = user1.user_type.value
+            else:
+                # 如果直接转换为字符串，提取实际值
+                user1_type_str = str(user1.user_type)
+                user1_type_value = user1_type_str.split('.')[-1] if '.' in user1_type_str else user1_type_str
+        
+        user2_type_value = None
+        if user2 and user2.user_type:
+            if hasattr(user2.user_type, 'value'):
+                user2_type_value = user2.user_type.value
+            else:
+                # 如果直接转换为字符串，提取实际值
+                user2_type_str = str(user2.user_type)
+                user2_type_value = user2_type_str.split('.')[-1] if '.' in user2_type_str else user2_type_str
+        
         session_dict = {
             "id": session.id,
             "user1_id": session.user1_id,
@@ -188,14 +207,19 @@ async def get_chat_sessions(
             "user1_name": user1.username if user1 else None,
             "user2_name": user2.username if user2 else None,
             "school_name": school.name if school else None,
-            "user1_type": str(user1.user_type) if user1 else None,
-            "user2_type": str(user2.user_type) if user2 else None,
+            "user1_type": user1_type_value,
+            "user2_type": user2_type_value,
             "last_message_at": session.last_message_at,
             "created_at": session.created_at,
             "updated_at": session.updated_at,
         }
         
         session_list.append(session_dict)
+    
+    return {
+        "items": session_list,
+        "total": len(session_list)
+    }
     
     return {
         "items": session_list,
@@ -255,6 +279,23 @@ async def get_chat_session(
         school_result = await db.execute(select(School).where(School.id == session.school_id))
         school = school_result.scalar_one_or_none()
     
+    # 处理用户类型：确保返回枚举值
+    user1_type_value = None
+    if user1 and user1.user_type:
+        if hasattr(user1.user_type, 'value'):
+            user1_type_value = user1.user_type.value
+        else:
+            user1_type_str = str(user1.user_type)
+            user1_type_value = user1_type_str.split('.')[-1] if '.' in user1_type_str else user1_type_str
+    
+    user2_type_value = None
+    if user2 and user2.user_type:
+        if hasattr(user2.user_type, 'value'):
+            user2_type_value = user2.user_type.value
+        else:
+            user2_type_str = str(user2.user_type)
+            user2_type_value = user2_type_str.split('.')[-1] if '.' in user2_type_str else user2_type_str
+    
     return {
         "id": session.id,
         "user1_id": session.user1_id,
@@ -263,8 +304,8 @@ async def get_chat_session(
         "user1_name": user1.username if user1 else None,
         "user2_name": user2.username if user2 else None,
         "school_name": school.name if school else None,
-        "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
-        "user2_type": str(user2.user_type.value) if user2 and hasattr(user2.user_type, 'value') else (str(user2.user_type) if user2 else None),
+        "user1_type": user1_type_value,
+        "user2_type": user2_type_value,
         "last_message_at": session.last_message_at,
         "created_at": session.created_at,
         "updated_at": session.updated_at,
@@ -332,7 +373,8 @@ async def create_chat_session(
                 "user1_name": user1.username if user1 else None,
                 "user2_name": None,
                 "school_name": school.name,
-                "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
+                # 处理用户类型：确保返回枚举值
+                "user1_type": user1.user_type.value if user1 and user1.user_type and hasattr(user1.user_type, 'value') else (str(user1.user_type).split('.')[-1] if user1 and user1.user_type and '.' in str(user1.user_type) else (str(user1.user_type) if user1 and user1.user_type else None)),
                 "user2_type": None,
                 "last_message_at": existing_session.last_message_at,
                 "created_at": existing_session.created_at,
@@ -362,7 +404,8 @@ async def create_chat_session(
             "user1_name": user1.username if user1 else None,
             "user2_name": None,
             "school_name": school.name,
-            "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
+                # 处理用户类型：确保返回枚举值
+                "user1_type": user1.user_type.value if user1 and user1.user_type and hasattr(user1.user_type, 'value') else (str(user1.user_type).split('.')[-1] if user1 and user1.user_type and '.' in str(user1.user_type) else (str(user1.user_type) if user1 and user1.user_type else None)),
             "user2_type": None,
             "last_message_at": session.last_message_at,
             "created_at": session.created_at,
@@ -426,8 +469,9 @@ async def create_chat_session(
             "user1_name": user1.username if user1 else None,
             "user2_name": user2.username if user2 else None,
             "school_name": None,
-            "user1_type": str(user1.user_type) if user1 else None,
-            "user2_type": str(user2.user_type) if user2 else None,
+            # 处理用户类型：确保返回枚举值
+            "user1_type": user1.user_type.value if user1 and user1.user_type and hasattr(user1.user_type, 'value') else (str(user1.user_type).split('.')[-1] if user1 and user1.user_type and '.' in str(user1.user_type) else (str(user1.user_type) if user1 and user1.user_type else None)),
+            "user2_type": user2.user_type.value if user2 and user2.user_type and hasattr(user2.user_type, 'value') else (str(user2.user_type).split('.')[-1] if user2 and user2.user_type and '.' in str(user2.user_type) else (str(user2.user_type) if user2 and user2.user_type else None)),
             "last_message_at": existing_session.last_message_at,
             "created_at": existing_session.created_at,
             "updated_at": existing_session.updated_at,
@@ -459,7 +503,8 @@ async def create_chat_session(
         "user1_name": user1.username if user1 else None,
         "user2_name": user2.username if user2 else None,
         "school_name": None,
-        "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
+                # 处理用户类型：确保返回枚举值
+                "user1_type": user1.user_type.value if user1 and user1.user_type and hasattr(user1.user_type, 'value') else (str(user1.user_type).split('.')[-1] if user1 and user1.user_type and '.' in str(user1.user_type) else (str(user1.user_type) if user1 and user1.user_type else None)),
         "user2_type": str(user2.user_type.value) if user2 and hasattr(user2.user_type, 'value') else (str(user2.user_type) if user2 else None),
         "last_message_at": session.last_message_at,
         "created_at": session.created_at,

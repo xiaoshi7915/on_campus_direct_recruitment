@@ -1,10 +1,11 @@
 """
 用户档案相关API路由（企业、学生、教师信息管理）
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import uuid4
+from typing import Optional
 
 from app.core.database import get_db
 from app.api.v1.auth import get_current_user, get_current_user_optional
@@ -302,20 +303,60 @@ async def get_my_enterprise_profile(
 
 @router.get("/enterprise", response_model=EnterpriseProfileResponse)  # 兼容前端调用
 async def get_enterprise_profile_alias(
+    user_id: Optional[str] = Query(None, description="用户ID（可选，用于查看其他企业的信息）"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    获取当前用户的企业档案（兼容接口）
+    获取企业档案（兼容接口）
+    如果提供了user_id，可以查看其他企业的信息（用于聊天等场景）
+    如果没有提供user_id，返回当前用户的企业档案
     
     Args:
+        user_id: 用户ID（可选）
         current_user: 当前登录用户
         db: 数据库会话
         
     Returns:
         EnterpriseProfileResponse: 企业档案
     """
-    return await _get_enterprise_profile_logic(current_user, db)
+    # 如果提供了user_id，查询指定用户的企业档案
+    if user_id:
+        # 检查目标用户是否存在且是企业用户
+        user_result = await db.execute(select(User).where(User.id == user_id))
+        target_user = user_result.scalar_one_or_none()
+        if not target_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="用户不存在"
+            )
+        if target_user.user_type != "ENTERPRISE":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="该用户不是企业用户"
+            )
+        
+        # 查询企业档案
+        result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.user_id == user_id)
+        )
+        profile = result.scalar_one_or_none()
+        
+        if not profile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="企业档案不存在"
+            )
+        
+        # 如果logo_url存在，生成签名URL用于显示（有效期24小时）
+        if profile.logo_url:
+            from app.core.oss import oss_service
+            profile.logo_url = oss_service.get_file_url(profile.logo_url, signed=True, expires=86400)  # 24小时
+        
+        return profile
+    else:
+        # 没有提供user_id，返回当前用户的企业档案
+        return await _get_enterprise_profile_logic(current_user, db)
 
 
 @router.post("/enterprise", response_model=EnterpriseProfileResponse, status_code=status.HTTP_201_CREATED)

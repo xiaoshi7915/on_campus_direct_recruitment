@@ -1,5 +1,5 @@
 <template>
-  <div class="student-chat" style="height: calc(100vh - 120px);">
+  <div class="teacher-chat" style="height: calc(100vh - 120px);">
     <div class="flex h-full">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r bg-white">
@@ -81,21 +81,21 @@
                     查看双选会
                   </button>
                 </template>
-                <!-- 教师相关快捷操作 -->
-                <template v-else-if="otherUserType === 'TEACHER'">
+                <!-- 学生相关快捷操作 -->
+                <template v-else-if="otherUserType === 'STUDENT'">
                   <button
-                    @click="viewMyProfile"
+                    @click="viewStudentProfile"
                     class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                    title="查看我的信息"
+                    title="查看学生信息"
                   >
-                    我的信息
+                    查看学生
                   </button>
                   <button
-                    @click="viewMyResumes"
+                    @click="viewStudentResumes"
                     class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                    title="查看我的简历"
+                    title="查看简历"
                   >
-                    我的简历
+                    查看简历
                   </button>
                   <button
                     @click="recommendToEnterprise"
@@ -176,16 +176,15 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser } from '@/api/users'
 import {
   getChatSessions,
   getSessionMessages,
+  sendMessage,
   type ChatSession,
   type Message,
 } from '@/api/chat'
 
-const authStore = useAuthStore()
 const router = useRouter()
 
 // 会话列表
@@ -204,7 +203,8 @@ const messagesContainer = ref<HTMLElement | null>(null)
 // 对方用户类型和相关信息
 const otherUserType = ref<string>('')
 const enterpriseId = ref<string | null>(null)
-const teacherUserId = ref<string | null>(null)
+const studentUserId = ref<string | null>(null)
+const studentId = ref<string | null>(null)
 
 // 格式化日期
 const formatDate = (dateString: string) => {
@@ -228,6 +228,10 @@ const formatDateTime = (dateString: string) => {
 
 // 获取对方用户名
 const getOtherUserName = (session: ChatSession) => {
+  // 如果是与学校聊天，显示学校名称
+  if (session.school_id && session.school_name) {
+    return session.school_name
+  }
   // 优先使用会话中的用户名
   if (session.user1_id === currentUserId.value) {
     return session.user2_name || session.user2_id
@@ -266,42 +270,51 @@ const getOtherUserId = computed(() => {
 
 // 加载对方用户信息
 const loadOtherUserInfo = async () => {
-  if (!currentSession.value || !currentUserId.value) {
-    return
-  }
+  if (!currentSession.value) return
 
   try {
-    // 从会话信息中获取对方用户类型
-    const otherUserTypeFromSession = currentSession.value.user1_id === currentUserId.value
-      ? currentSession.value.user2_type
-      : currentSession.value.user1_type
-    
-    // 处理用户类型格式：后端可能返回 'UserType.ENTERPRISE' 或 'ENTERPRISE'
-    // 需要提取实际的类型值
-    let userTypeValue = otherUserTypeFromSession || 'UNKNOWN'
-    if (userTypeValue.includes('.')) {
-      // 如果包含点号，提取点号后的部分（如 'UserType.ENTERPRISE' -> 'ENTERPRISE'）
-      userTypeValue = userTypeValue.split('.').pop() || 'UNKNOWN'
-    }
-    // 确保用户类型是大写格式
-    otherUserType.value = userTypeValue.toUpperCase()
-    
-    // 如果是企业，获取企业ID
-    if (otherUserType.value === 'ENTERPRISE') {
-      const otherUserId = getOtherUserId.value
-      if (otherUserId) {
-        try {
-          // 通过user_id获取企业档案，从而获取enterprise_id
-          const { getEnterpriseProfile } = await import('@/api/profile')
-          const enterpriseProfile = await getEnterpriseProfile(otherUserId)
-          enterpriseId.value = enterpriseProfile.id
-        } catch (error) {
-          // 静默处理错误，不影响聊天功能
+    // 如果是与学校聊天
+    if (currentSession.value.school_id) {
+      otherUserType.value = 'SCHOOL'
+    } else {
+      // 从会话信息中获取对方用户类型
+      const otherUserTypeFromSession = currentSession.value.user1_id === currentUserId.value
+        ? currentSession.value.user2_type
+        : currentSession.value.user1_type
+      
+      otherUserType.value = otherUserTypeFromSession || 'UNKNOWN'
+      
+      // 如果是企业，获取企业ID
+      if (otherUserType.value === 'ENTERPRISE') {
+        const otherUserId = getOtherUserId.value
+        if (otherUserId) {
+          try {
+            const { getEnterpriseProfile } = await import('@/api/profile')
+            const enterpriseProfile = await getEnterpriseProfile(otherUserId)
+            enterpriseId.value = enterpriseProfile.id
+          } catch (error) {
+            console.error('获取企业信息失败:', error)
+          }
+        }
+      }
+      
+      // 如果是学生，获取学生ID
+      if (otherUserType.value === 'STUDENT') {
+        const otherUserId = getOtherUserId.value
+        if (otherUserId) {
+          studentUserId.value = otherUserId
+          try {
+            const { getStudentProfile } = await import('@/api/profile')
+            const studentProfile = await getStudentProfile(otherUserId)
+            studentId.value = studentProfile.id
+          } catch (error) {
+            console.error('获取学生信息失败:', error)
+          }
         }
       }
     }
   } catch (error) {
-    // 静默处理错误，不影响聊天功能
+    console.error('加载对方用户信息失败:', error)
   }
 }
 
@@ -310,17 +323,7 @@ const selectSession = async (session: ChatSession) => {
   currentSession.value = session
   currentSessionId.value = session.id
   await loadMessages(session.id)
-  // 确保currentUserId已设置后再加载用户信息
-  if (currentUserId.value) {
-    await loadOtherUserInfo()
-  } else {
-    // 延迟一下再尝试加载
-    setTimeout(async () => {
-      if (currentUserId.value) {
-        await loadOtherUserInfo()
-      }
-    }, 100)
-  }
+  await loadOtherUserInfo()
 }
 
 // 加载消息
@@ -331,9 +334,8 @@ const loadMessages = async (sessionId: string) => {
       page: 1,
       page_size: 50,
     })
-    messages.value = response.items.reverse() // 反转以显示最新消息在底部
+    messages.value = response.items.reverse()
     
-    // 滚动到底部
     await nextTick()
     scrollToBottom()
   } catch (error) {
@@ -348,22 +350,25 @@ const handleSendMessage = async () => {
   if (!messageContent.value.trim() || !currentSession.value) return
 
   try {
-    const { sendMessage: sendMessageAPI } = await import('@/api/chat')
-    const newMessage = await sendMessageAPI(currentSession.value.id, {
-      receiver_id:
-        currentSession.value.user1_id === currentUserId.value
-          ? currentSession.value.user2_id
-          : currentSession.value.user1_id,
+    const receiverId = currentSession.value.user1_id === currentUserId.value
+      ? currentSession.value.user2_id
+      : currentSession.value.user1_id
+    
+    if (!receiverId) {
+      alert('无法获取接收者信息')
+      return
+    }
+    
+    const newMessage = await sendMessage(currentSession.value.id, {
+      receiver_id: receiverId,
       content: messageContent.value,
     })
     messages.value.push(newMessage)
     messageContent.value = ''
     
-    // 滚动到底部
     await nextTick()
     scrollToBottom()
     
-    // 刷新会话列表
     loadSessions()
   } catch (error: any) {
     alert(error.response?.data?.detail || '发送失败，请稍后重试')
@@ -384,26 +389,12 @@ watch(messages, () => {
   })
 })
 
-// 监听会话变化，自动加载用户信息
-watch(currentSession, async (newSession) => {
-  if (newSession && currentUserId.value) {
-    await loadOtherUserInfo()
-  }
-}, { immediate: true })
-
-// 监听currentUserId变化，如果会话已选择，重新加载用户信息
-watch(currentUserId, async (newUserId) => {
-  if (newUserId && currentSession.value) {
-    await loadOtherUserInfo()
-  }
-})
-
 // ==================== 企业相关快捷操作 ====================
 
 // 查看企业信息
 const viewEnterpriseProfile = () => {
   if (enterpriseId.value) {
-    router.push(`/student/enterprises/${enterpriseId.value}`)
+    router.push(`/teacher/enterprises/${enterpriseId.value}`)
   } else {
     alert('无法获取企业信息')
   }
@@ -412,7 +403,7 @@ const viewEnterpriseProfile = () => {
 // 查看企业职位
 const viewEnterpriseJobs = () => {
   if (enterpriseId.value) {
-    router.push(`/student/jobs?enterprise_id=${enterpriseId.value}`)
+    router.push(`/teacher/jobs?enterprise_id=${enterpriseId.value}`)
   } else {
     alert('无法获取企业信息')
   }
@@ -421,7 +412,7 @@ const viewEnterpriseJobs = () => {
 // 查看企业宣讲会
 const viewEnterpriseInfoSessions = () => {
   if (enterpriseId.value) {
-    router.push(`/student/info-sessions?enterprise_id=${enterpriseId.value}`)
+    router.push(`/teacher/info-sessions?enterprise_id=${enterpriseId.value}`)
   } else {
     alert('无法获取企业信息')
   }
@@ -429,51 +420,54 @@ const viewEnterpriseInfoSessions = () => {
 
 // 查看企业双选会
 const viewEnterpriseJobFairs = () => {
-  // 双选会是学校组织的，不是企业组织的，所以这里可以跳转到双选会列表
-  router.push('/student/job-fairs')
+  router.push('/teacher/job-fairs')
 }
 
-// ==================== 教师相关快捷操作 ====================
+// ==================== 学生相关快捷操作 ====================
 
-// 查看我的信息
-const viewMyProfile = () => {
-  router.push('/student/profile')
+// 查看学生信息
+const viewStudentProfile = () => {
+  if (studentId.value) {
+    router.push(`/teacher/students/${studentId.value}`)
+  } else {
+    alert('无法获取学生信息')
+  }
 }
 
-// 查看我的简历
-const viewMyResumes = () => {
-  router.push('/student/resumes')
+// 查看学生简历
+const viewStudentResumes = () => {
+  if (studentUserId.value) {
+    router.push(`/teacher/resumes?user_id=${studentUserId.value}`)
+  } else {
+    router.push('/teacher/resumes')
+  }
 }
 
 // 推荐给企业
 const recommendToEnterprise = () => {
-  // 跳转到推荐页面，可以选择企业进行推荐
-  router.push('/student/recommendations')
+  if (studentId.value) {
+    router.push(`/teacher/talent-recommendations?student_id=${studentId.value}`)
+  } else {
+    router.push('/teacher/talent-recommendations')
+  }
 }
 
 onMounted(async () => {
-  // 获取当前用户ID
   try {
     const user = await getCurrentUser()
     currentUserId.value = user.id
   } catch (error) {
-    // 静默处理错误
+    console.error('获取用户信息失败:', error)
   }
   
   await loadSessions()
-  
-  // 如果有默认会话，自动选择并加载用户信息
-  if (sessions.value.length > 0 && !currentSession.value) {
-    await selectSession(sessions.value[0])
-  }
 })
 </script>
 
 <style scoped>
-.student-chat {
+.teacher-chat {
   display: flex;
   flex-direction: column;
 }
 </style>
-
 

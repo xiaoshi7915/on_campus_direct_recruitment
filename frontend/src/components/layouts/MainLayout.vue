@@ -15,10 +15,17 @@
               v-for="item in navItems"
               :key="item.path"
               :to="item.path"
-              class="text-gray-700 hover:text-blue-600 transition-colors"
+              class="text-gray-700 hover:text-blue-600 transition-colors relative"
               active-class="text-blue-600 font-semibold"
             >
               {{ item.name }}
+              <!-- 系统消息未读提醒 -->
+              <span
+                v-if="item.path.includes('system-messages') && unreadMessageCount > 0"
+                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+              >
+                {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
+              </span>
             </router-link>
             
             <!-- 用户信息 -->
@@ -67,10 +74,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser } from '@/api/users'
+import { getUnreadCount } from '@/api/systemMessages'
 import type { User } from '@/api/users'
 
 const router = useRouter()
@@ -88,15 +96,55 @@ const userInfo = ref<User | null>(null)
 // 导航菜单项（根据用户类型动态显示）
 const navItems = ref<Array<{ name: string; path: string }>>([])
 
+// 未读消息数量
+const unreadMessageCount = ref(0)
+let unreadCountInterval: number | null = null
+
 // 加载用户信息
 const loadUserInfo = async () => {
   if (authStore.isAuthenticated()) {
     try {
       userInfo.value = await getCurrentUser()
       updateNavItems()
+      // 加载未读消息数量
+      loadUnreadCount()
+      // 启动定时刷新未读消息数量（每30秒）
+      startUnreadCountPolling()
     } catch (error) {
       console.error('获取用户信息失败:', error)
     }
+  }
+}
+
+// 加载未读消息数量
+const loadUnreadCount = async () => {
+  if (authStore.isAuthenticated()) {
+    try {
+      const res = await getUnreadCount()
+      unreadMessageCount.value = res.unread_count || 0
+    } catch (error) {
+      // 静默处理错误，不影响页面加载
+    }
+  }
+}
+
+// 启动未读消息数量轮询
+const startUnreadCountPolling = () => {
+  // 清除之前的定时器
+  if (unreadCountInterval !== null) {
+    clearInterval(unreadCountInterval)
+  }
+  // 每30秒刷新一次未读消息数量
+  unreadCountInterval = window.setInterval(() => {
+    loadUnreadCount()
+  }, 30000)
+}
+
+// 停止未读消息数量轮询
+const stopUnreadCountPolling = () => {
+  if (unreadCountInterval !== null) {
+    clearInterval(unreadCountInterval)
+    unreadCountInterval = null
   }
 }
 
@@ -155,6 +203,8 @@ const updateNavItems = () => {
         { name: '子账号管理', path: '/teacher/sub-accounts' },
         { name: '双选会管理', path: '/teacher/job-fairs' },
         { name: '宣讲会管理', path: '/teacher/info-sessions' },
+        { name: '聊天', path: '/teacher/chat' },
+        { name: '系统消息', path: '/teacher/system-messages' },
         { name: '数据统计', path: '/teacher/statistics' },
         { name: '个人中心', path: '/teacher/profile' },
       ]
@@ -181,6 +231,10 @@ const handleLogout = () => {
 
 onMounted(() => {
   loadUserInfo()
+})
+
+onUnmounted(() => {
+  stopUnreadCountPolling()
 })
 </script>
 
