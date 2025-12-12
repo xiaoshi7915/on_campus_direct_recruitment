@@ -225,6 +225,18 @@ const routes: RouteRecordRaw[] = [
         name: 'EnterprisePreview',
         component: () => import('@/views/enterprise/PreviewPage.vue'),
       },
+      {
+        path: 'verification',
+        name: 'EnterpriseVerification',
+        component: () => import('@/views/enterprise/EnterpriseVerification.vue'),
+        meta: { title: '企业认证', requiresAuth: true },
+      },
+      {
+        path: 'personal-verification',
+        name: 'EnterprisePersonalVerification',
+        component: () => import('@/views/enterprise/PersonalVerification.vue'),
+        meta: { title: '个人身份认证', requiresAuth: true },
+      },
     ],
   },
   // 教师端路由

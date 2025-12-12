@@ -163,9 +163,23 @@
           </div>
         </div>
         <div v-else class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center justify-between">
             <span class="text-yellow-600 font-semibold">⚠ 企业未认证</span>
+            <router-link
+              to="/enterprise/verification"
+              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+            >
+              立即认证
+            </router-link>
           </div>
+        </div>
+        <div class="mt-4">
+          <router-link
+            to="/enterprise/personal-verification"
+            class="block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-center"
+          >
+            个人身份认证
+          </router-link>
         </div>
       </div>
       </div>

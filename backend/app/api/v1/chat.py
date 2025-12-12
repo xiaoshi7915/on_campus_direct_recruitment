@@ -133,6 +133,7 @@ async def get_chat_sessions(
     from app.models.user import User
     
     # 查询当前用户参与的所有会话
+    # 注意：MySQL中NULL值在降序排序时默认排在最后
     result = await db.execute(
         select(ChatSession).where(
             or_(
@@ -145,32 +146,50 @@ async def get_chat_sessions(
     
     # 为每个会话加载对方用户信息
     session_list = []
-    # 收集所有需要查询的用户ID
+    # 收集所有需要查询的用户ID和学校ID
     all_user_ids = set()
+    all_school_ids = set()
     for session in sessions:
         all_user_ids.add(session.user1_id)
-        all_user_ids.add(session.user2_id)
+        if session.user2_id:
+            all_user_ids.add(session.user2_id)
+        if session.school_id:
+            all_school_ids.add(session.school_id)
     
     # 批量查询所有用户信息
-    users_result = await db.execute(
-        select(User).where(User.id.in_(all_user_ids))
-    )
-    users = {user.id: user for user in users_result.scalars().all()}
+    users = {}
+    if all_user_ids:
+        users_result = await db.execute(
+            select(User).where(User.id.in_(all_user_ids))
+        )
+        users = {user.id: user for user in users_result.scalars().all()}
+    
+    # 批量查询所有学校信息
+    schools = {}
+    if all_school_ids:
+        from app.models.school import School
+        schools_result = await db.execute(
+            select(School).where(School.id.in_(all_school_ids))
+        )
+        schools = {school.id: school for school in schools_result.scalars().all()}
     
     for session in sessions:
         # 获取用户1和用户2的信息
         user1 = users.get(session.user1_id)
-        user2 = users.get(session.user2_id)
+        user2 = users.get(session.user2_id) if session.user2_id else None
+        school = schools.get(session.school_id) if session.school_id else None
         
         # 构建响应对象
         session_dict = {
             "id": session.id,
             "user1_id": session.user1_id,
             "user2_id": session.user2_id,
+            "school_id": session.school_id,
             "user1_name": user1.username if user1 else None,
             "user2_name": user2.username if user2 else None,
-            "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
-            "user2_type": str(user2.user_type.value) if user2 and hasattr(user2.user_type, 'value') else (str(user2.user_type) if user2 else None),
+            "school_name": school.name if school else None,
+            "user1_type": str(user1.user_type) if user1 else None,
+            "user2_type": str(user2.user_type) if user2 else None,
             "last_message_at": session.last_message_at,
             "created_at": session.created_at,
             "updated_at": session.updated_at,
@@ -221,22 +240,53 @@ async def get_chat_session(
             detail="聊天会话不存在"
         )
     
-    return session
+    # 填充用户和学校信息
+    from app.models.school import School
+    user1_result = await db.execute(select(User).where(User.id == session.user1_id))
+    user1 = user1_result.scalar_one_or_none()
+    
+    user2 = None
+    if session.user2_id:
+        user2_result = await db.execute(select(User).where(User.id == session.user2_id))
+        user2 = user2_result.scalar_one_or_none()
+    
+    school = None
+    if session.school_id:
+        school_result = await db.execute(select(School).where(School.id == session.school_id))
+        school = school_result.scalar_one_or_none()
+    
+    return {
+        "id": session.id,
+        "user1_id": session.user1_id,
+        "user2_id": session.user2_id,
+        "school_id": session.school_id,
+        "user1_name": user1.username if user1 else None,
+        "user2_name": user2.username if user2 else None,
+        "school_name": school.name if school else None,
+        "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
+        "user2_type": str(user2.user_type.value) if user2 and hasattr(user2.user_type, 'value') else (str(user2.user_type) if user2 else None),
+        "last_message_at": session.last_message_at,
+        "created_at": session.created_at,
+        "updated_at": session.updated_at,
+    }
 
 
 @router.post("/sessions", response_model=ChatSessionResponse, status_code=status.HTTP_201_CREATED)
 async def create_chat_session(
     receiver_id: Optional[str] = Query(None, description="接收者ID（user_id）"),
     student_id: Optional[str] = Query(None, description="学生ID（如果提供，将转换为user_id）"),
+    school_id: Optional[str] = Query(None, description="学校ID（如果与学校聊天）"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
     创建或获取聊天会话
+    支持用户-用户聊天和用户-学校聊天
     
     Args:
-        receiver_id: 接收者ID（user_id，如果提供了student_id则可以为空）
+        receiver_id: 接收者ID（user_id，如果提供了student_id或school_id则可以为空）
         student_id: 学生ID（可选，如果提供将转换为user_id）
+        school_id: 学校ID（可选，如果与学校聊天）
         current_user: 当前登录用户
         db: 数据库会话
         
@@ -245,7 +295,81 @@ async def create_chat_session(
     """
     from app.models.profile import StudentProfile
     from app.models.user import User
+    from app.models.school import School
     
+    # 如果提供了school_id，创建企业-学校聊天会话
+    if school_id:
+        # 检查学校是否存在
+        school_result = await db.execute(
+            select(School).where(School.id == school_id)
+        )
+        school = school_result.scalar_one_or_none()
+        if not school:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="学校不存在"
+            )
+        
+        # 检查是否已存在企业-学校会话
+        existing_result = await db.execute(
+            select(ChatSession).where(
+                ChatSession.user1_id == current_user.id,
+                ChatSession.school_id == school_id
+            )
+        )
+        existing_session = existing_result.scalar_one_or_none()
+        
+        if existing_session:
+            # 返回现有会话
+            user1_result = await db.execute(select(User).where(User.id == existing_session.user1_id))
+            user1 = user1_result.scalar_one_or_none()
+            
+            return {
+                "id": existing_session.id,
+                "user1_id": existing_session.user1_id,
+                "user2_id": None,
+                "school_id": existing_session.school_id,
+                "user1_name": user1.username if user1 else None,
+                "user2_name": None,
+                "school_name": school.name,
+                "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
+                "user2_type": None,
+                "last_message_at": existing_session.last_message_at,
+                "created_at": existing_session.created_at,
+                "updated_at": existing_session.updated_at,
+            }
+        
+        # 创建新会话
+        session = ChatSession(
+            id=str(uuid4()),
+            user1_id=current_user.id,
+            user2_id=None,
+            school_id=school_id
+        )
+        
+        db.add(session)
+        await db.commit()
+        await db.refresh(session)
+        
+        user1_result = await db.execute(select(User).where(User.id == session.user1_id))
+        user1 = user1_result.scalar_one_or_none()
+        
+        return {
+            "id": session.id,
+            "user1_id": session.user1_id,
+            "user2_id": None,
+            "school_id": session.school_id,
+            "user1_name": user1.username if user1 else None,
+            "user2_name": None,
+            "school_name": school.name,
+            "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
+            "user2_type": None,
+            "last_message_at": session.last_message_at,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+        }
+    
+    # 用户-用户聊天逻辑（原有逻辑）
     # 如果提供了student_id，转换为user_id
     actual_receiver_id = receiver_id
     if student_id:
@@ -265,7 +389,7 @@ async def create_chat_session(
     if not actual_receiver_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="必须提供receiver_id或student_id"
+            detail="必须提供receiver_id、student_id或school_id"
         )
     
     # 检查是否已存在会话
@@ -274,11 +398,13 @@ async def create_chat_session(
             or_(
                 and_(
                     ChatSession.user1_id == current_user.id,
-                    ChatSession.user2_id == actual_receiver_id
+                    ChatSession.user2_id == actual_receiver_id,
+                    ChatSession.school_id.is_(None)  # 确保是用户-用户聊天
                 ),
                 and_(
                     ChatSession.user1_id == actual_receiver_id,
-                    ChatSession.user2_id == current_user.id
+                    ChatSession.user2_id == current_user.id,
+                    ChatSession.school_id.is_(None)  # 确保是用户-用户聊天
                 )
             )
         )
@@ -296,10 +422,12 @@ async def create_chat_session(
             "id": existing_session.id,
             "user1_id": existing_session.user1_id,
             "user2_id": existing_session.user2_id,
+            "school_id": None,
             "user1_name": user1.username if user1 else None,
             "user2_name": user2.username if user2 else None,
-            "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
-            "user2_type": str(user2.user_type.value) if user2 and hasattr(user2.user_type, 'value') else (str(user2.user_type) if user2 else None),
+            "school_name": None,
+            "user1_type": str(user1.user_type) if user1 else None,
+            "user2_type": str(user2.user_type) if user2 else None,
             "last_message_at": existing_session.last_message_at,
             "created_at": existing_session.created_at,
             "updated_at": existing_session.updated_at,
@@ -309,7 +437,8 @@ async def create_chat_session(
     session = ChatSession(
         id=str(uuid4()),
         user1_id=current_user.id,
-        user2_id=actual_receiver_id
+        user2_id=actual_receiver_id,
+        school_id=None
     )
     
     db.add(session)
@@ -326,8 +455,10 @@ async def create_chat_session(
         "id": session.id,
         "user1_id": session.user1_id,
         "user2_id": session.user2_id,
+        "school_id": None,
         "user1_name": user1.username if user1 else None,
         "user2_name": user2.username if user2 else None,
+        "school_name": None,
         "user1_type": str(user1.user_type.value) if user1 and hasattr(user1.user_type, 'value') else (str(user1.user_type) if user1 else None),
         "user2_type": str(user2.user_type.value) if user2 and hasattr(user2.user_type, 'value') else (str(user2.user_type) if user2 else None),
         "last_message_at": session.last_message_at,

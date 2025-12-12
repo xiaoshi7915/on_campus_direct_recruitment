@@ -42,11 +42,13 @@ class ChatSessionResponse(BaseModel):
     """聊天会话响应模式"""
     id: str
     user1_id: str
-    user2_id: str
+    user2_id: Optional[str] = None  # 用户2 ID（如果与用户聊天）
+    school_id: Optional[str] = None  # 学校ID（如果与学校聊天）
     user1_name: Optional[str] = None  # 用户1的用户名
-    user2_name: Optional[str] = None  # 用户2的用户名
+    user2_name: Optional[str] = None  # 用户2的用户名（如果与用户聊天）
+    school_name: Optional[str] = None  # 学校名称（如果与学校聊天）
     user1_type: Optional[str] = None  # 用户1的类型
-    user2_type: Optional[str] = None  # 用户2的类型
+    user2_type: Optional[str] = None  # 用户2的类型（如果与用户聊天）
     last_message_at: datetime
     created_at: datetime
     updated_at: datetime

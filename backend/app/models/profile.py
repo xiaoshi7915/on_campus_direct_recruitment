@@ -102,4 +102,5 @@ class EnterpriseProfile(Base):
     offers = relationship("Offer", back_populates="enterprise")
     talent_pools = relationship("TalentPool", back_populates="enterprise", cascade="all, delete-orphan")
     main_account = relationship("EnterpriseProfile", remote_side=[id], backref="sub_accounts")
+    verifications = relationship("EnterpriseVerification", back_populates="enterprise", cascade="all, delete-orphan")
 

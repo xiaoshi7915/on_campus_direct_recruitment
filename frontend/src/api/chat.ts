@@ -19,15 +19,17 @@ export interface Message {
 export interface ChatSession {
   id: string
   user1_id: string
-  user2_id: string
+  user2_id?: string  // 用户2 ID（如果与用户聊天）
+  school_id?: string  // 学校ID（如果与学校聊天）
   user1_name?: string  // 用户1的用户名
-  user2_name?: string  // 用户2的用户名
+  user2_name?: string  // 用户2的用户名（如果与用户聊天）
+  school_name?: string  // 学校名称（如果与学校聊天）
   user1_type?: string  // 用户1的类型
-  user2_type?: string  // 用户2的类型
+  user2_type?: string  // 用户2的类型（如果与用户聊天）
   last_message_id?: string
   last_message_at?: string
-  unread_count_user1: number
-  unread_count_user2: number
+  unread_count_user1?: number
+  unread_count_user2?: number
   created_at: string
   updated_at: string
 }
@@ -57,12 +59,20 @@ export const getChatSessions = async (): Promise<ChatSessionListResponse> => {
 }
 
 // 创建或获取聊天会话
-export const createOrGetChatSession = async (receiverId: string, studentId?: string): Promise<ChatSession> => {
-  // 使用URL参数传递receiver_id和可选的student_id
-  let url = `/chat/sessions?receiver_id=${encodeURIComponent(receiverId)}`
-  if (studentId) {
-    url += `&student_id=${encodeURIComponent(studentId)}`
+export const createOrGetChatSession = async (receiverId?: string, studentId?: string, schoolId?: string): Promise<ChatSession> => {
+  // 使用URL参数传递receiver_id、student_id或school_id
+  let url = '/chat/sessions?'
+  const params: string[] = []
+  if (receiverId) {
+    params.push(`receiver_id=${encodeURIComponent(receiverId)}`)
   }
+  if (studentId) {
+    params.push(`student_id=${encodeURIComponent(studentId)}`)
+  }
+  if (schoolId) {
+    params.push(`school_id=${encodeURIComponent(schoolId)}`)
+  }
+  url += params.join('&')
   return request.post(url)
 }
 

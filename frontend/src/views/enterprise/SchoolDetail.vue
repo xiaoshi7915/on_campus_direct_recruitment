@@ -81,6 +81,12 @@
             >
               申请宣讲会
             </button>
+            <button
+              @click="startChat"
+              class="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+            >
+              发起聊天
+            </button>
           </div>
         </div>
       </div>
@@ -294,6 +300,7 @@ import { addFavorite, removeFavorite, checkFavorite } from '@/api/favorites'
 import { createMark, getMark, updateMark, deleteMark, type MarkCreateRequest } from '@/api/marks'
 import { getSchoolShareLink } from '@/api/schools'
 import { getInfoSessions, type InfoSession, type InfoSessionListResponse } from '@/api/infoSessions'
+import { createOrGetChatSession } from '@/api/chat'
 
 const route = useRoute()
 const router = useRouter()
@@ -459,6 +466,21 @@ const handleMark = async () => {
     alert('保存标记失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     submitting.value = false
+  }
+}
+
+// 发起聊天
+const startChat = async () => {
+  if (!school.value) return
+  
+  try {
+    // 创建或获取与学校的聊天会话
+    const session = await createOrGetChatSession(undefined, undefined, school.value.id)
+    // 跳转到聊天页面
+    router.push(`/enterprise/chat?session_id=${session.id}`)
+  } catch (error: any) {
+    console.error('发起聊天失败:', error)
+    alert('发起聊天失败: ' + (error.response?.data?.detail || error.message))
   }
 }
 

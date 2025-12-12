@@ -30,6 +30,7 @@ class School(Base):
     departments = relationship("Department", back_populates="school", cascade="all, delete-orphan")
     students = relationship("StudentProfile", back_populates="school")
     teachers = relationship("TeacherProfile", back_populates="school")
+    chat_sessions = relationship("ChatSession", foreign_keys="ChatSession.school_id", back_populates="school")
 
 
 class Department(Base):

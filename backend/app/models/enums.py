@@ -133,4 +133,11 @@ class FeedbackStatus(str, Enum):
     REJECTED = "REJECTED"  # 已拒绝
 
 
+class VerificationStatus(str, Enum):
+    """认证状态"""
+    PENDING = "PENDING"  # 待审核
+    APPROVED = "APPROVED"  # 已通过
+    REJECTED = "REJECTED"  # 已拒绝
+
+
 

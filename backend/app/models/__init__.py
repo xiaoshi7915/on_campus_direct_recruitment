@@ -9,7 +9,8 @@ from app.models.enums import (
     RegistrationStatus, SessionType, SessionStatus,
     InterviewType, InterviewStatus, MessageType,
     FavoriteType, ScheduleType, OfferStatus,
-    RightsType, PurchaseStatus, FeedbackStatus
+    RightsType, PurchaseStatus, FeedbackStatus,
+    VerificationStatus
 )
 from app.models.school import School, Department, Class
 from app.models.profile import StudentProfile, TeacherProfile, EnterpriseProfile
@@ -22,6 +23,7 @@ from app.models.todo import Todo
 from app.models.mark import Mark
 from app.models.rights import Rights, RightsPackage, RightsPackageItem, UserRights, RightsPurchase
 from app.models.talent_pool import TalentPool
+from app.models.verification import EnterpriseVerification, PersonalVerification
 
 __all__ = [
     # 用户相关
@@ -85,4 +87,8 @@ __all__ = [
     "StudentComment",
     # 人才库
     "TalentPool",
+    # 认证相关
+    "EnterpriseVerification",
+    "PersonalVerification",
+    "VerificationStatus",
 ]

@@ -45,11 +45,11 @@
         </div>
         <div v-else class="flex-1 flex flex-col min-h-0 overflow-hidden">
           <!-- 聊天头部 -->
-          <div class="p-4 border-b bg-white">
-            <div class="flex justify-between items-center">
+          <div class="p-4 border-b bg-white flex-shrink-0">
+            <div class="flex justify-between items-center flex-wrap gap-2">
               <h3 class="text-lg font-semibold">{{ getOtherUserName(currentSession) }}</h3>
               <!-- 快捷操作按钮 -->
-              <div class="flex space-x-2">
+              <div class="flex flex-wrap gap-2">
                 <!-- 学生相关快捷操作 -->
                 <template v-if="otherUserType === 'STUDENT'">
                   <button
@@ -96,8 +96,8 @@
                     面试邀请
                   </button>
                 </template>
-                <!-- 教师相关快捷操作（学校） -->
-                <template v-else-if="otherUserType === 'TEACHER' && teacherSchoolId">
+                <!-- 学校相关快捷操作（直接与学校聊天或通过教师） -->
+                <template v-else-if="otherUserType === 'SCHOOL' || (otherUserType === 'TEACHER' && teacherSchoolId)">
                   <button
                     @click="viewSchoolDetail"
                     class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -135,6 +135,10 @@
                     申请宣讲会
                   </button>
                 </template>
+                <!-- 调试信息（开发时可见） -->
+                <div v-if="!otherUserType || otherUserType === 'UNKNOWN'" class="text-xs text-gray-500">
+                  用户类型: {{ otherUserType || '未设置' }}
+                </div>
               </div>
             </div>
           </div>
@@ -551,6 +555,11 @@ const formatDateTime = (dateString: string) => {
 
 // 获取对方用户名
 const getOtherUserName = (session: ChatSession) => {
+  // 如果是与学校聊天，显示学校名称
+  if (session.school_id && session.school_name) {
+    return session.school_name
+  }
+  // 如果是与用户聊天，显示用户名
   if (session.user1_id === currentUserId.value) {
     return session.user2_name || session.user2_id
   } else {
@@ -592,32 +601,48 @@ const loadOtherUserInfo = async () => {
   if (!otherUserId || !currentSession.value) return
 
   try {
-    // 从会话信息中获取对方用户类型
-    const otherUserTypeFromSession = currentSession.value.user1_id === currentUserId.value
-      ? currentSession.value.user2_type
-      : currentSession.value.user1_type
-    
-    otherUserType.value = otherUserTypeFromSession || 'UNKNOWN'
+    // 如果是与学校聊天
+    if (currentSession.value.school_id) {
+      otherUserType.value = 'SCHOOL'
+      teacherSchoolId.value = currentSession.value.school_id
+    } else {
+      // 如果是与用户聊天，从会话信息中获取对方用户类型
+      const otherUserTypeFromSession = currentSession.value.user1_id === currentUserId.value
+        ? currentSession.value.user2_type
+        : currentSession.value.user1_type
+      
+      otherUserType.value = otherUserTypeFromSession || 'UNKNOWN'
+      
+      // 调试信息
+      console.log('对方用户类型:', otherUserType.value, '会话信息:', {
+        user1_type: currentSession.value.user1_type,
+        user2_type: currentSession.value.user2_type,
+        user1_id: currentSession.value.user1_id,
+        user2_id: currentSession.value.user2_id,
+        currentUserId: currentUserId.value
+      })
+      
+      // 如果是教师，尝试获取学校ID
+      if (otherUserType.value === 'TEACHER') {
+        // 通过教师档案获取学校ID（需要调用API）
+        // 暂时先设置为null，后续可以通过API获取
+        teacherSchoolId.value = null
+      }
+    }
     
     // 根据用户类型加载相应的信息
     if (otherUserType.value === 'STUDENT') {
-      // 对于学生，通过简历API获取学生信息
-      // 企业用户可以查看所有简历，我们可以通过user_id查找对应的简历
-      try {
-        // 先获取所有简历，然后通过user_id匹配找到对应的student_id
-        // 注意：这需要后端API支持，或者我们需要通过其他方式获取student_id
-        // 暂时先尝试获取简历列表，然后通过其他方式匹配
-        const resumesResponse = await getResumes({ page_size: 100 })
-        
-        // 由于无法直接通过user_id查询，我们需要通过其他方式
-        // 暂时先不加载详细信息，但允许用户使用快捷操作（会提示需要学生信息）
-      } catch (error: any) {
-        console.log('无法获取学生详细信息（权限限制）:', error)
-      }
+      // 对于学生，加载简历信息
+      await loadStudentResumes()
     } else if (otherUserType.value === 'TEACHER') {
-      // 对于教师，暂时无法获取学校ID（需要权限）
-      // 快捷操作中的学校相关功能可能无法使用
-      console.log('教师用户，学校相关快捷操作需要学校ID，但无法获取（权限限制）')
+      // 对于教师，如果会话中有school_id，使用它
+      if (currentSession.value.school_id) {
+        teacherSchoolId.value = currentSession.value.school_id
+      } else {
+        // 如果没有school_id，尝试从会话信息中获取
+        // 注意：这需要后端API返回school_id
+        teacherSchoolId.value = null
+      }
     }
   } catch (error) {
     console.error('加载对方用户信息失败:', error)
