@@ -1,73 +1,143 @@
 # 校园直聘平台
 
-## 项目简介
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.x-green.svg)](https://vuejs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal.svg)](https://fastapi.tiangolo.com/)
 
-校园直聘平台是一个面向高校、企业和学生的综合性招聘服务平台，旨在连接高校人才与企业需求，提供便捷的招聘求职服务。
+> 一个面向高校、企业和学生的综合性招聘服务平台
 
-## 项目架构
+## 📋 项目简介
 
-### 技术栈
+校园直聘平台是一个连接高校人才与企业需求的综合性招聘服务平台，为高校教师、企业和学生提供便捷的招聘求职服务。
 
-- **前端**: Vue 3 + TypeScript + Vite + TailwindCSS + Pinia
-- **后端**: Python 3.11 + FastAPI + MySQL 8.0
-- **DevOps**: Docker + Docker-Compose + GitHub Actions
-- **测试**: Pytest（后端）+ Vitest（前端）+ Playwright（E2E）
+### 核心特性
 
-### 系统模块
+- 🎯 **多角色支持**：学生、企业、教师、管理员四种角色
+- 💬 **实时聊天**：支持文字、图片、文件等多种消息类型
+- 📊 **数据统计**：多维度数据分析和报表
+- 🔐 **安全可靠**：JWT认证、权限控制、数据加密
+- 🚀 **高性能**：Redis缓存、数据库优化、OSS存储
+- 📱 **响应式设计**：支持PC和移动端访问
 
-#### 1. PC/APP端 - 教师端
-- **工作台**: 学生活跃度分析、双选会分析、宣讲会分析、日程管理
-- **我的院校**: 院系信息管理、院校实名认证
-- **我的教师**: 主子账号管理、教师注册审批、权限移交
-- **我的学生**: 班级移交、学生查询、学生点评、移除学生
-- **推荐人才**: 为职位推荐管辖内的学生人才
-- **宣讲会&双选会**: 发布双选会/宣讲会、查询报名企业/学生、邀请企业
+## 🏗️ 技术架构
 
-#### 2. 企业端
-- **注册登录**: 短信验证、企业认证、个人身份认证、多种登录方式
-- **企业信息管理**: 企业信息编辑、宣传页预览和导出
-- **账号管理**: 主子账号管理
-- **消息中心**: 聊天消息、系统消息、日程表提醒消息
-- **学校/学生搜索推荐**: 查看、收藏、标记、分享、申请宣讲会、发起聊天
-- **职位管理**: 职位编辑、展示、搜索、标签管理
-- **在线聊天**: 与学校/学生在线聊天，支持文字、图片、位置等
-- **日程表**: 系统日程展示、手动输入、日程标记和提醒
-- **人才管理**: 企业触达过的人才库管理
-- **宣讲会管理**: 宣讲会信息编辑、资料上传、数据查看
-- **双选会管理**: 查看、申请、签到、管理、数据统计
-- **收藏夹**: 收藏学校/学生/简历
-- **直播宣讲**: 在线直播宣讲、签到、播放资料、线上互动
-- **视频/语音面试**: 双方在线面试
-- **试题/测评管理**: 按岗位区分笔试题
-- **反馈建议**: 提交意见反馈
+### 前端技术栈
+- **框架**: Vue 3 + TypeScript
+- **构建工具**: Vite
+- **UI框架**: TailwindCSS
+- **状态管理**: Pinia
+- **路由**: Vue Router
 
-#### 3. 学生端
-- **个人中心**: 个人信息管理
-- **消息中心**: 消息接收和管理
-- **待办中心**: 待办事项管理
-- **简历管理**: 简历创建、编辑、管理
-- **求职意向管理**: 求职意向设置和管理
-- **在线聊天**: 与企业/学校在线聊天
-- **日程表**: 日程展示和管理
-- **收藏**: 收藏企业/职位
-- **面试管理**: 面试安排和管理
-- **offer管理**: offer接收和管理
-- **搜索/推荐**: 搜索/推荐宣讲会/双选会、企业/职位
-- **参加活动**: 参加宣讲会、面试
-- **数据报表**: 个人数据统计
-- **注册登录**: 学生注册和登录
-- **视频/语音面试**: 参与在线面试
-- **在线笔试/测评**: 参与在线笔试和测评
-- **扫码签到**: 活动签到
-- **意见反馈**: 提交反馈
+### 后端技术栈
+- **框架**: FastAPI (Python 3.11+)
+- **数据库**: MySQL 8.0
+- **缓存**: Redis
+- **ORM**: SQLAlchemy
+- **认证**: JWT
+- **文件存储**: 阿里云OSS
 
-#### 4. 运营管理端
-- **权益中心**: 权益配置、套餐配置、权益查询、权益管理、权益购买和消费
-- **数据中心**: 用户数据分析、活跃分析、行为分析、权益收益分析
-- **反馈建议**: 处理反馈建议
-- **系统管理**: 系统配置和管理
+### DevOps
+- **容器化**: Docker + Docker Compose
+- **数据库迁移**: Alembic
+- **CI/CD**: GitHub Actions (可选)
 
-## 项目结构
+## 🚀 快速开始
+
+### 前置要求
+
+- Docker 20.10+ 和 Docker Compose 2.0+
+- 或 Python 3.11+、Node.js 18+、MySQL 8.0+
+
+### Docker部署（推荐）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/xiaoshi7915/on_campus_direct_recruitment.git
+cd on_campus_direct_recruitment
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，填入实际配置
+
+# 3. 启动服务
+docker-compose up -d
+
+# 4. 初始化数据库
+docker-compose exec backend alembic upgrade head
+```
+
+访问地址：
+- 前端: http://localhost:5173
+- 后端API: http://localhost:5001
+- API文档: http://localhost:5001/docs
+
+### Linux一键部署
+
+```bash
+# 执行部署脚本
+chmod +x deploy.sh
+sudo ./deploy.sh
+```
+
+### 本地开发
+
+```bash
+# 后端
+cd backend
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 5001
+
+# 前端（新终端）
+cd frontend
+npm install
+npm run dev
+```
+
+## 📚 文档
+
+- [功能说明文档](./FEATURES.md) - 详细功能列表
+- [部署文档](./DEPLOYMENT.md) - 部署指南和配置说明
+- [设计文档](./design.md) - 系统架构和数据模型
+- [需求文档](./requirements.md) - 需求规格说明
+
+## 🎯 核心功能
+
+### 学生端
+- ✅ 简历管理（创建、编辑、上传、预览）
+- ✅ 职位搜索和申请
+- ✅ 在线聊天（与企业、教师）
+- ✅ 申请管理和面试安排
+- ✅ 双选会和宣讲会参与
+- ✅ 系统消息和待办事项
+
+### 企业端
+- ✅ 职位发布和管理
+- ✅ 人才搜索和人才库管理
+- ✅ 学校搜索和合作
+- ✅ 在线聊天（与学生、教师、学校）
+- ✅ 宣讲会和双选会管理
+- ✅ 申请管理和面试安排
+- ✅ 企业认证和个人认证
+
+### 教师端
+- ✅ 学生管理（查询、点评、推荐）
+- ✅ 工作台（活跃度统计、数据分析）
+- ✅ 院校管理（院系信息、认证）
+- ✅ 活动管理（双选会、宣讲会）
+- ✅ 在线聊天（与学生、企业）
+- ✅ 主账号/子账号管理
+
+### 管理端
+- ✅ 用户管理
+- ✅ 审批管理（教师、企业认证）
+- ✅ 数据统计和分析
+- ✅ 系统配置
+
+## 📁 项目结构
 
 ```
 college_zhaopin/
@@ -79,103 +149,88 @@ college_zhaopin/
 │   │   ├── schemas/        # Pydantic模式
 │   │   ├── services/       # 业务逻辑
 │   │   └── utils/          # 工具函数
+│   ├── alembic/            # 数据库迁移
+│   ├── scripts/            # 脚本工具
 │   ├── tests/              # 测试文件
-│   ├── requirements.txt    # Python依赖
-│   └── Dockerfile          # Docker配置
+│   └── requirements.txt    # Python依赖
 ├── frontend/               # 前端应用
 │   ├── src/
 │   │   ├── api/            # API调用
-│   │   ├── components/     # 组件
+│   │   ├── components/      # 组件
 │   │   ├── views/          # 页面视图
 │   │   ├── stores/         # Pinia状态管理
-│   │   ├── router/         # 路由配置
-│   │   └── utils/          # 工具函数
-│   ├── tests/              # 测试文件
-│   └── Dockerfile          # Docker配置
+│   │   └── router/         # 路由配置
+│   └── package.json        # Node依赖
 ├── docker-compose.yml      # Docker编排
-├── requirements.md         # 需求文档
-├── design.md              # 设计文档
+├── deploy.sh              # Linux部署脚本
+├── .env.example           # 环境变量示例
+├── FEATURES.md            # 功能说明文档
+├── DEPLOYMENT.md          # 部署文档
 └── README.md              # 项目说明
 ```
 
-## 开发指南
+## 🔧 配置说明
 
-### 环境要求
+### 环境变量
 
-- Python 3.11+
-- Node.js 18+
-- MySQL 8.0+
-- Docker & Docker Compose
+复制 `.env.example` 为 `.env` 并配置以下关键项：
 
-### 快速开始
+- `DATABASE_URL`: 数据库连接字符串
+- `SECRET_KEY`: JWT密钥（生产环境必须修改）
+- `OSS_*`: 阿里云OSS配置
+- `SMS_*`: 短信服务配置（可选）
+- `CORS_ORIGINS`: 允许的跨域域名
 
-详细启动指南请查看 [QUICKSTART.md](./QUICKSTART.md)
+详细配置说明请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-**使用Docker Compose（推荐）**
+## 🧪 测试
+
 ```bash
-docker-compose up -d
-```
-
-**本地开发**
-```bash
-# 后端
+# 后端测试
 cd backend
-python -m venv venv
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 5001
+pytest
 
-# 前端（新终端）
+# 前端测试
 cd frontend
-npm install
-npm run dev
+npm run test
 ```
 
-### 数据库初始化
-
-```bash
-cd backend
-alembic upgrade head
-```
-
-## API文档
+## 📖 API文档
 
 启动后端服务后，访问以下地址查看API文档：
 - Swagger UI: http://localhost:5001/docs
 - ReDoc: http://localhost:5001/redoc
 
-## 测试
+## 🤝 贡献指南
 
-### 后端测试
-```bash
-cd backend
-pytest
-```
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 创建 Pull Request
 
-### 前端测试
-```bash
-cd frontend
-npm run test
-```
+## 📝 更新日志
 
-### E2E测试
-```bash
-npm run test:e2e
-```
+### v1.0.0 (2024)
+- ✅ 完成核心功能开发
+- ✅ 支持学生、企业、教师、管理员四种角色
+- ✅ 实现在线聊天功能
+- ✅ 完成系统消息功能
+- ✅ 支持Docker一键部署
 
-## 部署
+## 📄 许可证
 
-项目支持Docker部署，使用docker-compose.yml进行一键部署。
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
 
-## 贡献指南
+## 🔗 相关链接
 
-1. Fork项目
-2. 创建功能分支
-3. 提交更改
-4. 推送到分支
-5. 创建Pull Request
+- 项目地址: https://github.com/xiaoshi7915/on_campus_direct_recruitment
+- 问题反馈: https://github.com/xiaoshi7915/on_campus_direct_recruitment/issues
 
-## 许可证
+## 👥 作者
 
-MIT License
+校园直聘平台开发团队
 
+---
+
+⭐ 如果这个项目对你有帮助，请给个Star支持一下！

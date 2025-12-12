@@ -14,8 +14,12 @@ COPY . .
 # 暴露端口
 EXPOSE 5173
 
-# 启动命令
+# 启动命令（开发环境）
 CMD ["npm", "run", "dev", "--", "--host"]
+
+# 生产环境构建命令（可选）
+# RUN npm run build
+# CMD ["npm", "run", "preview", "--", "--host"]
 
 
 

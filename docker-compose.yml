@@ -6,28 +6,31 @@ services:
     image: mysql:8.0
     container_name: college_zhaopin_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: college_zhaopin
-      MYSQL_USER: appuser
-      MYSQL_PASSWORD: apppassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-college_zhaopin}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-apppassword}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./backup:/backup
     networks:
       - college_zhaopin_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
   # Redis缓存服务
   redis:
     image: redis:7-alpine
     container_name: college_zhaopin_redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -37,6 +40,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes
 
   # 后端API服务
   backend:
@@ -44,15 +49,17 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: college_zhaopin_backend
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: mysql+aiomysql://appuser:apppassword@mysql:3306/college_zhaopin
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SECRET_KEY: your-secret-key-change-in-production
+      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://appuser:apppassword@mysql:3306/college_zhaopin}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
     ports:
-      - "5001:5001"
+      - "${BACKEND_PORT:-5001}:5001"
     volumes:
       - ./backend:/app
+      - backend_logs:/app/logs
     depends_on:
       mysql:
         condition: service_healthy
@@ -60,6 +67,7 @@ services:
         condition: service_healthy
     networks:
       - college_zhaopin_network
+    restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload
 
   # 前端服务
@@ -69,7 +77,7 @@ services:
       dockerfile: Dockerfile
     container_name: college_zhaopin_frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -77,6 +85,7 @@ services:
       - backend
     networks:
       - college_zhaopin_network
+    restart: unless-stopped
     command: npm run dev -- --host
 
 networks:
@@ -85,7 +94,11 @@ networks:
 
 volumes:
   mysql_data:
+    driver: local
   redis_data:
+    driver: local
+  backend_logs:
+    driver: local
 
 
 

@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     PORT: int = 5001
     
     # 数据库配置（使用utf8mb4字符集）
-    DATABASE_URL: str = "mysql+pymysql://cxs_rds:4441326cxs!!@47.118.250.53:3306/college_zhaopin?charset=utf8mb4"
+    # 生产环境请通过环境变量配置，不要硬编码
+    DATABASE_URL: str = "mysql+pymysql://appuser:apppassword@mysql:3306/college_zhaopin?charset=utf8mb4"
     
     # Redis配置
     REDIS_HOST: str = "localhost"

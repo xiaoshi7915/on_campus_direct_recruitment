@@ -56,5 +56,45 @@ htmlcov/
 *.bak
 *.tmp
 
+# 环境变量和配置文件（包含敏感信息）
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
 
+# 数据库备份文件
+*.sql
+*.dump
+
+# 密钥文件
+*.pem
+*.key
+*.crt
+
+# 日志文件
+logs/
+*.log
+*.log.*
+
+# 临时文件
+tmp/
+temp/
+
+# IDE配置（可选，团队协作时可保留）
+# .vscode/
+# .idea/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 备份文件
+backup/
+*.backup
+
+# 部署相关临时文件
+deploy_*.sh
+*.sh.bak
 
