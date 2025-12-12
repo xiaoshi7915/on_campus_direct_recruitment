@@ -22,6 +22,7 @@ router = APIRouter()
 async def get_applications(
     job_id: Optional[str] = Query(None, description="职位ID（企业用户查看某个职位的申请）"),
     status_filter: Optional[str] = Query(None, alias="status", description="申请状态过滤"),
+    user_id: Optional[str] = Query(None, description="用户ID（可选，如果提供将转换为student_id查询）"),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     current_user: User = Depends(get_current_user),
@@ -33,6 +34,7 @@ async def get_applications(
     Args:
         job_id: 职位ID（可选）
         status_filter: 申请状态过滤
+        user_id: 用户ID（可选，如果提供将转换为student_id查询）
         page: 页码
         page_size: 每页数量
         current_user: 当前登录用户
@@ -42,6 +44,25 @@ async def get_applications(
         ApplicationListResponse: 申请列表
     """
     query = select(JobApplication)
+    
+    # 如果提供了user_id，转换为student_id查询（仅企业用户）
+    if user_id and current_user.user_type == "ENTERPRISE":
+        student_profile_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == user_id)
+        )
+        student_profile = student_profile_result.scalar_one_or_none()
+        if student_profile:
+            # 通过student_id查询申请（JobApplication.student_id是user_id，需要转换）
+            # 注意：JobApplication.student_id 实际上是 users.id，所以可以直接使用 user_id
+            query = query.where(JobApplication.student_id == user_id)
+        else:
+            # 如果找不到学生档案，返回空列表
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
     
     # 学生用户只能查看自己的申请
     if current_user.user_type == "STUDENT":

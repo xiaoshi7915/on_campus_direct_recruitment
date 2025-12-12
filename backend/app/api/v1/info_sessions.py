@@ -632,7 +632,8 @@ async def get_info_session_registrations(
 @router.post("/{session_id}/invite-student", response_model=InfoSessionRegistrationResponse, status_code=status.HTTP_201_CREATED)
 async def invite_student_to_info_session(
     session_id: str,
-    student_id: str = Query(..., description="学生ID"),
+    student_id: Optional[str] = Query(None, description="学生ID"),
+    user_id: Optional[str] = Query(None, description="用户ID（如果提供，将转换为student_id）"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -641,7 +642,8 @@ async def invite_student_to_info_session(
     
     Args:
         session_id: 宣讲会ID
-        student_id: 学生ID
+        student_id: 学生ID（可选）
+        user_id: 用户ID（可选，如果提供将转换为student_id）
         current_user: 当前登录用户（企业）
         db: 数据库会话
         
@@ -656,6 +658,28 @@ async def invite_student_to_info_session(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有企业用户才能邀请学生"
+        )
+    
+    # 如果提供了user_id，转换为student_id
+    actual_student_id = student_id
+    if user_id and not student_id:
+        from app.models.profile import StudentProfile
+        student_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == user_id)
+        )
+        student_profile = student_result.scalar_one_or_none()
+        if student_profile:
+            actual_student_id = student_profile.id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="该用户不是学生或学生档案不存在"
+            )
+    
+    if not actual_student_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="必须提供student_id或user_id"
         )
     
     # 获取企业信息
@@ -673,7 +697,7 @@ async def invite_student_to_info_session(
     # 检查宣讲会是否存在
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"邀请学生 - session_id: {session_id}, student_id: {student_id}, enterprise_id: {enterprise.id}, is_main_account: {enterprise.is_main_account}, main_account_id: {enterprise.main_account_id}")
+    logger.info(f"邀请学生 - session_id: {session_id}, student_id: {actual_student_id}, enterprise_id: {enterprise.id}, is_main_account: {enterprise.is_main_account}, main_account_id: {enterprise.main_account_id}")
     
     session_result = await db.execute(select(InfoSession).where(InfoSession.id == session_id))
     info_session = session_result.scalar_one_or_none()
@@ -702,7 +726,7 @@ async def invite_student_to_info_session(
         )
     
     # 检查学生是否存在
-    student_result = await db.execute(select(StudentProfile).where(StudentProfile.id == student_id))
+    student_result = await db.execute(select(StudentProfile).where(StudentProfile.id == actual_student_id))
     student = student_result.scalar_one_or_none()
     
     if not student:
@@ -715,7 +739,7 @@ async def invite_student_to_info_session(
     existing_result = await db.execute(
         select(InfoSessionRegistration).where(
             InfoSessionRegistration.session_id == session_id,
-            InfoSessionRegistration.student_id == student_id
+            InfoSessionRegistration.student_id == actual_student_id
         )
     )
     existing = existing_result.scalar_one_or_none()
@@ -730,7 +754,7 @@ async def invite_student_to_info_session(
     registration = InfoSessionRegistration(
         id=str(uuid4()),
         session_id=session_id,
-        student_id=student_id,
+        student_id=actual_student_id,
         status="ACCEPTED"  # 邀请自动接受
     )
     

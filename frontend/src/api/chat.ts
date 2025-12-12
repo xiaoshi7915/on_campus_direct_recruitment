@@ -20,6 +20,10 @@ export interface ChatSession {
   id: string
   user1_id: string
   user2_id: string
+  user1_name?: string  // 用户1的用户名
+  user2_name?: string  // 用户2的用户名
+  user1_type?: string  // 用户1的类型
+  user2_type?: string  // 用户2的类型
   last_message_id?: string
   last_message_at?: string
   unread_count_user1: number
@@ -53,9 +57,13 @@ export const getChatSessions = async (): Promise<ChatSessionListResponse> => {
 }
 
 // 创建或获取聊天会话
-export const createOrGetChatSession = async (receiverId: string): Promise<ChatSession> => {
-  // 使用URL参数传递receiver_id
-  return request.post(`/chat/sessions?receiver_id=${encodeURIComponent(receiverId)}`)
+export const createOrGetChatSession = async (receiverId: string, studentId?: string): Promise<ChatSession> => {
+  // 使用URL参数传递receiver_id和可选的student_id
+  let url = `/chat/sessions?receiver_id=${encodeURIComponent(receiverId)}`
+  if (studentId) {
+    url += `&student_id=${encodeURIComponent(studentId)}`
+  }
+  return request.post(url)
 }
 
 // 获取会话消息列表

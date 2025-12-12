@@ -1,7 +1,7 @@
 <template>
-  <div class="main-layout">
+  <div :class="['main-layout', isChatPage ? 'h-screen flex flex-col' : '']">
     <!-- 顶部导航栏 -->
-    <header class="bg-white shadow-sm">
+    <header :class="['bg-white shadow-sm', isChatPage ? 'flex-shrink-0' : '']">
       <nav class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
           <!-- Logo -->
@@ -51,12 +51,12 @@
     </header>
 
     <!-- 主要内容区域 -->
-    <main class="container mx-auto px-4 py-8">
+    <main :class="isChatPage ? 'flex-1 flex flex-col min-h-0' : 'container mx-auto px-4 py-8'">
       <router-view />
     </main>
 
-    <!-- 底部 -->
-    <footer class="bg-gray-800 text-white mt-auto">
+    <!-- 底部（聊天页面不显示） -->
+    <footer v-if="!isChatPage" class="bg-gray-800 text-white mt-auto">
       <div class="container mx-auto px-4 py-8">
         <div class="text-center">
           <p>&copy; 2024 校园直聘平台. All rights reserved.</p>
@@ -67,14 +67,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getCurrentUser } from '@/api/users'
 import type { User } from '@/api/users'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
+
+// 判断是否是聊天页面
+const isChatPage = computed(() => {
+  return route.path.includes('/chat')
+})
 
 // 用户信息
 const userInfo = ref<User | null>(null)
@@ -128,6 +134,7 @@ const updateNavItems = () => {
         { name: '人才搜索', path: '/enterprise/talents' },
         { name: '人才库', path: '/enterprise/talent-library' },
         { name: '申请管理', path: '/enterprise/applications' },
+        { name: '学校搜索', path: '/enterprise/schools' },
         { name: '双选会', path: '/enterprise/job-fairs' },
         { name: '宣讲会', path: '/enterprise/info-sessions' },
         { name: '聊天', path: '/enterprise/chat' },

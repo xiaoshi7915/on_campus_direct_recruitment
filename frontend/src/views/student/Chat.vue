@@ -1,6 +1,6 @@
 <template>
-  <div class="student-chat">
-    <div class="flex h-screen">
+  <div class="student-chat" style="height: calc(100vh - 120px);">
+    <div class="flex h-full">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r bg-white">
         <div class="p-4 border-b">
@@ -39,18 +39,18 @@
       </div>
 
       <!-- 聊天窗口 -->
-      <div class="flex-1 flex flex-col">
+      <div class="flex-1 flex flex-col min-h-0">
         <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500">
           请选择一个会话
         </div>
-        <div v-else class="flex-1 flex flex-col">
+        <div v-else class="flex-1 flex flex-col min-h-0 overflow-hidden">
           <!-- 聊天头部 -->
           <div class="p-4 border-b bg-white">
             <h3 class="text-lg font-semibold">{{ getOtherUserName(currentSession) }}</h3>
           </div>
 
           <!-- 消息列表 -->
-          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50">
+          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
             <div v-if="messagesLoading" class="text-center py-4">加载中...</div>
             <div v-else-if="messages.length === 0" class="text-center py-8 text-gray-500">
               暂无消息
@@ -87,7 +87,7 @@
           </div>
 
           <!-- 输入框 -->
-          <div class="p-4 border-t bg-white">
+          <div class="p-4 border-t bg-white flex-shrink-0">
             <form @submit.prevent="handleSendMessage" class="flex space-x-2">
               <input
                 v-model="messageContent"
@@ -157,9 +157,12 @@ const formatDateTime = (dateString: string) => {
 
 // 获取对方用户名
 const getOtherUserName = (session: ChatSession) => {
-  // 这里应该根据user1_id或user2_id获取用户名
-  // 暂时返回ID
-  return session.user1_id === currentUserId.value ? session.user2_id : session.user1_id
+  // 优先使用会话中的用户名
+  if (session.user1_id === currentUserId.value) {
+    return session.user2_name || session.user2_id
+  } else {
+    return session.user1_name || session.user1_id
+  }
 }
 
 // 获取未读消息数
@@ -265,7 +268,8 @@ onMounted(async () => {
 
 <style scoped>
 .student-chat {
-  height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
 }
 </style>
 

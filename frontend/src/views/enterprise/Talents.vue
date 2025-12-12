@@ -254,8 +254,18 @@ const downloadResume = async (resumeId: string) => {
 
 // 发起聊天
 const startChat = async (studentId: string) => {
-  // TODO: 创建或获取聊天会话
-  router.push(`/enterprise/chat?user_id=${studentId}`)
+  // studentId 是 student_profiles.id，需要转换为 users.id
+  // 由于前端无法直接查询，我们通过创建聊天会话API来处理
+  // 后端API应该支持通过student_id创建会话
+  try {
+    const { createOrGetChatSession } = await import('@/api/chat')
+    // 注意：这里需要后端API支持通过student_id创建会话
+    // 暂时先尝试使用studentId作为user_id（如果后端支持）
+    // 或者需要先查询student_id对应的user_id
+    router.push(`/enterprise/chat?student_id=${studentId}`)
+  } catch (error) {
+    console.error('发起聊天失败:', error)
+  }
 }
 
 // 标记简历

@@ -8,7 +8,7 @@ from datetime import datetime
 
 class FavoriteCreate(BaseModel):
     """创建收藏请求模式"""
-    target_type: str = Field(..., description="收藏类型：JOB, RESUME, ENTERPRISE")
+    target_type: str = Field(..., description="收藏类型：JOB, RESUME, ENTERPRISE, SCHOOL")
     target_id: str = Field(..., description="目标ID")
 
 

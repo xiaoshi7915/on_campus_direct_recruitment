@@ -22,6 +22,7 @@ async def get_resumes(
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     student_id: Optional[str] = Query(None, description="学生ID（可选，管理员可查看所有）"),
+    user_id: Optional[str] = Query(None, description="用户ID（可选，如果提供将转换为student_id）"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -30,12 +31,23 @@ async def get_resumes(
     
     Args:
         student_id: 学生ID（可选）
+        user_id: 用户ID（可选，如果提供将转换为student_id）
         current_user: 当前登录用户
         db: 数据库会话
         
     Returns:
         ResumeListResponse: 简历列表
     """
+    # 如果提供了user_id，转换为student_id
+    actual_student_id = student_id
+    if user_id and not student_id:
+        student_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == user_id)
+        )
+        student_profile = student_result.scalar_one_or_none()
+        if student_profile:
+            actual_student_id = student_profile.id
+    
     # 构建查询
     query = select(Resume)
     
@@ -53,11 +65,14 @@ async def get_resumes(
         query = query.where(Resume.student_id == student.id)
     # 企业用户可以查看所有简历（用于人才搜索）
     elif current_user.user_type == "ENTERPRISE":
-        # 企业用户可以查看所有简历，不需要student_id
+        # 如果指定了student_id，只查看该学生的简历
+        if actual_student_id:
+            query = query.where(Resume.student_id == actual_student_id)
+        # 否则查看所有简历
         pass
     # 如果指定了student_id，且用户有权限查看（企业或管理员）
-    elif student_id:
-        query = query.where(Resume.student_id == student_id)
+    elif actual_student_id:
+        query = query.where(Resume.student_id == actual_student_id)
     # 管理员可以查看所有简历
     elif current_user.user_type == "ADMIN":
         pass

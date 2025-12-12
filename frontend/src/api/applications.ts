@@ -41,6 +41,7 @@ export const getApplications = async (params?: {
   page_size?: number
   job_id?: string
   student_id?: string
+  user_id?: string
   status?: string
 }): Promise<ApplicationListResponse> => {
   return request.get('/applications', { params })

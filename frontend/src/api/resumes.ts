@@ -43,6 +43,7 @@ export const getResumes = async (params?: {
   page?: number
   page_size?: number
   student_id?: string
+  user_id?: string
 }): Promise<ResumeListResponse> => {
   return request.get('/resumes', { params })
 }

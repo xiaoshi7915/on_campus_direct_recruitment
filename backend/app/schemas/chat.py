@@ -43,6 +43,10 @@ class ChatSessionResponse(BaseModel):
     id: str
     user1_id: str
     user2_id: str
+    user1_name: Optional[str] = None  # 用户1的用户名
+    user2_name: Optional[str] = None  # 用户2的用户名
+    user1_type: Optional[str] = None  # 用户1的类型
+    user2_type: Optional[str] = None  # 用户2的类型
     last_message_at: datetime
     created_at: datetime
     updated_at: datetime

@@ -129,8 +129,14 @@ export const searchStudents = async (params?: {
 }
 
 // 邀请学生参加宣讲会
-export const inviteStudentToInfoSession = async (sessionId: string, studentId: string): Promise<InfoSessionRegistration> => {
-  return request.post(`/info-sessions/${sessionId}/invite-student?student_id=${studentId}`)
+export const inviteStudentToInfoSession = async (sessionId: string, studentId?: string, userId?: string): Promise<InfoSessionRegistration> => {
+  let url = `/info-sessions/${sessionId}/invite-student`
+  if (studentId) {
+    url += `?student_id=${encodeURIComponent(studentId)}`
+  } else if (userId) {
+    url += `?user_id=${encodeURIComponent(userId)}`
+  }
+  return request.post(url)
 }
 
 // 批量邀请学生参加宣讲会

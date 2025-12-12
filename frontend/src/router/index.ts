@@ -196,6 +196,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/enterprise/Statistics.vue'),
       },
       {
+        path: 'schools',
+        name: 'EnterpriseSchools',
+        component: () => import('@/views/enterprise/Schools.vue'),
+      },
+      {
+        path: 'schools/:id',
+        name: 'EnterpriseSchoolDetail',
+        component: () => import('@/views/enterprise/SchoolDetail.vue'),
+      },
+      {
         path: 'system-messages',
         name: 'EnterpriseSystemMessages',
         component: () => import('@/views/enterprise/SystemMessages.vue'),
