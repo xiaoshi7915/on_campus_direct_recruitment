@@ -273,6 +273,11 @@ async def _get_enterprise_profile_logic(
             detail="企业档案不存在"
         )
     
+    # 如果logo_url存在，生成签名URL用于显示（有效期24小时）
+    if profile.logo_url:
+        from app.core.oss import oss_service
+        profile.logo_url = oss_service.get_file_url(profile.logo_url, signed=True, expires=86400)  # 24小时
+    
     return profile
 
 

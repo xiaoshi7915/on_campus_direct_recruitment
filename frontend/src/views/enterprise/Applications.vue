@@ -68,7 +68,7 @@
               </span>
             </div>
             <div class="text-gray-600 text-sm mb-3">
-              <p>申请人ID：{{ app.student_id }}</p>
+              <p>申请人：{{ app.student_name || app.student_id || '未知' }}</p>
               <p>申请时间：{{ formatDate(app.created_at) }}</p>
             </div>
             <p v-if="app.message" class="text-gray-700 mb-3">{{ app.message }}</p>

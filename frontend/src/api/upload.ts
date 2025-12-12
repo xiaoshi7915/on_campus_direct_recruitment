@@ -5,7 +5,11 @@ import request from './request'
 
 export interface UploadResponse {
   url: string
-  filename: string
+  filename?: string
+  file_path?: string
+  file_name?: string
+  file_size?: number
+  content_type?: string
 }
 
 /**

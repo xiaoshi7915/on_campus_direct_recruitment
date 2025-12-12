@@ -628,6 +628,12 @@ const loadDepartments = async () => {
 
 // 显示邀请模态框
 const showInviteModal = (sessionId: string) => {
+  console.log('显示邀请模态框，sessionId:', sessionId)
+  console.log('当前宣讲会列表:', infoSessions.value.map(s => ({ id: s.id, title: s.title })))
+  if (!sessionId) {
+    alert('宣讲会ID不存在，无法邀请学生')
+    return
+  }
   currentInviteSessionId.value = sessionId
   searchKeyword.value = ''
   searchDepartmentId.value = ''
@@ -678,6 +684,18 @@ const handleInviteStudentsBatch = async () => {
     return
   }
   
+  console.log('开始批量邀请，session_id:', currentInviteSessionId.value)
+  console.log('选中的学生IDs:', selectedStudentIds.value)
+  
+  // 验证session_id是否在列表中
+  const sessionExists = infoSessions.value.some(s => s.id === currentInviteSessionId.value)
+  if (!sessionExists) {
+    console.error('宣讲会不在列表中！session_id:', currentInviteSessionId.value)
+    console.error('当前列表中的宣讲会IDs:', infoSessions.value.map(s => s.id))
+    alert('宣讲会不存在于当前列表中，请刷新页面后重试')
+    return
+  }
+  
   try {
     const result = await inviteStudentsBatch(currentInviteSessionId.value, selectedStudentIds.value)
     alert(`邀请完成！成功: ${result.success_count}，失败: ${result.failed_count}`)
@@ -690,7 +708,12 @@ const handleInviteStudentsBatch = async () => {
       await viewRegistrations(currentInviteSessionId.value)
     }
   } catch (error: any) {
-    alert('批量邀请失败: ' + (error.response?.data?.detail || error.message))
+    const errorMessage = error.response?.data?.detail || error.message
+    console.error('批量邀请失败:', error)
+    console.error('session_id:', currentInviteSessionId.value)
+    console.error('student_ids:', selectedStudentIds.value)
+    console.error('错误响应:', error.response?.data)
+    alert('批量邀请失败: ' + errorMessage)
   }
 }
 

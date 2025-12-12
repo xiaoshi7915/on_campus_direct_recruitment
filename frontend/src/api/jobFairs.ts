@@ -99,6 +99,14 @@ export const checkInJobFair = async (jobFairId: string): Promise<JobFairRegistra
   return request.post(`/job-fairs/${jobFairId}/check-in`)
 }
 
+// 获取企业创建的双选会列表
+export const getMyCreatedJobFairs = async (params?: {
+  page?: number
+  page_size?: number
+}): Promise<JobFairListResponse> => {
+  return request.get('/job-fairs/my-created', { params })
+}
+
 // 获取企业报名的双选会列表
 export const getMyJobFairRegistrations = async (params?: {
   page?: number

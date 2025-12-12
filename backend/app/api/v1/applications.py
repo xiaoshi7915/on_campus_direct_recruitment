@@ -128,8 +128,27 @@ async def get_applications(
     result = await db.execute(query)
     applications = result.scalars().all()
     
+    # 填充关联信息用于前端显示（职位名称和学生姓名）
+    application_list = []
+    for application in applications:
+        # 获取职位信息
+        job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+        job = job_result.scalar_one_or_none()
+        if job:
+            application.job_title = job.title  # type: ignore
+        
+        # 获取学生姓名
+        student_profile_result = await db.execute(
+            select(StudentProfile).where(StudentProfile.user_id == application.student_id)
+        )
+        student_profile = student_profile_result.scalar_one_or_none()
+        if student_profile:
+            application.student_name = student_profile.real_name  # type: ignore
+        
+        application_list.append(application)
+    
     return {
-        "items": applications,
+        "items": application_list,
         "total": total,
         "page": page,
         "page_size": page_size
@@ -348,7 +367,7 @@ async def get_application(
     )
     student_profile = student_profile_result.scalar_one_or_none()
     if student_profile:
-        application.student_name = student_profile.name  # type: ignore
+        application.student_name = student_profile.real_name  # type: ignore
     
     return application
 
@@ -426,6 +445,20 @@ async def update_application_status(
     application.status = status
     await db.commit()
     await db.refresh(application)
+    
+    # 填充关联信息用于前端显示
+    job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+    job = job_result.scalar_one_or_none()
+    if job:
+        application.job_title = job.title  # type: ignore
+    
+    # 获取学生姓名
+    student_profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == application.student_id)
+    )
+    student_profile = student_profile_result.scalar_one_or_none()
+    if student_profile:
+        application.student_name = student_profile.real_name  # type: ignore
     
     return application
 

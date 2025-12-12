@@ -9,7 +9,7 @@
           :class="showMyRegistrations ? 'bg-green-500' : 'bg-gray-500'"
           class="px-6 py-2 text-white rounded-lg hover:opacity-90"
         >
-          {{ showMyRegistrations ? '我的报名' : '查看我的报名' }}
+          {{ showMyRegistrations ? '我的报名' : '我创建的' }}
         </button>
         <button
           v-if="!showBrowseMode"
@@ -23,7 +23,7 @@
           :class="showBrowseMode ? 'bg-purple-500' : 'bg-gray-500'"
           class="px-6 py-2 text-white rounded-lg hover:opacity-90"
         >
-          {{ showBrowseMode ? '我的双选会' : '浏览双选会' }}
+          {{ showBrowseMode ? '我创建的' : '浏览双选会' }}
         </button>
       </div>
     </div>
@@ -32,7 +32,7 @@
     <div class="space-y-4">
       <div v-if="loading" class="text-center py-12">加载中...</div>
       <div v-else-if="jobFairs.length === 0" class="text-center py-12 text-gray-500">
-        {{ showBrowseMode ? '暂无可报名的双选会' : (showMyRegistrations ? '暂无报名的双选会' : '暂无双选会信息') }}
+        {{ showBrowseMode ? '暂无可报名的双选会' : (showMyRegistrations ? '暂无报名的双选会' : '暂未创建双选会') }}
       </div>
       <div
         v-for="jobFair in jobFairs"
@@ -258,7 +258,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, getMyJobFairRegistrations, checkInJobFair, registerJobFair, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
+import { getJobFairs, createJobFair, updateJobFair, deleteJobFair, getJobFairRegistrations, getMyJobFairRegistrations, getMyCreatedJobFairs, checkInJobFair, registerJobFair, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
 import Pagination from '@/components/Pagination.vue'
 
 // 双选会列表
@@ -350,17 +350,16 @@ const loadJobFairs = async () => {
         registeredJobFairIds.value = new Set()
       }
     } else if (showMyRegistrations.value) {
-      // 加载企业报名的双选会
+      // 加载企业报名的双选会（只显示报名过的）
       response = await getMyJobFairRegistrations({ 
         page: currentPage.value,
         page_size: pageSize.value
       })
     } else {
-      // 加载企业创建的双选会
-      response = await getJobFairs({ 
+      // 默认显示企业创建的双选会（使用专门的API）
+      response = await getMyCreatedJobFairs({ 
         page: currentPage.value,
-        page_size: pageSize.value,
-        status: undefined 
+        page_size: pageSize.value
       })
     }
     jobFairs.value = response.items

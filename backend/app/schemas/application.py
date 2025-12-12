@@ -17,7 +17,7 @@ class ApplicationResponse(BaseModel):
     """申请响应模式"""
     id: str
     job_id: str
-    resume_id: str
+    resume_id: Optional[str] = None  # 允许为空，虽然模型中不可为空，但为了兼容性设为可选
     student_id: str
     status: str
     message: Optional[str]

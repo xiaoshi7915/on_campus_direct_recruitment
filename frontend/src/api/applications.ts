@@ -14,6 +14,8 @@ export interface JobApplication {
   message?: string
   created_at: string
   updated_at: string
+  job_title?: string
+  student_name?: string
 }
 
 export interface ApplicationListResponse {
@@ -56,6 +58,7 @@ export const createApplication = async (data: ApplicationCreateRequest): Promise
 
 // 更新申请状态
 export const updateApplication = async (id: string, data: ApplicationUpdateRequest): Promise<JobApplication> => {
-  return request.put(`/applications/${id}`, data)
+  // 后端API使用Query参数传递status，而不是body
+  return request.put(`/applications/${id}?status=${data.status}`)
 }
 

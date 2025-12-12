@@ -67,11 +67,11 @@ async def get_departments(
     page_size: int = Query(20, ge=1, le=100, description="每页数量"),
     keyword: Optional[str] = Query(None, description="关键词搜索（名称、代码）"),
     school_id: Optional[str] = Query(None, description="学校ID过滤"),
-    current_user: User = Depends(require_teacher()),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    获取院系列表（仅教师，只能查看自己学校的院系）
+    获取院系列表（教师和企业用户都可以查看，企业用户可查看所有院系）
     
     Args:
         page: 页码
@@ -84,33 +84,47 @@ async def get_departments(
     Returns:
         DepartmentListResponse: 院系列表
     """
-    # 获取教师信息
-    teacher_result = await db.execute(
-        select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
-    )
-    teacher = teacher_result.scalar_one_or_none()
-    
-    if not teacher:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="教师信息不存在"
+    # 根据用户类型处理权限
+    if current_user.user_type == "TEACHER":
+        # 教师：只能查看自己学校的院系
+        teacher_result = await db.execute(
+            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
         )
-    
-    # 数据权限隔离：教师只能查看自己学校的院系
-    if not teacher.school_id:
+        teacher = teacher_result.scalar_one_or_none()
+        
+        if not teacher:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="教师信息不存在"
+            )
+        
+        # 数据权限隔离：教师只能查看自己学校的院系
+        if not teacher.school_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="您还没有关联学校，无法查看院系信息"
+            )
+        
+        # 构建查询条件
+        query = select(Department).where(Department.school_id == teacher.school_id)
+        
+        # 如果指定了school_id，验证是否与教师的学校一致
+        if school_id and school_id != teacher.school_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看其他学校的院系信息"
+            )
+        filter_school_id = teacher.school_id
+    elif current_user.user_type == "ENTERPRISE":
+        # 企业用户：可以查看所有院系（用于邀请学生时筛选）
+        query = select(Department)
+        if school_id:
+            query = query.where(Department.school_id == school_id)
+        filter_school_id = school_id
+    else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="您还没有关联学校，无法查看院系信息"
-        )
-    
-    # 构建查询条件
-    query = select(Department).where(Department.school_id == teacher.school_id)
-    
-    # 如果指定了school_id，验证是否与教师的学校一致
-    if school_id and school_id != teacher.school_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权查看其他学校的院系信息"
+            detail="只有教师或企业用户才能查看院系信息"
         )
     
     # 关键词搜索
@@ -123,7 +137,13 @@ async def get_departments(
         )
     
     # 获取总数
-    count_query = select(func.count(Department.id)).where(Department.school_id == teacher.school_id)
+    if current_user.user_type == "TEACHER":
+        count_query = select(func.count(Department.id)).where(Department.school_id == filter_school_id)
+    else:
+        count_query = select(func.count(Department.id))
+        if filter_school_id:
+            count_query = count_query.where(Department.school_id == filter_school_id)
+    
     if keyword:
         count_query = count_query.where(
             or_(

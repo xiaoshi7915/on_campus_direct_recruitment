@@ -21,6 +21,69 @@ from app.schemas.activity import (
 router = APIRouter()
 
 
+@router.get("/my-created", response_model=JobFairListResponse)
+async def get_my_created_job_fairs(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取企业创建的双选会列表
+    
+    Args:
+        page: 页码
+        page_size: 每页数量
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        JobFairListResponse: 双选会列表
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能查看创建的双选会"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 获取企业创建的双选会
+    query = select(JobFair).where(JobFair.created_by == enterprise.id)
+    
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # 分页
+    offset = (page - 1) * page_size
+    query = query.order_by(JobFair.start_time.desc()).offset(offset).limit(page_size)
+    result = await db.execute(query)
+    job_fairs = result.scalars().all()
+    
+    # 将ORM对象转换为响应模型
+    job_fair_responses = [JobFairResponse.model_validate(jf) for jf in job_fairs]
+    
+    return {
+        "items": job_fair_responses,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
 @router.get("/my-registrations", response_model=JobFairListResponse)
 async def get_my_job_fair_registrations(
     page: int = Query(1, ge=1, description="页码"),
@@ -163,6 +226,10 @@ async def get_job_fairs(
     """
     # 构建查询
     query = select(JobFair)
+    
+    # 注意：企业用户调用此API时，应该通过"浏览双选会"模式来查看所有双选会
+    # 而"我的双选会"应该通过/my-registrations接口来获取报名的双选会
+    # 这里不再自动过滤企业创建的双选会，因为前端有专门的"浏览双选会"和"我的报名"按钮
     
     # 关键词搜索
     if keyword:
