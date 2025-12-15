@@ -83,6 +83,14 @@ async def create_favorite(
     Raises:
         HTTPException: 如果已收藏
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "favorite:write", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权创建收藏"
+        )
     # 检查是否已收藏
     existing_result = await db.execute(
         select(Favorite).where(
@@ -166,13 +174,18 @@ async def delete_favorite(
     Raises:
         HTTPException: 如果收藏不存在或无权删除
     """
-    # 获取收藏
-    result = await db.execute(
-        select(Favorite).where(
-            Favorite.id == favorite_id,
-            Favorite.user_id == current_user.id
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("favorite", favorite_id, current_user, db, "delete")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此收藏"
         )
-    )
+    
+    # 获取收藏
+    result = await db.execute(select(Favorite).where(Favorite.id == favorite_id))
     favorite = result.scalar_one_or_none()
     
     if not favorite:

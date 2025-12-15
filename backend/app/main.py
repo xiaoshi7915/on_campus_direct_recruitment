@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     
     # 初始化Redis连接池
     from app.core.cache import init_redis_pool
-    await init_redis_pool()
+    init_redis_pool()  # 同步函数，不需要await
     
     async with engine.begin() as conn:
         # 创建数据库表（生产环境应使用Alembic迁移）
@@ -49,8 +49,8 @@ async def lifespan(app: FastAPI):
     logger.info("应用正在关闭...")
     
     # 关闭Redis连接池
-    from app.core.cache import close_redis_pool
-    await close_redis_pool()
+    from app.core.cache import close_redis
+    await close_redis()
 
 
 # 创建FastAPI应用实例（禁用默认docs，稍后自定义）

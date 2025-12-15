@@ -98,12 +98,17 @@ async def get_schedule(
     Raises:
         HTTPException: 如果日程不存在或无权查看
     """
-    result = await db.execute(
-        select(Schedule).where(
-            Schedule.id == schedule_id,
-            Schedule.user_id == current_user.id
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("schedule", schedule_id, current_user, db, "read")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看此日程"
         )
-    )
+    
+    result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
     schedule = result.scalar_one_or_none()
     
     if not schedule:
@@ -132,6 +137,14 @@ async def create_schedule(
     Returns:
         ScheduleResponse: 创建的日程
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "schedule:write", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权创建日程"
+        )
     # 创建日程
     schedule = Schedule(
         id=str(uuid4()),
@@ -175,13 +188,18 @@ async def update_schedule(
     Raises:
         HTTPException: 如果日程不存在或无权修改
     """
-    # 获取日程
-    result = await db.execute(
-        select(Schedule).where(
-            Schedule.id == schedule_id,
-            Schedule.user_id == current_user.id
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("schedule", schedule_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此日程"
         )
-    )
+    
+    # 获取日程
+    result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
     schedule = result.scalar_one_or_none()
     
     if not schedule:
@@ -218,13 +236,18 @@ async def delete_schedule(
     Raises:
         HTTPException: 如果日程不存在或无权删除
     """
-    # 获取日程
-    result = await db.execute(
-        select(Schedule).where(
-            Schedule.id == schedule_id,
-            Schedule.user_id == current_user.id
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("schedule", schedule_id, current_user, db, "delete")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此日程"
         )
-    )
+    
+    # 获取日程
+    result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
     schedule = result.scalar_one_or_none()
     
     if not schedule:
@@ -254,13 +277,23 @@ async def complete_schedule(
     Returns:
         ScheduleResponse: 更新后的日程
     """
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("schedule", schedule_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权操作此日程"
+        )
+    
     result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
     schedule = result.scalar_one_or_none()
     
-    if not schedule or schedule.user_id != current_user.id:
+    if not schedule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="日程不存在或无权操作"
+            detail="日程不存在"
         )
     
     schedule.is_completed = True
@@ -287,13 +320,23 @@ async def uncomplete_schedule(
     Returns:
         ScheduleResponse: 更新后的日程
     """
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("schedule", schedule_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权操作此日程"
+        )
+    
     result = await db.execute(select(Schedule).where(Schedule.id == schedule_id))
     schedule = result.scalar_one_or_none()
     
-    if not schedule or schedule.user_id != current_user.id:
+    if not schedule:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="日程不存在或无权操作"
+            detail="日程不存在"
         )
     
     schedule.is_completed = False

@@ -89,6 +89,14 @@ async def create_todo(
     Returns:
         创建的待办事项
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "todo:write", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权创建待办事项"
+        )
     todo = Todo(
         id=str(uuid4()),
         user_id=current_user.id,
@@ -168,10 +176,20 @@ async def delete_todo(
     Returns:
         成功消息
     """
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("todo", todo_id, current_user, db, "delete")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此待办事项"
+        )
+    
     result = await db.execute(select(Todo).where(Todo.id == todo_id))
     todo = result.scalar_one_or_none()
     
-    if not todo or todo.user_id != current_user.id:
+    if not todo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="待办事项不存在"

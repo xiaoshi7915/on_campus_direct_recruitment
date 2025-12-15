@@ -54,24 +54,23 @@ async def approve_job_fair(
     Returns:
         ApprovalResponse: 审批结果
     """
-    # 检查权限（管理员或教师）
-    if current_user.user_type not in ["ADMIN", "TEACHER"]:
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "job_fair:approve", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有管理员或教师才能审批双选会"
         )
     
-    # 如果是教师，验证是否有权限
-    if current_user.user_type == "TEACHER":
-        teacher_result = await db.execute(
-            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+    # 使用资源权限检查（教师只能审批自己学校的双选会）
+    has_access = await check_resource_access("job_fair", job_fair_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权审批此双选会"
         )
-        teacher = teacher_result.scalar_one_or_none()
-        if not teacher:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="教师信息不存在"
-            )
     
     # 获取双选会
     job_fair_result = await db.execute(select(JobFair).where(JobFair.id == job_fair_id))
@@ -82,18 +81,6 @@ async def approve_job_fair(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="双选会不存在"
         )
-    
-    # 如果是教师，验证双选会是否属于其学校
-    if current_user.user_type == "TEACHER":
-        teacher_result = await db.execute(
-            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
-        )
-        teacher = teacher_result.scalar_one_or_none()
-        if teacher and teacher.school_id and job_fair.school_id != teacher.school_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权审批其他学校的双选会"
-            )
     
     # 执行审批
     if approval_data.action == "APPROVE":
@@ -154,11 +141,22 @@ async def approve_info_session(
     Returns:
         ApprovalResponse: 审批结果
     """
-    # 检查权限（管理员或教师）
-    if current_user.user_type not in ["ADMIN", "TEACHER"]:
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "info_session:approve", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有管理员或教师才能审批宣讲会"
+        )
+    
+    # 使用资源权限检查（教师只能审批自己学校的宣讲会）
+    has_access = await check_resource_access("info_session", session_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权审批此宣讲会"
         )
     
     # 获取宣讲会
@@ -170,18 +168,6 @@ async def approve_info_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="宣讲会不存在"
         )
-    
-    # 如果是教师，验证宣讲会是否属于其学校
-    if current_user.user_type == "TEACHER":
-        teacher_result = await db.execute(
-            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
-        )
-        teacher = teacher_result.scalar_one_or_none()
-        if teacher and teacher.school_id and info_session.school_id != teacher.school_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权审批其他学校的宣讲会"
-            )
     
     # 执行审批
     if approval_data.action == "APPROVE":

@@ -48,11 +48,13 @@ async def create_enterprise_verification(
     Returns:
         EnterpriseVerificationResponse: 创建的认证申请
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "verification:create:enterprise", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有企业用户才能申请企业认证"
+            detail="只有企业主账号才能申请企业认证"
         )
     
     # 获取企业信息
@@ -237,7 +239,10 @@ async def get_enterprise_verification(
             detail="认证申请不存在"
         )
     
-    # 检查权限
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    
+    # 企业只能查看自己的认证申请，管理员可以查看所有
     if current_user.user_type == "ENTERPRISE":
         enterprise_result = await db.execute(
             select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
@@ -250,10 +255,12 @@ async def get_enterprise_verification(
                 detail="无权查看此认证申请"
             )
     elif current_user.user_type != "ADMIN":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权查看此认证申请"
-        )
+        has_permission = await check_permission(current_user, "verification:read", db)
+        if not has_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看此认证申请"
+            )
     
     # 解析other_documents
     import json

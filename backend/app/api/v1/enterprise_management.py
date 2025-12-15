@@ -181,6 +181,19 @@ async def create_sub_account(
     db: AsyncSession = Depends(get_db)
 ):
     """
+    创建子账号（仅企业主账号）
+    
+    使用新的权限检查机制，确保只有主账号可以创建子账号
+    """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "sub_account:create", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业主账号才能创建子账号"
+        )
+    """
     创建子账号（仅主账号）
     
     Args:

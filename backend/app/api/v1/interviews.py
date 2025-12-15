@@ -203,27 +203,14 @@ async def get_interview(
             detail="面试不存在"
         )
     
-    # 检查权限
-    if current_user.user_type == "ENTERPRISE":
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    has_access = await check_resource_access("interview", interview_id, current_user, db, "read")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看此面试"
         )
-        enterprise = enterprise_result.scalar_one_or_none()
-        if not enterprise or interview.enterprise_id != enterprise.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权查看此面试"
-            )
-    elif current_user.user_type == "STUDENT":
-        student_result = await db.execute(
-            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
-        )
-        student = student_result.scalar_one_or_none()
-        if not student or interview.student_id != student.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权查看此面试"
-            )
     
     return interview
 
@@ -248,6 +235,14 @@ async def create_interview(
     Raises:
         HTTPException: 如果用户不是企业或申请不存在
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "interview:create", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能创建面试"
+        )
     # 检查用户类型
     if current_user.user_type != "ENTERPRISE":
         raise HTTPException(
@@ -487,8 +482,10 @@ async def create_offer(
     Raises:
         HTTPException: 如果用户不是企业或申请不存在
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "offer:create", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有企业用户才能创建Offer"
@@ -612,28 +609,26 @@ async def update_offer(
             detail="Offer不存在"
         )
     
-    # 检查权限
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    # 企业可以更新，学生也可以更新（接受/拒绝）
     if current_user.user_type == "ENTERPRISE":
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
-        )
-        enterprise = enterprise_result.scalar_one_or_none()
-        if not enterprise or offer.enterprise_id != enterprise.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权修改此Offer"
-            )
+        has_permission = await check_permission(current_user, "offer:update", db)
     elif current_user.user_type == "STUDENT":
-        student_result = await db.execute(
-            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
-        )
-        student = student_result.scalar_one_or_none()
-        if not student or offer.student_id != student.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权修改此Offer"
-            )
+        has_permission = await check_permission(current_user, "offer:update", db)
     else:
+        has_permission = False
+    
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此Offer"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("offer", offer_id, current_user, db, "update")
+    if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权修改此Offer"
@@ -670,11 +665,22 @@ async def accept_offer(
     Raises:
         HTTPException: 如果Offer不存在或无权操作
     """
-    # 检查用户类型
-    if current_user.user_type != "STUDENT":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "offer:update", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生用户才能接受Offer"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("offer", offer_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权操作此Offer"
         )
     
     # 获取学生信息
@@ -752,11 +758,22 @@ async def reject_offer(
     Raises:
         HTTPException: 如果Offer不存在或无权操作
     """
-    # 检查用户类型
-    if current_user.user_type != "STUDENT":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "offer:update", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生用户才能拒绝Offer"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("offer", offer_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权操作此Offer"
         )
     
     # 获取学生信息

@@ -181,6 +181,15 @@ async def create_sub_account(
     Returns:
         TeacherResponse: 创建的子账号
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "sub_account:create", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师主账号才能创建子账号"
+        )
+    
     # 获取教师信息
     teacher_result = await db.execute(
         select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
@@ -191,13 +200,6 @@ async def create_sub_account(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="教师信息不存在"
-        )
-    
-    # 检查是否是主账号
-    if not teacher.is_main_account:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有主账号才能创建子账号"
         )
     
     # 检查用户名是否已存在

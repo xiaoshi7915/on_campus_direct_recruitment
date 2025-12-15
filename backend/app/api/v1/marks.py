@@ -118,6 +118,14 @@ async def create_mark(
     Returns:
         MarkResponse: 创建的标记
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "talent:mark", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能创建标记"
+        )
     # 检查是否已存在
     existing_result = await db.execute(
         select(Mark).where(
@@ -173,6 +181,16 @@ async def update_mark(
     Returns:
         MarkResponse: 更新后的标记
     """
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("mark", mark_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此标记"
+        )
+    
     result = await db.execute(select(Mark).where(Mark.id == mark_id))
     mark = result.scalar_one_or_none()
     
@@ -180,13 +198,6 @@ async def update_mark(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="标记不存在"
-        )
-    
-    # 检查权限
-    if mark.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权修改此标记"
         )
     
     # 更新字段
@@ -215,6 +226,16 @@ async def delete_mark(
         current_user: 当前登录用户
         db: 数据库会话
     """
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    
+    has_access = await check_resource_access("mark", mark_id, current_user, db, "delete")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此标记"
+        )
+    
     result = await db.execute(select(Mark).where(Mark.id == mark_id))
     mark = result.scalar_one_or_none()
     
@@ -222,13 +243,6 @@ async def delete_mark(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="标记不存在"
-        )
-    
-    # 检查权限
-    if mark.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权删除此标记"
         )
     
     await db.delete(mark)

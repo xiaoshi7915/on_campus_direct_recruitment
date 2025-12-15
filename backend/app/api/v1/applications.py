@@ -415,8 +415,11 @@ async def update_application_status(
     Raises:
         HTTPException: 如果申请不存在或无权修改
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "application:update", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有企业用户才能更新申请状态"
@@ -432,14 +435,12 @@ async def update_application_status(
             detail="申请不存在"
         )
     
-    # 检查权限：企业只能更新自己职位的申请
-    job_result = await db.execute(select(Job).where(Job.id == application.job_id))
-    job = job_result.scalar_one_or_none()
-    
-    if not job:
+    # 使用资源权限检查
+    has_access = await check_resource_access("application", application_id, current_user, db, "update")
+    if not has_access:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="职位不存在"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权更新此申请"
         )
     
     from app.models.profile import EnterpriseProfile

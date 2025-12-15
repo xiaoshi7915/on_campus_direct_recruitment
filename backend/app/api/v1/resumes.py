@@ -132,6 +132,15 @@ async def get_resume(
     Raises:
         HTTPException: 如果简历不存在或无权查看
     """
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    has_access = await check_resource_access("resume", resume_id, current_user, db, "read")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看此简历"
+        )
+    
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
     
@@ -140,19 +149,6 @@ async def get_resume(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="简历不存在"
         )
-    
-    # 检查权限：学生只能查看自己的简历，企业和管理员可以查看
-    if current_user.user_type == "STUDENT":
-        student_result = await db.execute(
-            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
-        )
-        student = student_result.scalar_one_or_none()
-        
-        if not student or resume.student_id != student.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权查看此简历"
-            )
     
     # 增加查看次数
     resume.view_count += 1
@@ -197,18 +193,14 @@ async def download_resume(
             detail="简历不存在"
         )
     
-    # 检查权限：学生只能下载自己的简历，企业和管理员可以下载
-    if current_user.user_type == "STUDENT":
-        student_result = await db.execute(
-            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+    # 使用资源权限检查
+    from app.core.permissions import check_resource_access
+    has_access = await check_resource_access("resume", resume_id, current_user, db, "read")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权下载此简历"
         )
-        student = student_result.scalar_one_or_none()
-        
-        if not student or resume.student_id != student.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权下载此简历"
-            )
     
     if not resume.file_url:
         raise HTTPException(
@@ -304,8 +296,10 @@ async def create_resume(
     Raises:
         HTTPException: 如果用户不是学生或学生信息不存在
     """
-    # 检查用户类型
-    if current_user.user_type != "STUDENT":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "resume:create", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生用户才能创建简历"
@@ -379,11 +373,22 @@ async def update_resume(
     Raises:
         HTTPException: 如果简历不存在或无权修改
     """
-    # 检查用户类型
-    if current_user.user_type != "STUDENT":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "resume:update", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生用户才能更新简历"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("resume", resume_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此简历"
         )
     
     # 获取简历
@@ -396,23 +401,11 @@ async def update_resume(
             detail="简历不存在"
         )
     
-    # 检查权限
-    student_result = await db.execute(
-        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
-    )
-    student = student_result.scalar_one_or_none()
-    
-    if not student or resume.student_id != student.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权修改此简历"
-        )
-    
     # 如果设置为默认简历，需要先取消其他默认简历
     if resume_data.is_default is True:
         existing_defaults_result = await db.execute(
             select(Resume).where(
-                Resume.student_id == student.id,
+                Resume.student_id == resume.student_id,
                 Resume.is_default == True,
                 Resume.id != resume_id
             )
@@ -448,11 +441,22 @@ async def delete_resume(
     Raises:
         HTTPException: 如果简历不存在或无权删除
     """
-    # 检查用户类型
-    if current_user.user_type != "STUDENT":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "resume:delete", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生用户才能删除简历"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("resume", resume_id, current_user, db, "delete")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此简历"
         )
     
     # 获取简历
@@ -463,18 +467,6 @@ async def delete_resume(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="简历不存在"
-        )
-    
-    # 检查权限
-    student_result = await db.execute(
-        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
-    )
-    student = student_result.scalar_one_or_none()
-    
-    if not student or resume.student_id != student.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权删除此简历"
         )
     
     await db.delete(resume)

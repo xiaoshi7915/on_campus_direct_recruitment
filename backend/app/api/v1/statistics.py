@@ -40,8 +40,10 @@ async def get_student_personal_statistics(
     Returns:
         dict: 个人统计数据
     """
-    # 检查用户类型
-    if current_user.user_type != "STUDENT":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "statistics:read:personal", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生用户才能查看个人统计"
@@ -677,8 +679,10 @@ async def get_enterprise_personal_statistics(
     Returns:
         dict: 企业统计数据
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "statistics:read:personal", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有企业用户才能查看企业统计"

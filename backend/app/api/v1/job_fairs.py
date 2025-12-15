@@ -329,11 +329,21 @@ async def create_job_fair(
     Raises:
         HTTPException: 如果用户类型不正确
     """
-    # 检查用户类型（教师或企业）
-    if current_user.user_type not in ["TEACHER", "ENTERPRISE"]:
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    
+    # 教师和企业都可以创建双选会，但企业子账号不能创建
+    if current_user.user_type == "TEACHER":
+        has_permission = await check_permission(current_user, "job_fair:create", db)
+    elif current_user.user_type == "ENTERPRISE":
+        has_permission = await check_permission(current_user, "job_fair:create", db)
+    else:
+        has_permission = False
+    
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有教师或企业用户才能创建双选会"
+            detail="只有教师或企业主账号才能创建双选会"
         )
     
     # 创建双选会
@@ -400,22 +410,19 @@ async def update_job_fair(
             detail="双选会不存在"
         )
     
-    # 检查权限
-    if current_user.user_type == "TEACHER":
-        # 教师可以修改
-        pass
-    elif current_user.user_type == "ENTERPRISE":
-        # 企业只能修改自己创建的
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "job_fair:update", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此双选会"
         )
-        enterprise = enterprise_result.scalar_one_or_none()
-        if not enterprise or job_fair.created_by != enterprise.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权修改此双选会"
-            )
-    else:
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("job_fair", job_fair_id, current_user, db, "update")
+    if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权修改此双选会"
@@ -459,20 +466,19 @@ async def delete_job_fair(
             detail="双选会不存在"
         )
     
-    # 检查权限（同更新逻辑）
-    if current_user.user_type == "TEACHER":
-        pass
-    elif current_user.user_type == "ENTERPRISE":
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "job_fair:delete", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此双选会"
         )
-        enterprise = enterprise_result.scalar_one_or_none()
-        if not enterprise or job_fair.created_by != enterprise.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权删除此双选会"
-            )
-    else:
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("job_fair", job_fair_id, current_user, db, "delete")
+    if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权删除此双选会"

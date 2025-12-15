@@ -208,7 +208,7 @@ async def create_job(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    创建职位（仅企业用户）
+    创建职位（仅企业用户，主账号）
     
     Args:
         job_data: 职位数据
@@ -221,11 +221,13 @@ async def create_job(
     Raises:
         HTTPException: 如果用户不是企业用户或企业信息不存在
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "job:create", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有企业用户才能创建职位"
+            detail="只有企业主账号才能创建职位"
         )
     
     # 获取企业信息
@@ -287,11 +289,22 @@ async def update_job(
     Raises:
         HTTPException: 如果职位不存在或无权修改
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "job:update", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有企业用户才能更新职位"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("job", job_id, current_user, db, "update")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权更新此职位"
         )
     
     # 获取职位
@@ -304,7 +317,6 @@ async def update_job(
             detail="职位不存在"
         )
     
-    # 检查权限（只能修改自己企业的职位）
     enterprise_result = await db.execute(
         select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
     )
@@ -344,11 +356,22 @@ async def delete_job(
     Raises:
         HTTPException: 如果职位不存在或无权删除
     """
-    # 检查用户类型
-    if current_user.user_type != "ENTERPRISE":
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "job:delete", db)
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有企业用户才能删除职位"
+            detail="只有企业主账号才能删除职位"
+        )
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("job", job_id, current_user, db, "delete")
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此职位"
         )
     
     # 获取职位
@@ -361,7 +384,6 @@ async def delete_job(
             detail="职位不存在"
         )
     
-    # 检查权限
     enterprise_result = await db.execute(
         select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
     )

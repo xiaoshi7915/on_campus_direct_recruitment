@@ -80,6 +80,14 @@ async def recommend_talent(
     Returns:
         TalentRecommendationResponse: 推荐信息
     """
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    has_permission = await check_permission(current_user, "student:recommend", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权推荐学生"
+        )
     # 获取教师信息
     teacher_result = await db.execute(
         select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)

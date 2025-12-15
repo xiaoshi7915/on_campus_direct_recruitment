@@ -65,33 +65,25 @@ async def get_info_sessions(
     if school_id:
         query = query.where(InfoSession.school_id == school_id)
     
-    # 企业过滤（支持主账号、子账号逻辑）
+    # 企业过滤
+    # 注意：企业用户调用此API时，应该通过"浏览宣讲会"模式来查看所有宣讲会
+    # 而"我的报名"应该通过/my-registrations接口来获取报名的宣讲会
+    # 这里不再自动过滤企业创建的宣讲会，因为前端有专门的"浏览宣讲会"和"我的报名"按钮
     if enterprise_id:
         query = query.where(InfoSession.enterprise_id == enterprise_id)
-    elif current_user and current_user.user_type == "ENTERPRISE":
-        # 企业用户：显示主账号和所有子账号的宣讲会
-        from app.models.profile import EnterpriseProfile
-        from app.services.enterprise_service import get_enterprise_ids_for_query
-        
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
-        )
-        enterprise = enterprise_result.scalar_one_or_none()
-        if enterprise:
-            enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
-            query = query.where(InfoSession.enterprise_id.in_(enterprise_ids))
     
     # 状态过滤
     if status_filter:
         query = query.where(InfoSession.status == status_filter)
     elif status_filter is None:
         # 如果未指定状态过滤，根据用户类型决定
-        # 教师和企业用户可以看到所有状态，未登录用户和学生只能看到已发布的
-        if current_user and current_user.user_type in ["TEACHER", "ENTERPRISE"]:
-            # 教师和企业用户可以看到所有状态，不添加状态过滤
+        # 教师可以看到所有状态，企业用户和学生只能看到已发布的
+        if current_user and current_user.user_type == "TEACHER":
+            # 教师可以看到所有状态，不添加状态过滤
             pass
         else:
-            # 未登录用户和学生只能看到已发布的宣讲会
+            # 企业用户、未登录用户和学生只能看到已发布的宣讲会
+            # 企业用户可以通过/my-created接口查看自己创建的所有状态的宣讲会
             query = query.where(InfoSession.status == "PUBLISHED")
     
     # 获取总数
@@ -100,6 +92,145 @@ async def get_info_sessions(
     total = total_result.scalar()
     
     # 分页查询
+    offset = (page - 1) * page_size
+    query = query.order_by(InfoSession.start_time.desc()).offset(offset).limit(page_size)
+    result = await db.execute(query)
+    info_sessions = result.scalars().all()
+    
+    # 将ORM对象转换为响应模型
+    info_session_responses = [InfoSessionResponse.model_validate(session) for session in info_sessions]
+    
+    return {
+        "items": info_session_responses,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
+@router.get("/my-registrations", response_model=InfoSessionListResponse)
+async def get_my_info_session_registrations(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取企业报名的宣讲会列表（仅企业用户）
+    
+    Args:
+        page: 页码
+        page_size: 每页数量
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        InfoSessionListResponse: 宣讲会列表
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能查看报名的宣讲会"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 获取企业报名的宣讲会ID列表（通过InfoSessionRegistration查找企业邀请的宣讲会）
+    # 注意：企业报名的宣讲会实际上是企业被邀请参加的宣讲会
+    # 这里需要查找企业作为参与者（通过enterprise_id字段）的宣讲会
+    # 但InfoSessionRegistration只有student_id，没有enterprise_id
+    # 所以企业报名的宣讲会应该是企业创建的宣讲会
+    # 根据需求，企业只能查看自己报名的宣讲会，这里理解为企业创建的宣讲会
+    
+    # 获取企业创建的宣讲会ID列表（主账号和子账号）
+    from app.services.enterprise_service import get_enterprise_ids_for_query
+    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+    
+    query = select(InfoSession).where(InfoSession.enterprise_id.in_(enterprise_ids))
+    
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # 分页
+    offset = (page - 1) * page_size
+    query = query.order_by(InfoSession.start_time.desc()).offset(offset).limit(page_size)
+    result = await db.execute(query)
+    info_sessions = result.scalars().all()
+    
+    # 将ORM对象转换为响应模型
+    info_session_responses = [InfoSessionResponse.model_validate(session) for session in info_sessions]
+    
+    return {
+        "items": info_session_responses,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
+@router.get("/my-created", response_model=InfoSessionListResponse)
+async def get_my_created_info_sessions(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取企业创建的宣讲会列表（仅企业用户）
+    
+    Args:
+        page: 页码
+        page_size: 每页数量
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        InfoSessionListResponse: 宣讲会列表
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能查看创建的宣讲会"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 获取企业创建的宣讲会ID列表（主账号和子账号）
+    from app.services.enterprise_service import get_enterprise_ids_for_query
+    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+    
+    query = select(InfoSession).where(InfoSession.enterprise_id.in_(enterprise_ids))
+    
+    # 获取总数
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # 分页
     offset = (page - 1) * page_size
     query = query.order_by(InfoSession.start_time.desc()).offset(offset).limit(page_size)
     result = await db.execute(query)
@@ -251,11 +382,21 @@ async def create_info_session(
     Raises:
         HTTPException: 如果用户不是企业
     """
-    # 检查用户类型（教师或企业）
-    if current_user.user_type not in ["TEACHER", "ENTERPRISE"]:
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission
+    
+    # 教师和企业都可以创建宣讲会，但教师子账号不能创建
+    if current_user.user_type == "TEACHER":
+        has_permission = await check_permission(current_user, "info_session:create", db)
+    elif current_user.user_type == "ENTERPRISE":
+        has_permission = await check_permission(current_user, "info_session:create", db)
+    else:
+        has_permission = False
+    
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有教师或企业用户才能创建宣讲会"
+            detail="只有教师主账号或企业用户才能创建宣讲会"
         )
     
     # 如果是企业用户，获取企业信息（子账号创建时使用主账号ID）
@@ -333,32 +474,19 @@ async def update_info_session(
             detail="宣讲会不存在"
         )
     
-    # 检查权限
-    if current_user.user_type == "TEACHER":
-        # 教师可以修改所有宣讲会
-        pass
-    elif current_user.user_type == "ENTERPRISE":
-        # 企业只能修改自己企业的宣讲会
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "info_session:update", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权修改此宣讲会"
         )
-        enterprise = enterprise_result.scalar_one_or_none()
-        
-        if not enterprise:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="企业信息不存在"
-            )
-        
-        # 检查权限（主账号和子账号都可以修改主账号创建的宣讲会）
-        from app.services.enterprise_service import get_effective_enterprise_id
-        effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
-        if info_session.enterprise_id != effective_enterprise_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权修改此宣讲会"
-            )
-    else:
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("info_session", session_id, current_user, db, "update")
+    if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权修改此宣讲会"
@@ -409,32 +537,19 @@ async def delete_info_session(
             detail="宣讲会不存在"
         )
     
-    # 检查权限
-    if current_user.user_type == "TEACHER":
-        # 教师可以删除所有宣讲会
-        pass
-    elif current_user.user_type == "ENTERPRISE":
-        # 企业只能删除自己企业的宣讲会
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    # 使用新的权限检查机制
+    from app.core.permissions import check_permission, check_resource_access
+    
+    has_permission = await check_permission(current_user, "info_session:delete", db)
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除此宣讲会"
         )
-        enterprise = enterprise_result.scalar_one_or_none()
-        
-        if not enterprise:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="企业信息不存在"
-            )
-        
-        # 检查权限（主账号和子账号都可以删除主账号创建的宣讲会）
-        from app.services.enterprise_service import get_effective_enterprise_id
-        effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
-        if info_session.enterprise_id != effective_enterprise_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="无权删除此宣讲会"
-            )
-    else:
+    
+    # 使用资源权限检查
+    has_access = await check_resource_access("info_session", session_id, current_user, db, "delete")
+    if not has_access:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权删除此宣讲会"
