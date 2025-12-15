@@ -1,8 +1,7 @@
 /**
  * 认证相关API
  */
-import request from './request'
-import axios from 'axios'
+import request, { requestForm } from './request'
 
 // 注册接口
 export interface RegisterRequest {
@@ -43,12 +42,8 @@ export const login = (data: LoginRequest) => {
   formData.append('username', data.username)
   formData.append('password', data.password)
   
-  // 使用axios直接发送，因为request封装默认使用JSON
-  return axios.post('/api/v1/auth/login', formData.toString(), {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  }).then(response => response.data)
+  // 使用统一的表单请求封装
+  return requestForm.post('/auth/login', formData.toString())
 }
 
 /**

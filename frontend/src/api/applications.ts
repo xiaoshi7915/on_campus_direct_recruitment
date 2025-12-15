@@ -60,6 +60,10 @@ export const createApplication = async (data: ApplicationCreateRequest): Promise
 // 更新申请状态
 export const updateApplication = async (id: string, data: ApplicationUpdateRequest): Promise<JobApplication> => {
   // 后端API使用Query参数传递status，而不是body
-  return request.put(`/applications/${id}?status=${data.status}`)
+  // 验证status参数是否存在
+  if (!data.status) {
+    throw new Error('状态参数不能为空')
+  }
+  return request.put(`/applications/${id}?status=${encodeURIComponent(data.status)}`)
 }
 

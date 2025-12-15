@@ -15,6 +15,42 @@ const service: AxiosInstance = axios.create({
   },
 })
 
+/**
+ * 发送表单数据请求（用于OAuth2登录等需要表单格式的接口）
+ */
+export const requestForm = axios.create({
+  baseURL: '/api/v1',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+})
+
+// 为表单请求添加请求拦截器（添加token）
+requestForm.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem('access_token')
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// 为表单请求添加响应拦截器（统一错误处理）
+requestForm.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response.data
+  },
+  (error) => {
+    handleApiError(error)
+    return Promise.reject(error)
+  }
+)
+
 // 请求重试配置
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1秒

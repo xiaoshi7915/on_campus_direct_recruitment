@@ -225,16 +225,21 @@ async def login(
     }
 
 
+class RefreshTokenRequest(BaseModel):
+    """刷新令牌请求"""
+    refresh_token: str = Field(..., description="刷新令牌")
+
+
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
-    token: str = Query(..., description="刷新令牌"),
+    request: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
     刷新访问令牌接口
     
     Args:
-        refresh_token: 刷新令牌
+        request: 刷新令牌请求（包含refresh_token）
         db: 数据库会话
         
     Returns:
@@ -243,7 +248,7 @@ async def refresh_token(
     Raises:
         HTTPException: 如果刷新令牌无效
     """
-    payload = verify_token(token)
+    payload = verify_token(request.refresh_token)
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

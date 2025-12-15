@@ -97,6 +97,6 @@ export const sendMessage = async (
 
 // 标记消息为已读
 export const markMessageAsRead = async (messageId: string): Promise<void> => {
-  return request.post(`/chat/messages/${messageId}/read`)
+  return request.put(`/chat/messages/${messageId}/read`)
 }
 
