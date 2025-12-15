@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-chat max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="height: calc(100vh - 120px);">
+  <div class="enterprise-chat w-full mx-auto px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
     <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
@@ -50,8 +50,8 @@
       </div>
 
       <!-- 聊天窗口 -->
-      <div class="flex-1 flex flex-col min-h-0 bg-white">
-        <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
+      <div class="flex-1 flex flex-col min-h-0 bg-white overflow-hidden">
+        <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 min-h-0">
           <div class="text-center">
             <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -62,7 +62,7 @@
         <div v-else class="flex-1 flex flex-col min-h-0 overflow-hidden">
           <!-- 聊天头部 -->
           <div class="p-6 border-b border-gray-200 bg-white flex-shrink-0">
-            <div class="flex justify-between items-center flex-wrap gap-3">
+            <div class="flex flex-col gap-4">
               <h3 class="text-xl font-bold text-gray-900">{{ getOtherUserName(currentSession) }}</h3>
               <!-- 快捷操作按钮 -->
               <div class="flex flex-wrap gap-2">

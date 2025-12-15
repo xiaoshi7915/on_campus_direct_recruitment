@@ -29,7 +29,7 @@
               v-model="formData.username"
               type="text"
               required
-              class="form-input pl-10"
+              class="form-input"
               placeholder="请输入用户名、手机号或邮箱"
             />
           </div>
@@ -50,7 +50,7 @@
               v-model="formData.password"
               type="password"
               required
-              class="form-input pl-10"
+              class="form-input"
               placeholder="请输入密码"
             />
           </div>
@@ -185,7 +185,8 @@ const handleLogin = async () => {
 }
 
 .form-input {
-  @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200;
+  @apply w-full py-3 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200;
+  padding-left: 3.75rem; /* 60px - 确保图标和文字不重合 */
 }
 
 .form-input::placeholder {
@@ -197,6 +198,8 @@ const handleLogin = async () => {
   color: white;
   border-radius: 0.75rem;
   font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  min-height: 3rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.2s;
 }

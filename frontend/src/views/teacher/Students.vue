@@ -233,6 +233,111 @@
       </div>
     </div>
 
+    <!-- 学生详情模态框 -->
+    <div
+      v-if="showDetailModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      @click.self="showDetailModal = false"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+              <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              学生详情
+            </h2>
+            <button
+              @click="showDetailModal = false"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div v-if="studentDetail" class="space-y-6">
+            <!-- 基本信息卡片 -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <div class="flex items-center space-x-4 mb-4">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span class="text-white text-2xl font-bold">{{ studentDetail.real_name?.charAt(0) || '学' }}</span>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-bold text-gray-900">{{ studentDetail.real_name }}</h3>
+                  <p v-if="studentDetail.student_id" class="text-gray-600 mt-1">学号：{{ studentDetail.student_id }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 详细信息 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="text-sm font-semibold text-gray-700">年级</span>
+                </div>
+                <p class="text-gray-900 text-lg">{{ studentDetail.grade || '未设置' }}</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <span class="text-sm font-semibold text-gray-700">专业</span>
+                </div>
+                <p class="text-gray-900 text-lg">{{ studentDetail.major || '未设置' }}</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span class="text-sm font-semibold text-gray-700">简历数</span>
+                </div>
+                <p class="text-gray-900 text-lg">{{ studentDetail.resume_count || 0 }} 份</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div class="flex items-center mb-2">
+                  <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span class="text-sm font-semibold text-gray-700">申请数</span>
+                </div>
+                <p class="text-gray-900 text-lg">{{ studentDetail.application_count || 0 }} 份</p>
+              </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+              <button
+                @click="showDetailModal = false"
+                class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              >
+                关闭
+              </button>
+              <button
+                v-if="studentDetail.id"
+                @click="viewStudentResumes(studentDetail.id); showDetailModal = false"
+                class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                查看简历
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 移除确认模态框 -->
     <div
       v-if="showRemoveModal"
@@ -300,7 +405,9 @@ const total = ref(0)
 // 模态框状态
 const showCommentModalVisible = ref(false)
 const showRemoveModal = ref(false)
+const showDetailModal = ref(false)
 const selectedStudent = ref<Student | null>(null)
+const studentDetail = ref<any>(null)
 
 // 点评表单
 const commentForm = ref<StudentCommentCreate>({
@@ -354,7 +461,8 @@ const handlePaginationChange = (page: number, size: number) => {
 const viewStudentDetail = async (studentId: string) => {
   try {
     const student = await getStudent(studentId)
-    alert(`学生详情：\n姓名：${student.real_name}\n学号：${student.student_id || '未设置'}\n年级：${student.grade || '未设置'}\n专业：${student.major || '未设置'}\n简历数：${student.resume_count}\n申请数：${student.application_count}`)
+    studentDetail.value = student
+    showDetailModal.value = true
   } catch (error: any) {
     alert('加载学生详情失败: ' + (error.response?.data?.detail || error.message))
   }

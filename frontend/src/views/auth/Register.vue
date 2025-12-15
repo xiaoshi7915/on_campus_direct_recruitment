@@ -30,7 +30,7 @@
               type="text"
               required
               minlength="3"
-              class="form-input pl-10"
+              class="form-input"
               placeholder="请输入用户名（至少3个字符）"
             />
           </div>
@@ -52,7 +52,7 @@
               type="password"
               required
               minlength="6"
-              class="form-input pl-10"
+              class="form-input"
               placeholder="请输入密码（至少6个字符）"
             />
           </div>
@@ -72,7 +72,7 @@
               id="phone"
               v-model="formData.phone"
               type="tel"
-              class="form-input pl-10"
+              class="form-input"
               placeholder="请输入手机号"
             />
           </div>
@@ -92,7 +92,7 @@
               id="email"
               v-model="formData.email"
               type="email"
-              class="form-input pl-10"
+              class="form-input"
               placeholder="请输入邮箱"
             />
           </div>
@@ -241,7 +241,8 @@ const handleRegister = async () => {
 }
 
 .form-input {
-  @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200;
+  @apply w-full py-3 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200;
+  padding-left: 3.75rem; /* 60px - 确保图标和文字不重合 */
 }
 
 .form-input::placeholder {
@@ -257,6 +258,8 @@ const handleRegister = async () => {
   color: white;
   border-radius: 0.75rem;
   font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  min-height: 3rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.2s;
 }

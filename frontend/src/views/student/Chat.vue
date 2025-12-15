@@ -1,5 +1,5 @@
 <template>
-  <div class="student-chat max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="height: calc(100vh - 120px);">
+  <div class="student-chat max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
     <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">

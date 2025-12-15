@@ -1,5 +1,5 @@
 <template>
-  <div class="teacher-chat max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="height: calc(100vh - 120px);">
+  <div class="teacher-chat w-full mx-auto px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
     <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
@@ -62,7 +62,7 @@
         <div v-else class="flex-1 flex flex-col min-h-0 overflow-hidden">
           <!-- 聊天头部 -->
           <div class="p-6 border-b border-gray-200 bg-white flex-shrink-0">
-            <div class="flex justify-between items-center flex-wrap gap-3">
+            <div class="flex flex-col gap-4">
               <h3 class="text-xl font-bold text-gray-900">{{ getOtherUserName(currentSession) }}</h3>
               <!-- 快捷操作按钮 -->
               <div class="flex flex-wrap gap-2">

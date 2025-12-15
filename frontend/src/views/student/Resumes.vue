@@ -117,8 +117,9 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       @click.self="closeModal"
     >
-      <div class="bg-white rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-100">
-        <div class="flex items-center justify-between mb-6">
+      <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+        <!-- 固定头部 -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h2 class="text-2xl font-bold text-gray-900 flex items-center">
             <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -134,7 +135,9 @@
             </svg>
           </button>
         </div>
-        <form @submit.prevent="saveResume" class="space-y-6">
+        <!-- 可滚动内容区域 -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="space-y-6">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">简历标题</label>
             <input
@@ -217,25 +220,28 @@
               <span class="ml-2 text-sm text-gray-700 font-medium">设为默认简历</span>
             </label>
           </div>
-          <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              @click="closeModal"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
-            >
-              取消
-            </button>
-            <button
-              type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
-            >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              保存
-            </button>
           </div>
-        </form>
+        </div>
+        <!-- 固定底部按钮 -->
+        <div class="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+          <button
+            type="button"
+            @click="closeModal"
+            class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            @click="saveResume"
+            class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            保存
+          </button>
+        </div>
       </div>
     </div>
   </div>
