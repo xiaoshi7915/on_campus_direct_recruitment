@@ -49,16 +49,16 @@ async def fulltext_search_jobs(
             base_query += " AND work_location LIKE :location"
             params["location"] = f"%{location}%"
         
-        # 获取总数
-        count_query = f"SELECT COUNT(*) as total FROM ({base_query}) as subquery"
-        count_result = await db.execute(text(count_query), params)
+        # 获取总数 - 使用参数化查询，避免SQL注入
+        count_query = text("SELECT COUNT(*) as total FROM (" + base_query + ") as subquery")
+        count_result = await db.execute(count_query, params)
         total = count_result.scalar() or 0
         
-        # 获取分页结果
-        search_query = f"{base_query} ORDER BY relevance DESC LIMIT :limit OFFSET :offset"
+        # 获取分页结果 - 使用参数化查询，避免SQL注入
+        search_query = text(base_query + " ORDER BY relevance DESC LIMIT :limit OFFSET :offset")
         params.update({"limit": limit, "offset": offset})
         
-        result = await db.execute(text(search_query), params)
+        result = await db.execute(search_query, params)
         rows = result.fetchall()
         
         # 将原始行数据转换为Job对象

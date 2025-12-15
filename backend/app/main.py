@@ -1,7 +1,7 @@
 """
 FastAPI应用主入口文件
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -34,6 +34,10 @@ async def lifespan(app: FastAPI):
     from app.core.production import check_production_settings
     check_production_settings()
     
+    # 初始化Redis连接池
+    from app.core.cache import init_redis_pool
+    await init_redis_pool()
+    
     async with engine.begin() as conn:
         # 创建数据库表（生产环境应使用Alembic迁移）
         # await conn.run_sync(Base.metadata.create_all)
@@ -44,8 +48,9 @@ async def lifespan(app: FastAPI):
     # 关闭时执行
     logger.info("应用正在关闭...")
     
-    # 关闭时执行
-    pass
+    # 关闭Redis连接池
+    from app.core.cache import close_redis_pool
+    await close_redis_pool()
 
 
 # 创建FastAPI应用实例（禁用默认docs，稍后自定义）
@@ -70,6 +75,10 @@ app.add_middleware(
 
 # 添加日志中间件
 app.add_middleware(LoggingMiddleware)
+
+# 添加Gzip压缩中间件（压缩响应内容，提升传输性能）
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # 添加限流中间件（每分钟60次请求）
 app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
@@ -98,12 +107,35 @@ async def custom_swagger_ui_html():
 
 
 # 全局异常处理
+# 注意：只捕获业务异常，让系统异常（如SystemExit, KeyboardInterrupt）正常传播
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):
+    """
+    HTTP异常处理器
+    处理FastAPI的HTTPException
+    """
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error_code": exc.status_code * 10,
+            "error_message": exc.detail,
+            "detail": exc.detail
+        }
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """
     全局异常处理器
-    捕获所有未处理的异常并返回统一格式的错误响应
+    捕获所有未处理的业务异常并返回统一格式的错误响应
+    注意：不捕获系统异常（SystemExit, KeyboardInterrupt等）
     """
+    # 不捕获系统退出异常
+    if isinstance(exc, (SystemExit, KeyboardInterrupt)):
+        raise
+    
+    logger.error(f"未处理的异常: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={

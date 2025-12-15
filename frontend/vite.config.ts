@@ -22,6 +22,16 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // 生产环境移除console
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // 移除console.log
+        drop_debugger: true, // 移除debugger
+      },
+    },
+  },
 })
 
 

@@ -1,37 +1,66 @@
 """
 Redis缓存工具模块
+使用连接池管理Redis连接
 """
 import json
 from typing import Optional, Any
-from redis.asyncio import Redis
+from redis.asyncio import Redis, ConnectionPool
 from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
 # Redis连接池
+redis_pool: Optional[ConnectionPool] = None
 redis_client: Optional[Redis] = None
 
 
-async def get_redis() -> Optional[Redis]:
-    """获取Redis客户端"""
-    global redis_client
+def init_redis_pool():
+    """初始化Redis连接池"""
+    global redis_pool, redis_client
     
-    if redis_client is None:
+    if redis_pool is None:
         try:
-            redis_client = Redis(
+            redis_pool = ConnectionPool(
                 host=settings.REDIS_HOST,
                 port=settings.REDIS_PORT,
                 db=settings.REDIS_DB,
                 password=settings.REDIS_PASSWORD if settings.REDIS_PASSWORD else None,
-                decode_responses=True
+                decode_responses=True,
+                max_connections=50,  # 最大连接数
+                retry_on_timeout=True,
+                health_check_interval=30  # 健康检查间隔（秒）
             )
-            # 测试连接
-            await redis_client.ping()
-            logger.info("Redis连接成功")
+            redis_client = Redis(connection_pool=redis_pool)
+            logger.info("Redis连接池初始化成功")
         except Exception as e:
-            logger.warning(f"Redis连接失败: {str(e)}，将使用内存缓存")
+            logger.warning(f"Redis连接池初始化失败: {str(e)}，将使用内存缓存")
+            redis_pool = None
             redis_client = None
+
+
+async def get_redis() -> Optional[Redis]:
+    """获取Redis客户端（使用连接池）"""
+    global redis_client
+    
+    if redis_pool is None:
+        init_redis_pool()
+    
+    if redis_client is None:
+        return None
+    
+    # 测试连接
+    try:
+        await redis_client.ping()
+    except Exception as e:
+        logger.warning(f"Redis连接测试失败: {str(e)}")
+        # 尝试重新初始化
+        init_redis_pool()
+        if redis_client:
+            try:
+                await redis_client.ping()
+            except Exception:
+                redis_client = None
     
     return redis_client
 
@@ -106,10 +135,13 @@ async def delete_cache(key: str):
 
 
 async def close_redis():
-    """关闭Redis连接"""
-    global redis_client
+    """关闭Redis连接和连接池"""
+    global redis_client, redis_pool
     if redis_client:
         await redis_client.close()
         redis_client = None
-        logger.info("Redis连接已关闭")
+    if redis_pool:
+        await redis_pool.disconnect()
+        redis_pool = None
+        logger.info("Redis连接池已关闭")
 

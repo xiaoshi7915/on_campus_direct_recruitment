@@ -4,61 +4,156 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_, and_
-from typing import Optional, Dict, List
+from sqlalchemy.orm import selectinload, joinedload
+from typing import Optional, Dict, List, Set
 from uuid import uuid4
 import json
+import asyncio
+from datetime import datetime, timedelta
 
 from app.core.database import get_db
+from app.core.datetime_utils import utc_now
 from app.api.v1.auth import get_current_user
+from app.core.security import verify_token
 from app.models.user import User
 from app.models.chat import ChatSession, Message
 from app.schemas.chat import (
     MessageCreate, MessageResponse, MessageListResponse,
     ChatSessionResponse, ChatSessionListResponse
 )
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
 # WebSocket连接管理器
 class ConnectionManager:
-    """WebSocket连接管理器"""
+    """WebSocket连接管理器，支持心跳检测和自动清理失效连接"""
     
     def __init__(self):
         # 存储活跃的连接：{user_id: [websocket1, websocket2, ...]}
         self.active_connections: Dict[str, List[WebSocket]] = {}
+        # 存储连接的最后心跳时间：{websocket: last_ping_time}
+        self.connection_heartbeat: Dict[WebSocket, datetime] = {}
+        # 心跳超时时间（秒）
+        self.heartbeat_timeout = 60
+        # 启动心跳检测任务
+        self._heartbeat_task: Optional[asyncio.Task] = None
+    
+    async def start_heartbeat_check(self):
+        """启动心跳检测任务"""
+        if self._heartbeat_task is None or self._heartbeat_task.done():
+            self._heartbeat_task = asyncio.create_task(self._check_heartbeat())
+    
+    async def _check_heartbeat(self):
+        """定期检查连接心跳，清理超时连接"""
+        while True:
+            try:
+                await asyncio.sleep(30)  # 每30秒检查一次
+                current_time = utc_now()
+                timeout_connections: Set[WebSocket] = set()
+                
+                # 检查所有连接的心跳时间
+                for websocket, last_ping in list(self.connection_heartbeat.items()):
+                    if (current_time - last_ping).total_seconds() > self.heartbeat_timeout:
+                        timeout_connections.add(websocket)
+                
+                # 清理超时连接
+                for websocket in timeout_connections:
+                    await self._remove_connection(websocket, reason="心跳超时")
+                    
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"心跳检测任务出错: {str(e)}", exc_info=True)
+    
+    async def _remove_connection(self, websocket: WebSocket, reason: str = "未知原因"):
+        """移除连接（内部方法）"""
+        try:
+            # 关闭WebSocket连接
+            await websocket.close(code=1000, reason=reason)
+        except Exception as e:
+            logger.debug(f"关闭WebSocket连接时出错: {str(e)}")
+        
+        # 从心跳记录中移除
+        if websocket in self.connection_heartbeat:
+            del self.connection_heartbeat[websocket]
+        
+        # 从活跃连接中移除
+        for user_id, connections in list(self.active_connections.items()):
+            if websocket in connections:
+                connections.remove(websocket)
+                if not connections:
+                    del self.active_connections[user_id]
+                break
+        
+        logger.info(f"WebSocket连接已移除: {reason}")
     
     async def connect(self, websocket: WebSocket, user_id: str):
         """建立WebSocket连接"""
-        await websocket.accept()
-        if user_id not in self.active_connections:
-            self.active_connections[user_id] = []
-        self.active_connections[user_id].append(websocket)
+        try:
+            await websocket.accept()
+            if user_id not in self.active_connections:
+                self.active_connections[user_id] = []
+            self.active_connections[user_id].append(websocket)
+            # 记录连接时间作为初始心跳
+            self.connection_heartbeat[websocket] = utc_now()
+            
+            # 确保心跳检测任务运行
+            await self.start_heartbeat_check()
+            
+            logger.info(f"WebSocket连接已建立: user_id={user_id}")
+        except Exception as e:
+            logger.error(f"建立WebSocket连接失败: {str(e)}", exc_info=True)
+            raise
     
     def disconnect(self, websocket: WebSocket, user_id: str):
         """断开WebSocket连接"""
-        if user_id in self.active_connections:
-            if websocket in self.active_connections[user_id]:
-                self.active_connections[user_id].remove(websocket)
-            if not self.active_connections[user_id]:
-                del self.active_connections[user_id]
+        asyncio.create_task(self._remove_connection(websocket, "主动断开"))
+    
+    async def update_heartbeat(self, websocket: WebSocket):
+        """更新连接心跳时间"""
+        self.connection_heartbeat[websocket] = datetime.utcnow()
     
     async def send_personal_message(self, message: dict, user_id: str):
         """向特定用户发送消息"""
-        if user_id in self.active_connections:
-            for connection in self.active_connections[user_id]:
-                try:
-                    await connection.send_json(message)
-                except Exception as e:
-                    print(f"发送消息失败：{e}")
+        if user_id not in self.active_connections:
+            return
+        
+        # 收集需要移除的失效连接
+        invalid_connections: List[WebSocket] = []
+        
+        for connection in self.active_connections[user_id]:
+            try:
+                await connection.send_json(message)
+                # 发送成功，更新心跳
+                await self.update_heartbeat(connection)
+            except Exception as e:
+                logger.warning(f"发送消息失败，连接可能已断开: {str(e)}")
+                # 记录失效连接，稍后移除
+                invalid_connections.append(connection)
+        
+        # 移除失效连接
+        for connection in invalid_connections:
+            await self._remove_connection(connection, "发送消息失败")
     
     async def broadcast(self, message: dict):
         """广播消息给所有连接"""
-        for user_id, connections in self.active_connections.items():
+        invalid_connections: List[WebSocket] = []
+        
+        for user_id, connections in list(self.active_connections.items()):
             for connection in connections:
                 try:
                     await connection.send_json(message)
+                    await self.update_heartbeat(connection)
                 except Exception as e:
-                    print(f"广播消息失败：{e}")
+                    logger.warning(f"广播消息失败: {str(e)}")
+                    invalid_connections.append(connection)
+        
+        # 移除失效连接
+        for connection in invalid_connections:
+            await self._remove_connection(connection, "广播消息失败")
 
 
 # 创建全局连接管理器
@@ -67,16 +162,102 @@ manager = ConnectionManager()
 
 # ==================== WebSocket接口 ====================
 
-@router.websocket("/ws/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: str):
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(None)):
     """
-    WebSocket连接端点
+    WebSocket连接端点（需要认证）
     
     Args:
         websocket: WebSocket连接
-        user_id: 用户ID
+        token: JWT令牌（通过查询参数传递，例如：ws://host/ws?token=xxx）
     """
-    await manager.connect(websocket, user_id)
+    # 验证token
+    if not token:
+        await websocket.close(code=1008, reason="缺少认证令牌")
+        return
+    
+    # 验证token并获取用户信息
+    payload = verify_token(token)
+    if not payload:
+        await websocket.close(code=1008, reason="无效的认证令牌")
+        return
+    
+    username = payload.get("sub")
+    user_id_from_token = payload.get("user_id")
+    
+    if not username or not user_id_from_token:
+        await websocket.close(code=1008, reason="令牌信息不完整")
+        return
+    
+    # 从数据库验证用户存在且状态正常
+    # 注意：WebSocket不能使用Depends，需要手动创建数据库会话
+    async for db in get_db():
+        try:
+            result = await db.execute(
+                select(User).where(User.id == user_id_from_token, User.username == username)
+            )
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                await websocket.close(code=1008, reason="用户不存在")
+                return
+            
+            if user.status != "ACTIVE":
+                await websocket.close(code=1008, reason="账户已被禁用")
+                return
+            
+            # 认证通过，建立连接
+            await manager.connect(websocket, user_id_from_token)
+            logger.info(f"WebSocket连接已建立（已认证）: user_id={user_id_from_token}, username={username}")
+            
+            # 保存user_id供后续使用
+            current_user_id = user_id_from_token
+            
+            try:
+                while True:
+                    # 接收消息
+                    data = await websocket.receive_text()
+                    message_data = json.loads(data)
+                    
+                    # 处理不同类型的消息
+                    message_type = message_data.get("type", "message")
+                    
+                    if message_type == "ping":
+                        # 心跳检测
+                        await manager.update_heartbeat(websocket)
+                        await websocket.send_json({"type": "pong"})
+                    elif message_type == "message":
+                        # 普通消息（需要保存到数据库）
+                        receiver_id = message_data.get("receiver_id")
+                        content = message_data.get("content")
+                        
+                        if receiver_id and content:
+                            # 发送给接收者
+                            await manager.send_personal_message({
+                                "type": "message",
+                                "sender_id": current_user_id,
+                                "content": content,
+                                "timestamp": message_data.get("timestamp")
+                            }, receiver_id)
+                            
+                            # 确认发送成功
+                            await websocket.send_json({
+                                "type": "message_sent",
+                                "message_id": message_data.get("message_id")
+                            })
+                            # 更新心跳
+                            await manager.update_heartbeat(websocket)
+            except WebSocketDisconnect:
+                logger.info(f"WebSocket连接断开: user_id={current_user_id}")
+                manager.disconnect(websocket, current_user_id)
+            except Exception as e:
+                logger.error(f"WebSocket处理出错: {str(e)}", exc_info=True)
+                manager.disconnect(websocket, current_user_id)
+            break
+        except Exception as e:
+            logger.error(f"WebSocket认证失败: {str(e)}", exc_info=True)
+            await websocket.close(code=1011, reason="服务器内部错误")
+            break
     try:
         while True:
             # 接收消息
@@ -88,6 +269,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             
             if message_type == "ping":
                 # 心跳检测
+                await manager.update_heartbeat(websocket)
                 await websocket.send_json({"type": "pong"})
             elif message_type == "message":
                 # 普通消息（需要保存到数据库）
@@ -99,7 +281,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     # 发送给接收者
                     await manager.send_personal_message({
                         "type": "message",
-                        "sender_id": user_id,
+                        "sender_id": user_id_from_token,
                         "content": content,
                         "timestamp": message_data.get("timestamp")
                     }, receiver_id)
@@ -109,8 +291,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                         "type": "message_sent",
                         "message_id": message_data.get("message_id")
                     })
+                    # 更新心跳
+                    await manager.update_heartbeat(websocket)
     except WebSocketDisconnect:
-        manager.disconnect(websocket, user_id)
+        logger.info(f"WebSocket连接断开: user_id={user_id_from_token}")
+        manager.disconnect(websocket, user_id_from_token)
+    except Exception as e:
+        logger.error(f"WebSocket处理出错: {str(e)}", exc_info=True)
+        manager.disconnect(websocket, user_id_from_token)
 
 
 # ==================== REST API接口 ====================
@@ -133,51 +321,33 @@ async def get_chat_sessions(
     from app.models.user import User
     
     # 查询当前用户参与的所有会话
+    # 使用selectinload预加载关联数据，避免N+1查询问题
     # 注意：MySQL中NULL值在降序排序时默认排在最后
     result = await db.execute(
-        select(ChatSession).where(
+        select(ChatSession)
+        .options(
+            selectinload(ChatSession.user1),
+            selectinload(ChatSession.user2),
+            selectinload(ChatSession.school)
+        )
+        .where(
             or_(
                 ChatSession.user1_id == current_user.id,
                 ChatSession.user2_id == current_user.id
             )
-        ).order_by(ChatSession.last_message_at.desc())
+        )
+        .order_by(ChatSession.last_message_at.desc())
     )
     sessions = result.scalars().all()
     
-    # 为每个会话加载对方用户信息
+    # 为每个会话构建响应对象
     session_list = []
-    # 收集所有需要查询的用户ID和学校ID
-    all_user_ids = set()
-    all_school_ids = set()
-    for session in sessions:
-        all_user_ids.add(session.user1_id)
-        if session.user2_id:
-            all_user_ids.add(session.user2_id)
-        if session.school_id:
-            all_school_ids.add(session.school_id)
-    
-    # 批量查询所有用户信息
-    users = {}
-    if all_user_ids:
-        users_result = await db.execute(
-            select(User).where(User.id.in_(all_user_ids))
-        )
-        users = {user.id: user for user in users_result.scalars().all()}
-    
-    # 批量查询所有学校信息
-    schools = {}
-    if all_school_ids:
-        from app.models.school import School
-        schools_result = await db.execute(
-            select(School).where(School.id.in_(all_school_ids))
-        )
-        schools = {school.id: school for school in schools_result.scalars().all()}
     
     for session in sessions:
-        # 获取用户1和用户2的信息
-        user1 = users.get(session.user1_id)
-        user2 = users.get(session.user2_id) if session.user2_id else None
-        school = schools.get(session.school_id) if session.school_id else None
+        # 获取用户1和用户2的信息（已通过selectinload预加载）
+        user1 = session.user1
+        user2 = session.user2 if session.user2_id else None
+        school = session.school if session.school_id else None
         
         # 构建响应对象
         # 处理用户类型：确保返回的是枚举值（如 'ENTERPRISE'）而不是字符串表示（如 'UserType.ENTERPRISE'）
@@ -215,11 +385,6 @@ async def get_chat_sessions(
         }
         
         session_list.append(session_dict)
-    
-    return {
-        "items": session_list,
-        "total": len(session_list)
-    }
     
     return {
         "items": session_list,
@@ -638,7 +803,6 @@ async def create_message(
         )
     
     # 创建消息
-    from datetime import datetime
     message = Message(
         id=str(uuid4()),
         session_id=session_id,
@@ -650,14 +814,11 @@ async def create_message(
         is_read=False
     )
     
-    # 使用当前时间作为创建时间
-    from datetime import datetime
-    current_time = datetime.utcnow()
-    
     db.add(message)
     await db.flush()  # 刷新以获取created_at
     
     # 更新会话的最后消息时间（使用当前时间）
+    current_time = utc_now()
     session.last_message_at = current_time
     
     await db.commit()
