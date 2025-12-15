@@ -106,3 +106,4 @@ async def test_query_optimization_comparison():
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 
+

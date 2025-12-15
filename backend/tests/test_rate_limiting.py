@@ -56,3 +56,4 @@ def test_rate_limit_root_endpoint_excluded():
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 
+

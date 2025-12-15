@@ -68,3 +68,4 @@ def parse_datetime(dt_str: str, format_str: str = "%Y-%m-%d %H:%M:%S") -> dateti
     dt = datetime.strptime(dt_str, format_str)
     return dt.replace(tzinfo=timezone.utc)
 
+
