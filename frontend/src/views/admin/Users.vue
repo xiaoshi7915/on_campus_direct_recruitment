@@ -1,26 +1,37 @@
 <template>
-  <div class="admin-users">
-    <h1 class="text-3xl font-bold mb-6">用户管理</h1>
+  <div class="admin-users max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 flex items-center">
+      <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+      用户管理
+    </h1>
 
     <!-- 搜索和筛选 -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        搜索和筛选
+      </h2>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">搜索</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">搜索</label>
           <input
             v-model="searchKeyword"
             type="text"
             placeholder="搜索用户名、手机号、邮箱..."
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
             @keyup.enter="handleSearch"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">用户类型</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">用户类型</label>
           <select
             v-model="userTypeFilter"
             @change="handleSearch"
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
           >
             <option value="">全部</option>
             <option value="STUDENT">学生</option>
@@ -30,11 +41,11 @@
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">状态</label>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">状态</label>
           <select
             v-model="statusFilter"
             @change="handleSearch"
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
           >
             <option value="">全部</option>
             <option value="ACTIVE">活跃</option>
@@ -45,8 +56,11 @@
         <div class="flex items-end">
           <button
             @click="handleSearch"
-            class="w-full px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            class="w-full px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center justify-center"
           >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             搜索
           </button>
         </div>
@@ -55,56 +69,82 @@
 
     <!-- 用户列表 -->
     <div class="space-y-4">
-      <div v-if="loading" class="text-center py-12">加载中...</div>
-      <div v-else-if="users.length === 0" class="text-center py-12 text-gray-500">
-        暂无用户信息
+      <div v-if="loading" class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600">加载中...</p>
+      </div>
+      <div v-else-if="users.length === 0" class="text-center py-16 text-gray-500">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <p class="text-lg">暂无用户信息</p>
       </div>
       <div
         v-for="user in users"
         :key="user.id"
-        class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-200 border border-gray-100"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <div class="flex items-center space-x-3 mb-2">
-              <h3 class="text-xl font-semibold">{{ user.username }}</h3>
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="p-2 bg-blue-50 rounded-lg">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900">{{ user.username }}</h3>
               <span
                 :class="getUserTypeClass(user.user_type)"
-                class="px-2 py-1 rounded text-xs"
+                class="px-3 py-1 rounded-full text-xs font-medium"
               >
                 {{ getUserTypeText(user.user_type) }}
               </span>
               <span
                 :class="getStatusClass(user.status)"
-                class="px-2 py-1 rounded text-xs"
+                class="px-3 py-1 rounded-full text-xs font-medium"
               >
                 {{ getStatusText(user.status) }}
               </span>
             </div>
-            <div class="text-gray-600 text-sm mb-3">
-              <p v-if="user.phone">手机号：{{ user.phone }}</p>
-              <p v-if="user.email">邮箱：{{ user.email }}</p>
-              <p>注册时间：{{ formatDate(user.created_at) }}</p>
+            <div class="text-gray-600 text-sm mb-3 ml-11 space-y-1">
+              <p v-if="user.phone" class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                手机号：{{ user.phone }}
+              </p>
+              <p v-if="user.email" class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                邮箱：{{ user.email }}
+              </p>
+              <p class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                注册时间：{{ formatDate(user.created_at) }}
+              </p>
             </div>
           </div>
           <div class="ml-6 flex flex-col space-y-2">
             <button
               @click="viewUserDetail(user.id)"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
             >
               查看详情
             </button>
             <button
               v-if="user.status === 'ACTIVE'"
               @click="handleBanUser(user.id)"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              class="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
             >
               封禁
             </button>
             <button
               v-else
               @click="handleUnbanUser(user.id)"
-              class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              class="px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
             >
               解封
             </button>
@@ -268,9 +308,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.admin-users {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* 样式已内联到模板中 */
 </style>
 

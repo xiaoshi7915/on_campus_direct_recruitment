@@ -1,36 +1,96 @@
 <template>
-  <div class="login-container">
-    <div class="login-box">
-      <h2 class="text-2xl font-bold mb-6">用户登录</h2>
-      <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label for="username">用户名/手机号/邮箱</label>
-          <input
-            id="username"
-            v-model="formData.username"
-            type="text"
-            required
-            class="form-input"
-            placeholder="请输入用户名、手机号或邮箱"
-          />
+  <div class="login-container min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="login-box w-full max-w-md">
+      <!-- Logo和标题 -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
         </div>
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">欢迎回来</h2>
+        <p class="text-gray-600">登录您的账户以继续</p>
+      </div>
+
+      <!-- 登录表单 -->
+      <form @submit.prevent="handleLogin" class="space-y-6">
         <div class="form-group">
-          <label for="password">密码</label>
-          <input
-            id="password"
-            v-model="formData.password"
-            type="password"
-            required
-            class="form-input"
-            placeholder="请输入密码"
-          />
+          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+            用户名/手机号/邮箱
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <input
+              id="username"
+              v-model="formData.username"
+              type="text"
+              required
+              class="form-input pl-10"
+              placeholder="请输入用户名、手机号或邮箱"
+            />
+          </div>
         </div>
-        <button type="submit" class="btn-submit" :disabled="loading">
-          {{ loading ? '登录中...' : '登录' }}
+        
+        <div class="form-group">
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            密码
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <input
+              id="password"
+              v-model="formData.password"
+              type="password"
+              required
+              class="form-input pl-10"
+              placeholder="请输入密码"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <router-link to="/forgot-password" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            忘记密码？
+          </router-link>
+        </div>
+
+        <button
+          type="submit"
+          class="btn-submit w-full"
+          :disabled="loading"
+        >
+          <span v-if="loading" class="flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            登录中...
+          </span>
+          <span v-else class="flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            登录
+          </span>
         </button>
       </form>
-      <div class="mt-4 text-center">
-        <router-link to="/register" class="text-blue-500">还没有账号？立即注册</router-link>
+
+      <!-- 注册链接 -->
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-600">
+          还没有账号？
+          <router-link to="/register" class="text-blue-600 hover:text-blue-700 font-semibold">
+            立即注册
+          </router-link>
+        </p>
       </div>
     </div>
   </div>
@@ -116,35 +176,39 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-container {
-  @apply flex items-center justify-center min-h-screen bg-gray-100;
+  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
 }
 
 .login-box {
-  @apply bg-white p-8 rounded-lg shadow-md w-full max-w-md;
-}
-
-.form-group {
-  @apply mb-4;
-}
-
-.form-group label {
-  @apply block mb-2 text-gray-700;
+  @apply bg-white p-8 rounded-2xl border border-gray-100;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
 }
 
 .form-input {
-  @apply w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white;
+  @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200;
 }
 
 .form-input::placeholder {
   @apply text-gray-400;
 }
 
-.login-box h2 {
-  @apply text-gray-900;
+.btn-submit {
+  background-color: #2563eb;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
 }
 
-.btn-submit {
-  @apply w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed;
+.btn-submit:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>
 

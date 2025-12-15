@@ -1,35 +1,46 @@
 <template>
-  <div class="enterprise-chat" style="height: calc(100vh - 120px);">
-    <div class="flex h-full">
+  <div class="enterprise-chat max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="height: calc(100vh - 120px);">
+    <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
-      <div class="w-1/3 border-r bg-white">
-        <div class="p-4 border-b">
-          <h2 class="text-xl font-semibold">聊天</h2>
+      <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
+        <div class="p-6 border-b border-gray-200 bg-white">
+          <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            聊天
+          </h2>
         </div>
-        <div class="overflow-y-auto h-full">
-          <div v-if="loading" class="p-4 text-center">加载中...</div>
-          <div v-else-if="sessions.length === 0" class="p-4 text-center text-gray-500">
-            暂无聊天记录
+        <div class="flex-1 overflow-y-auto">
+          <div v-if="loading" class="p-8 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-3 text-gray-600">加载中...</p>
+          </div>
+          <div v-else-if="sessions.length === 0" class="p-8 text-center text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-sm">暂无聊天记录</p>
           </div>
           <div
             v-for="session in sessions"
             :key="session.id"
             @click="selectSession(session)"
             :class="[
-              'p-4 border-b cursor-pointer hover:bg-gray-50',
-              currentSessionId === session.id ? 'bg-blue-50' : ''
+              'p-4 border-b border-gray-200 cursor-pointer transition-all duration-200',
+              currentSessionId === session.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-100'
             ]"
           >
             <div class="flex justify-between items-start">
-              <div>
-                <p class="font-semibold">{{ getOtherUserName(session) }}</p>
-                <p class="text-sm text-gray-600 truncate">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 truncate">{{ getOtherUserName(session) }}</p>
+                <p class="text-sm text-gray-500 truncate mt-1">
                   {{ session.last_message_at ? formatDate(session.last_message_at) : '暂无消息' }}
                 </p>
               </div>
               <span
                 v-if="getUnreadCount(session) > 0"
-                class="bg-red-500 text-white text-xs rounded-full px-2 py-1"
+                class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center flex-shrink-0"
               >
                 {{ getUnreadCount(session) }}
               </span>
@@ -39,58 +50,63 @@
       </div>
 
       <!-- 聊天窗口 -->
-      <div class="flex-1 flex flex-col min-h-0">
-        <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500">
-          请选择一个会话
+      <div class="flex-1 flex flex-col min-h-0 bg-white">
+        <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
+          <div class="text-center">
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-lg">请选择一个会话</p>
+          </div>
         </div>
         <div v-else class="flex-1 flex flex-col min-h-0 overflow-hidden">
           <!-- 聊天头部 -->
-          <div class="p-4 border-b bg-white flex-shrink-0">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <h3 class="text-lg font-semibold">{{ getOtherUserName(currentSession) }}</h3>
+          <div class="p-6 border-b border-gray-200 bg-white flex-shrink-0">
+            <div class="flex justify-between items-center flex-wrap gap-3">
+              <h3 class="text-xl font-bold text-gray-900">{{ getOtherUserName(currentSession) }}</h3>
               <!-- 快捷操作按钮 -->
               <div class="flex flex-wrap gap-2">
                 <!-- 学生相关快捷操作 -->
                 <template v-if="otherUserType === 'STUDENT'">
                   <button
                     @click="viewStudentResume"
-                    class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看简历"
                   >
                     查看简历
                   </button>
                   <button
                     @click="markResume"
-                    class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    class="px-4 py-2 text-sm bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="标记简历"
                   >
                     标记简历
                   </button>
                   <button
                     @click="toggleResumeFavorite"
-                    :class="isResumeFavorited ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'"
-                    class="px-3 py-1 text-sm text-white rounded"
+                    :class="isResumeFavorited ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'"
+                    class="px-4 py-2 text-sm text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     :title="isResumeFavorited ? '取消收藏' : '收藏简历'"
                   >
                     {{ isResumeFavorited ? '已收藏' : '收藏简历' }}
                   </button>
                   <button
                     @click="downloadResume"
-                    class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="下载简历"
                   >
                     下载简历
                   </button>
                   <button
                     @click="inviteToInfoSession"
-                    class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="宣讲会邀请"
                   >
                     宣讲会邀请
                   </button>
                   <button
                     @click="inviteToInterview"
-                    class="px-3 py-1 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600"
+                    class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="面试邀请"
                   >
                     面试邀请
@@ -100,43 +116,43 @@
                 <template v-else-if="otherUserType === 'SCHOOL' || (otherUserType === 'TEACHER' && teacherSchoolId)">
                   <button
                     @click="viewSchoolDetail"
-                    class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看学校主页"
                   >
                     查看学校
                   </button>
                   <button
                     @click="markSchool"
-                    class="px-3 py-1 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    class="px-4 py-2 text-sm bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="标记学校"
                   >
                     标记学校
                   </button>
                   <button
                     @click="toggleSchoolFavorite"
-                    :class="isSchoolFavorited ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-500 hover:bg-gray-600'"
-                    class="px-3 py-1 text-sm text-white rounded"
+                    :class="isSchoolFavorited ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'"
+                    class="px-4 py-2 text-sm text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     :title="isSchoolFavorited ? '取消收藏' : '收藏学校'"
                   >
                     {{ isSchoolFavorited ? '已收藏' : '收藏学校' }}
                   </button>
                   <button
                     @click="shareSchool"
-                    class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="分享学校"
                   >
                     分享学校
                   </button>
                   <button
                     @click="requestOfflineInfoSession"
-                    class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="申请线下宣讲会"
                   >
                     申请宣讲会
                   </button>
                 </template>
                 <!-- 调试信息（开发时可见） -->
-                <div v-if="!otherUserType || otherUserType === 'UNKNOWN'" class="text-xs text-gray-500">
+                <div v-if="!otherUserType || otherUserType === 'UNKNOWN'" class="text-xs text-gray-500 px-3 py-2 bg-gray-100 rounded-xl">
                   用户类型: {{ otherUserType || '未设置' }}
                 </div>
               </div>
@@ -144,10 +160,16 @@
           </div>
 
           <!-- 消息列表 -->
-          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
-            <div v-if="messagesLoading" class="text-center py-4">加载中...</div>
-            <div v-else-if="messages.length === 0" class="text-center py-8 text-gray-500">
-              暂无消息
+          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-6 bg-gray-50 min-h-0">
+            <div v-if="messagesLoading" class="text-center py-8">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p class="mt-3 text-gray-600">加载中...</p>
+            </div>
+            <div v-else-if="messages.length === 0" class="text-center py-12 text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <p>暂无消息</p>
             </div>
             <div v-else class="space-y-4">
               <div
@@ -160,16 +182,16 @@
               >
                 <div
                   :class="[
-                    'max-w-xs lg:max-w-md px-4 py-2 rounded-lg',
+                    'max-w-xs lg:max-w-md px-4 py-3 rounded-xl shadow-sm',
                     message.sender_id === currentUserId
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-800 border border-gray-200'
                   ]"
                 >
-                  <p>{{ message.content }}</p>
+                  <p class="break-words">{{ message.content }}</p>
                   <p
                     :class="[
-                      'text-xs mt-1',
+                      'text-xs mt-2',
                       message.sender_id === currentUserId ? 'text-blue-100' : 'text-gray-500'
                     ]"
                   >
@@ -181,18 +203,21 @@
           </div>
 
           <!-- 输入框 -->
-          <div class="p-4 border-t bg-white flex-shrink-0">
-            <form @submit.prevent="handleSendMessage" class="flex space-x-2">
+          <div class="p-6 border-t border-gray-200 bg-white flex-shrink-0">
+            <form @submit.prevent="handleSendMessage" class="flex space-x-3">
               <input
                 v-model="messageContent"
                 type="text"
                 placeholder="输入消息..."
-                class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
               />
               <button
                 type="submit"
-                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
               >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
                 发送
               </button>
             </form>
@@ -202,23 +227,28 @@
     </div>
 
     <!-- 标记简历模态框 -->
-    <div v-if="showMarkResumeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 class="text-2xl font-bold mb-4">标记简历</h2>
-        <form @submit.prevent="saveResumeMark" class="space-y-4">
+    <div v-if="showMarkResumeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          标记简历
+        </h2>
+        <form @submit.prevent="saveResumeMark" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">备注</label>
             <textarea
               v-model="markForm.note"
               rows="3"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">标记颜色</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">标记颜色</label>
             <select
               v-model="markForm.color"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
             >
               <option value="blue">蓝色</option>
               <option value="red">红色</option>
@@ -226,18 +256,21 @@
               <option value="yellow">黄色</option>
             </select>
           </div>
-          <div class="flex justify-end space-x-2">
+          <div class="pt-4 border-t border-gray-200 flex justify-end space-x-4">
             <button
               type="button"
               @click="showMarkResumeModal = false"
-              class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
             >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
               保存
             </button>
           </div>
@@ -246,23 +279,28 @@
     </div>
 
     <!-- 标记学校模态框 -->
-    <div v-if="showMarkSchoolModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 class="text-2xl font-bold mb-4">标记学校</h2>
-        <form @submit.prevent="saveSchoolMark" class="space-y-4">
+    <div v-if="showMarkSchoolModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          标记学校
+        </h2>
+        <form @submit.prevent="saveSchoolMark" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">备注</label>
             <textarea
               v-model="markForm.note"
               rows="3"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">标记颜色</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">标记颜色</label>
             <select
               v-model="markForm.color"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
             >
               <option value="blue">蓝色</option>
               <option value="red">红色</option>
@@ -270,18 +308,21 @@
               <option value="yellow">黄色</option>
             </select>
           </div>
-          <div class="flex justify-end space-x-2">
+          <div class="pt-4 border-t border-gray-200 flex justify-end space-x-4">
             <button
               type="button"
               @click="showMarkSchoolModal = false"
-              class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
             >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
               保存
             </button>
           </div>
@@ -290,27 +331,35 @@
     </div>
 
     <!-- 宣讲会邀请模态框 -->
-    <div v-if="showInviteInfoSessionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">选择宣讲会</h2>
+    <div v-if="showInviteInfoSessionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-96 overflow-y-auto border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          选择宣讲会
+        </h2>
         <div v-if="infoSessions.length === 0" class="text-center py-8 text-gray-500">
-          暂无可邀请的宣讲会
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <p>暂无可邀请的宣讲会</p>
         </div>
-        <div v-else class="space-y-2">
+        <div v-else class="space-y-3">
           <div
             v-for="session in infoSessions"
             :key="session.id"
-            class="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            class="p-4 border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all duration-200"
             @click="submitInfoSessionInvite(session.id)"
           >
-            <h3 class="font-semibold">{{ session.title }}</h3>
+            <h3 class="font-semibold text-gray-900 mb-1">{{ session.title }}</h3>
             <p class="text-sm text-gray-600">{{ new Date(session.start_time).toLocaleString('zh-CN') }}</p>
           </div>
         </div>
-        <div class="mt-4 flex justify-end">
+        <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
           <button
             @click="showInviteInfoSessionModal = false"
-            class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+            class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
           >
             取消
           </button>
@@ -319,27 +368,35 @@
     </div>
 
     <!-- 面试邀请模态框 -->
-    <div v-if="showInviteInterviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">选择申请</h2>
+    <div v-if="showInviteInterviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full max-h-96 overflow-y-auto border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          选择申请
+        </h2>
         <div v-if="applications.length === 0" class="text-center py-8 text-gray-500">
-          暂无可邀请的申请
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p>暂无可邀请的申请</p>
         </div>
-        <div v-else class="space-y-2">
+        <div v-else class="space-y-3">
           <div
             v-for="app in applications"
             :key="app.id"
-            class="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            class="p-4 border-2 border-gray-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50 cursor-pointer transition-all duration-200"
             @click="submitInterviewInvite(app.id)"
           >
-            <h3 class="font-semibold">{{ app.job_title || '职位' }}</h3>
+            <h3 class="font-semibold text-gray-900 mb-1">{{ app.job_title || '职位' }}</h3>
             <p class="text-sm text-gray-600">申请时间：{{ new Date(app.created_at).toLocaleString('zh-CN') }}</p>
           </div>
         </div>
-        <div class="mt-4 flex justify-end">
+        <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
           <button
             @click="showInviteInterviewModal = false"
-            class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+            class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
           >
             取消
           </button>
@@ -348,105 +405,117 @@
     </div>
 
     <!-- 申请线下宣讲会模态框 -->
-    <div v-if="showRequestInfoSessionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">申请线下宣讲会</h2>
-        <form @submit.prevent="submitRequestInfoSession" class="space-y-4">
+    <div v-if="showRequestInfoSessionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          申请线下宣讲会
+        </h2>
+        <form @submit.prevent="submitRequestInfoSession" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">宣讲会标题 *</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">宣讲会标题 *</label>
             <input
               v-model="requestForm.title"
               type="text"
               required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">描述</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">描述</label>
             <textarea
               v-model="requestForm.description"
               rows="3"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"
             />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">建议开始时间 *</label>
-            <input
-              v-model="requestForm.proposed_start_time"
-              type="datetime-local"
-              required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">建议开始时间 *</label>
+              <input
+                v-model="requestForm.proposed_start_time"
+                type="datetime-local"
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">建议结束时间 *</label>
+              <input
+                v-model="requestForm.proposed_end_time"
+                type="datetime-local"
+                required
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              />
+            </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">建议结束时间 *</label>
-            <input
-              v-model="requestForm.proposed_end_time"
-              type="datetime-local"
-              required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">建议地点</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">建议地点</label>
             <input
               v-model="requestForm.proposed_location"
               type="text"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">最大学生数</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">最大学生数</label>
             <input
               v-model.number="requestForm.max_students"
               type="number"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
             />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">联系人</label>
-            <input
-              v-model="requestForm.contact_person"
-              type="text"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">联系人</label>
+              <input
+                v-model="requestForm.contact_person"
+                type="text"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">联系电话</label>
+              <input
+                v-model="requestForm.contact_phone"
+                type="text"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">联系邮箱</label>
+              <input
+                v-model="requestForm.contact_email"
+                type="email"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              />
+            </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">联系电话</label>
-            <input
-              v-model="requestForm.contact_phone"
-              type="text"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">联系邮箱</label>
-            <input
-              v-model="requestForm.contact_email"
-              type="email"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">申请留言</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">申请留言</label>
             <textarea
               v-model="requestForm.message"
               rows="3"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"
             />
           </div>
-          <div class="flex justify-end space-x-2">
+          <div class="pt-4 border-t border-gray-200 flex justify-end space-x-4">
             <button
               type="button"
               @click="showRequestInfoSessionModal = false"
-              class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
             >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
               提交申请
             </button>
           </div>
@@ -1116,9 +1185,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.enterprise-chat {
-  display: flex;
-  flex-direction: column;
-}
+/* 样式已内联到模板中 */
 </style>
 

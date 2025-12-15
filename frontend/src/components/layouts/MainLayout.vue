@@ -1,53 +1,63 @@
 <template>
   <div :class="['main-layout', isChatPage ? 'h-screen flex flex-col' : '']">
     <!-- 顶部导航栏 -->
-    <header :class="['bg-white bg-opacity-95 shadow-sm relative z-20', isChatPage ? 'flex-shrink-0' : '']">
+    <header :class="['bg-white shadow-md relative z-20 border-b border-gray-100', isChatPage ? 'flex-shrink-0' : '']">
       <nav class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
           <!-- Logo -->
-          <router-link to="/" class="text-2xl font-bold text-blue-600">
-            校园直聘
+          <router-link to="/" class="flex items-center space-x-2 group">
+            <div class="p-2 bg-blue-600 rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <span class="text-2xl font-bold text-blue-600">校园直聘</span>
           </router-link>
           
           <!-- 导航菜单 -->
-          <div class="flex items-center space-x-6">
+          <div class="flex items-center space-x-1 overflow-x-auto">
             <router-link
               v-for="item in navItems"
               :key="item.path"
               :to="item.path"
-              class="text-gray-700 hover:text-blue-600 transition-colors relative"
-              active-class="text-blue-600 font-semibold"
+              class="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 relative font-medium"
+              active-class="text-blue-600 bg-blue-50 font-semibold"
             >
               {{ item.name }}
               <!-- 系统消息未读提醒 -->
               <span
                 v-if="item.path.includes('system-messages') && unreadMessageCount > 0"
-                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+                class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shadow-md"
               >
                 {{ unreadMessageCount > 99 ? '99+' : unreadMessageCount }}
               </span>
             </router-link>
             
             <!-- 用户信息 -->
-            <div v-if="authStore.isAuthenticated()" class="flex items-center space-x-4">
-              <span class="text-gray-700">{{ userInfo?.username }}</span>
+            <div v-if="authStore.isAuthenticated()" class="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
+              <div class="flex items-center space-x-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {{ userInfo?.username?.charAt(0).toUpperCase() || 'U' }}
+                </div>
+                <span class="text-gray-700 font-medium">{{ userInfo?.username }}</span>
+              </div>
               <button
                 @click="handleLogout"
-                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
               >
                 退出
               </button>
             </div>
-            <div v-else class="flex items-center space-x-4">
+            <div v-else class="flex items-center space-x-3">
               <router-link
                 to="/login"
-                class="px-4 py-2 text-gray-700 hover:text-blue-600"
+                class="px-4 py-2 text-gray-700 hover:text-blue-600 font-medium transition-colors"
               >
                 登录
               </router-link>
               <router-link
                 to="/register"
-                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
               >
                 注册
               </router-link>
@@ -63,10 +73,10 @@
     </main>
 
     <!-- 底部（聊天页面不显示） -->
-    <footer v-if="!isChatPage" class="bg-gray-800 bg-opacity-95 text-white mt-auto relative z-20">
+    <footer v-if="!isChatPage" class="bg-gray-800 text-white mt-auto relative z-20 border-t border-gray-700">
       <div class="container mx-auto px-4 py-8">
         <div class="text-center">
-          <p>&copy; 2025 mr stone的个人网站. All rights reserved.</p>
+          <p class="text-gray-300">&copy; 2025 mr stone的个人网站. All rights reserved.</p>
         </div>
       </div>
     </footer>

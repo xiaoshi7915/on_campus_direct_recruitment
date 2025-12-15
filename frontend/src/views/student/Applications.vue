@@ -1,15 +1,20 @@
 <template>
-  <div class="student-applications">
-    <h1 class="text-3xl font-bold mb-6">我的申请</h1>
+  <div class="student-applications max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">我的申请</h1>
 
     <!-- 筛选条件 -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
       <div class="flex items-center space-x-4">
-        <label class="text-sm font-medium text-gray-700">状态筛选：</label>
+        <label class="text-sm font-semibold text-gray-700 flex items-center">
+          <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          状态筛选：
+        </label>
         <select
           v-model="statusFilter"
           @change="loadApplications"
-          class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
         >
           <option value="">全部</option>
           <option value="PENDING">待审核</option>
@@ -22,37 +27,65 @@
 
     <!-- 申请列表 -->
     <div class="space-y-4">
-      <div v-if="loading" class="text-center py-12">加载中...</div>
-      <div v-else-if="applications.length === 0" class="text-center py-12 text-gray-500">
-        暂无申请记录
+      <div v-if="loading" class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600">加载中...</p>
+      </div>
+      <div v-else-if="applications.length === 0" class="text-center py-16">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p class="text-gray-500 text-lg">暂无申请记录</p>
+        <p class="text-gray-400 text-sm mt-2">快去申请心仪的职位吧！</p>
       </div>
       <div
         v-for="app in applications"
         :key="app.id"
-        class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-gray-200"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <h3 class="text-xl font-semibold mb-2">{{ app.job?.title || '职位' }}</h3>
-            <div class="flex flex-wrap gap-4 text-gray-600 text-sm mb-3">
-              <span>申请时间：{{ formatDate(app.created_at) }}</span>
-              <span v-if="app.updated_at !== app.created_at">
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="p-2 bg-blue-50 rounded-lg">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900">{{ app.job?.title || '职位' }}</h3>
+            </div>
+            <div class="flex flex-wrap gap-4 text-gray-600 text-sm mb-3 ml-11">
+              <span class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                申请时间：{{ formatDate(app.created_at) }}
+              </span>
+              <span v-if="app.updated_at !== app.created_at" class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 更新时间：{{ formatDate(app.updated_at) }}
               </span>
             </div>
-            <p v-if="app.message" class="text-gray-700 mb-3">{{ app.message }}</p>
+            <p v-if="app.message" class="text-gray-700 mb-3 ml-11 bg-gray-50 p-3 rounded-lg border border-gray-200">
+              {{ app.message }}
+            </p>
           </div>
-          <div class="ml-6 flex flex-col items-end space-y-2">
+          <div class="ml-6 flex flex-col items-end space-y-3">
             <span
               :class="getStatusClass(app.status)"
-              class="px-3 py-1 rounded-full text-sm"
+              class="px-4 py-1.5 rounded-full text-sm font-medium"
             >
               {{ getStatusText(app.status) }}
             </span>
             <button
               @click="viewJobDetail(app.job_id)"
-              class="px-4 py-2 text-blue-600 hover:text-blue-800"
+              class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center"
             >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
               查看职位
             </button>
           </div>
@@ -171,10 +204,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.student-applications {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* 样式已内联到模板中 */
 </style>
 
 

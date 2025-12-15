@@ -1,30 +1,45 @@
 <template>
-  <div class="teacher-profile">
-    <h1 class="text-3xl font-bold mb-6">教师中心</h1>
+  <div class="teacher-profile max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">教师中心</h1>
 
-    <div v-if="loading" class="text-center py-12">加载中...</div>
+    <div v-if="loading" class="text-center py-16">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <p class="mt-4 text-gray-600">加载中...</p>
+    </div>
     <div v-else>
-      <div v-if="!profile" class="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p class="text-yellow-800">您还没有创建教师档案，请填写以下信息创建档案。</p>
+      <div v-if="!profile" class="mb-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
+        <p class="text-yellow-800 text-sm flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          您还没有创建教师档案，请填写以下信息创建档案。
+        </p>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- 左侧：教师信息 -->
       <div class="lg:col-span-2">
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-4">教师信息</h2>
+        <div class="bg-white rounded-xl shadow-md p-8 border border-gray-100">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            教师信息
+          </h2>
           <form @submit.prevent="saveProfile">
             <!-- 头像上传 -->
             <div class="mb-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">头像</label>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">头像</label>
               <div class="flex items-center space-x-4">
-                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-gray-200 shadow-sm">
                   <img
                     v-if="profileForm.avatar_url"
                     :src="profileForm.avatar_url"
                     alt="头像"
                     class="w-full h-full object-cover"
                   />
-                  <span v-else class="text-gray-400 text-2xl">头像</span>
+                  <svg v-else class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
                 <div class="flex-1">
                   <input
@@ -37,78 +52,84 @@
                   <button
                     type="button"
                     @click="avatarInput?.click()"
-                    class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    class="px-5 py-2.5 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors duration-200 font-medium"
                   >
                     上传头像
                   </button>
-                  <p v-if="uploadingAvatar" class="text-sm text-blue-600 mt-2">上传中...</p>
+                  <p v-if="uploadingAvatar" class="text-sm text-blue-600 mt-2 flex items-center">
+                    <svg class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    上传中...
+                  </p>
                 </div>
               </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">姓名 *</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">姓名 *</label>
                 <input
                   v-model="profileForm.real_name"
                   type="text"
                   required
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">职称</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">职称</label>
                 <input
                   v-model="profileForm.title"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                   placeholder="例如：教授、副教授"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">职务名称</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">职务名称</label>
                 <input
                   v-model="profileForm.position"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                   placeholder="例如：系主任、副院长"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">授课专业</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">授课专业</label>
                 <input
                   v-model="profileForm.teaching_major"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                   placeholder="例如：计算机科学与技术"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">授课年级</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">授课年级</label>
                 <input
                   v-model="profileForm.teaching_grade"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                   placeholder="例如：2021级、2022级"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">学校名称</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">学校名称</label>
                 <select
                   v-model="profileForm.school_id"
                   @change="onSchoolChange"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                 >
                   <option value="">请选择学校</option>
                   <option v-if="mySchool" :value="mySchool.id">{{ mySchool.name }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">院系名称</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">院系名称</label>
                 <select
                   v-model="profileForm.department_id"
                   :disabled="!profileForm.school_id"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 disabled:bg-gray-100"
                 >
                   <option value="">请选择院系</option>
                   <option v-for="dept in departmentList" :key="dept.id" :value="dept.id">
@@ -117,20 +138,20 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">联系方式</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">联系方式</label>
                 <input
                   v-model="profileForm.phone"
                   type="text"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                   placeholder="请输入联系方式"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">电子邮箱</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">电子邮箱</label>
                 <input
                   v-model="profileForm.email"
                   type="email"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
                   placeholder="请输入电子邮箱"
                 />
               </div>
@@ -138,8 +159,11 @@
             <div class="mt-6 flex justify-end">
               <button
                 type="submit"
-                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
               >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
                 保存
               </button>
             </div>
@@ -149,12 +173,22 @@
 
       <!-- 右侧：统计信息 -->
       <div class="space-y-6">
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-4">统计信息</h2>
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            统计信息
+          </h2>
           <div class="space-y-4">
-            <div>
-              <div class="text-gray-600 text-sm">管辖学生数</div>
-              <div class="text-2xl font-bold text-blue-600">{{ studentCount }}</div>
+            <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-100">
+              <div class="flex items-center">
+                <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <div class="text-gray-700 text-base">管辖学生数</div>
+              </div>
+              <div class="text-3xl font-bold text-blue-600">{{ studentCount }}</div>
             </div>
           </div>
         </div>
@@ -328,9 +362,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.teacher-profile {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* 样式已内联到模板中 */
 </style>
 

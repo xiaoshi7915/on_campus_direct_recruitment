@@ -1,35 +1,46 @@
 <template>
-  <div class="teacher-chat" style="height: calc(100vh - 120px);">
-    <div class="flex h-full">
+  <div class="teacher-chat max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="height: calc(100vh - 120px);">
+    <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
-      <div class="w-1/3 border-r bg-white">
-        <div class="p-4 border-b">
-          <h2 class="text-xl font-semibold">聊天</h2>
+      <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
+        <div class="p-6 border-b border-gray-200 bg-white">
+          <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            聊天
+          </h2>
         </div>
-        <div class="overflow-y-auto h-full">
-          <div v-if="loading" class="p-4 text-center">加载中...</div>
-          <div v-else-if="sessions.length === 0" class="p-4 text-center text-gray-500">
-            暂无聊天记录
+        <div class="flex-1 overflow-y-auto">
+          <div v-if="loading" class="p-8 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-3 text-gray-600">加载中...</p>
+          </div>
+          <div v-else-if="sessions.length === 0" class="p-8 text-center text-gray-500">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-sm">暂无聊天记录</p>
           </div>
           <div
             v-for="session in sessions"
             :key="session.id"
             @click="selectSession(session)"
             :class="[
-              'p-4 border-b cursor-pointer hover:bg-gray-50',
-              currentSessionId === session.id ? 'bg-blue-50' : ''
+              'p-4 border-b border-gray-200 cursor-pointer transition-all duration-200',
+              currentSessionId === session.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-100'
             ]"
           >
             <div class="flex justify-between items-start">
-              <div>
-                <p class="font-semibold">{{ getOtherUserName(session) }}</p>
-                <p class="text-sm text-gray-600 truncate">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 truncate">{{ getOtherUserName(session) }}</p>
+                <p class="text-sm text-gray-500 truncate mt-1">
                   {{ session.last_message_at ? formatDate(session.last_message_at) : '暂无消息' }}
                 </p>
               </div>
               <span
                 v-if="getUnreadCount(session) > 0"
-                class="bg-red-500 text-white text-xs rounded-full px-2 py-1"
+                class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center flex-shrink-0"
               >
                 {{ getUnreadCount(session) }}
               </span>
@@ -39,43 +50,48 @@
       </div>
 
       <!-- 聊天窗口 -->
-      <div class="flex-1 flex flex-col min-h-0">
-        <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500">
-          请选择一个会话
+      <div class="flex-1 flex flex-col min-h-0 bg-white">
+        <div v-if="!currentSession" class="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
+          <div class="text-center">
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <p class="text-lg">请选择一个会话</p>
+          </div>
         </div>
         <div v-else class="flex-1 flex flex-col min-h-0 overflow-hidden">
           <!-- 聊天头部 -->
-          <div class="p-4 border-b bg-white flex-shrink-0">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <h3 class="text-lg font-semibold">{{ getOtherUserName(currentSession) }}</h3>
+          <div class="p-6 border-b border-gray-200 bg-white flex-shrink-0">
+            <div class="flex justify-between items-center flex-wrap gap-3">
+              <h3 class="text-xl font-bold text-gray-900">{{ getOtherUserName(currentSession) }}</h3>
               <!-- 快捷操作按钮 -->
               <div class="flex flex-wrap gap-2">
                 <!-- 企业相关快捷操作 -->
                 <template v-if="otherUserType === 'ENTERPRISE'">
                   <button
                     @click="viewEnterpriseProfile"
-                    class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看企业信息"
                   >
                     查看企业
                   </button>
                   <button
                     @click="viewEnterpriseJobs"
-                    class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看职位信息"
                   >
                     查看职位
                   </button>
                   <button
                     @click="viewEnterpriseInfoSessions"
-                    class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看宣讲会"
                   >
                     查看宣讲会
                   </button>
                   <button
                     @click="viewEnterpriseJobFairs"
-                    class="px-3 py-1 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600"
+                    class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看双选会"
                   >
                     查看双选会
@@ -85,28 +101,28 @@
                 <template v-else-if="otherUserType === 'STUDENT'">
                   <button
                     @click="viewStudentProfile"
-                    class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看学生信息"
                   >
                     查看学生
                   </button>
                   <button
                     @click="viewStudentResumes"
-                    class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="查看简历"
                   >
                     查看简历
                   </button>
                   <button
                     @click="recommendToEnterprise"
-                    class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
                     title="推荐给企业"
                   >
                     推荐给企业
                   </button>
                 </template>
                 <!-- 调试信息（开发时可见） -->
-                <div v-if="!otherUserType || otherUserType === 'UNKNOWN'" class="text-xs text-gray-500">
+                <div v-if="!otherUserType || otherUserType === 'UNKNOWN'" class="text-xs text-gray-500 px-3 py-2 bg-gray-100 rounded-xl">
                   用户类型: {{ otherUserType || '未设置' }}
                 </div>
               </div>
@@ -114,10 +130,16 @@
           </div>
 
           <!-- 消息列表 -->
-          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
-            <div v-if="messagesLoading" class="text-center py-4">加载中...</div>
-            <div v-else-if="messages.length === 0" class="text-center py-8 text-gray-500">
-              暂无消息
+          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-6 bg-gray-50 min-h-0">
+            <div v-if="messagesLoading" class="text-center py-8">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p class="mt-3 text-gray-600">加载中...</p>
+            </div>
+            <div v-else-if="messages.length === 0" class="text-center py-12 text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <p>暂无消息</p>
             </div>
             <div v-else class="space-y-4">
               <div
@@ -130,16 +152,16 @@
               >
                 <div
                   :class="[
-                    'max-w-xs lg:max-w-md px-4 py-2 rounded-lg',
+                    'max-w-xs lg:max-w-md px-4 py-3 rounded-xl shadow-sm',
                     message.sender_id === currentUserId
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-800 border border-gray-200'
                   ]"
                 >
-                  <p>{{ message.content }}</p>
+                  <p class="break-words">{{ message.content }}</p>
                   <p
                     :class="[
-                      'text-xs mt-1',
+                      'text-xs mt-2',
                       message.sender_id === currentUserId ? 'text-blue-100' : 'text-gray-500'
                     ]"
                   >
@@ -151,18 +173,21 @@
           </div>
 
           <!-- 输入框 -->
-          <div class="p-4 border-t bg-white flex-shrink-0">
-            <form @submit.prevent="handleSendMessage" class="flex space-x-2">
+          <div class="p-6 border-t border-gray-200 bg-white flex-shrink-0">
+            <form @submit.prevent="handleSendMessage" class="flex space-x-3">
               <input
                 v-model="messageContent"
                 type="text"
                 placeholder="输入消息..."
-                class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
               />
               <button
                 type="submit"
-                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
               >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
                 发送
               </button>
             </form>
@@ -465,9 +490,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.teacher-chat {
-  display: flex;
-  flex-direction: column;
-}
+/* 样式已内联到模板中 */
 </style>
 

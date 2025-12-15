@@ -1,75 +1,110 @@
 <template>
-  <div class="teacher-job-fairs">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">双选会管理</h1>
+  <div class="teacher-job-fairs max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
+        <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        双选会管理
+      </h1>
       <button
         @click="showCreateModal = true"
-        class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center"
       >
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
         创建双选会
       </button>
     </div>
 
     <!-- 双选会列表 -->
     <div class="space-y-4">
-      <div v-if="loading" class="text-center py-12">加载中...</div>
-      <div v-else-if="jobFairs.length === 0" class="text-center py-12 text-gray-500">
-        暂无双选会信息
+      <div v-if="loading" class="text-center py-16">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600">加载中...</p>
+      </div>
+      <div v-else-if="jobFairs.length === 0" class="text-center py-16 text-gray-500">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <p class="text-lg">暂无双选会信息</p>
       </div>
       <div
         v-for="jobFair in jobFairs"
         :key="jobFair.id"
-        class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-200 border border-gray-100"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <div class="flex items-center space-x-3 mb-2">
-              <h3 class="text-xl font-semibold">{{ jobFair.title }}</h3>
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="p-2 bg-blue-50 rounded-lg">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900">{{ jobFair.title }}</h3>
               <span
                 :class="getStatusClass(jobFair.status)"
-                class="px-2 py-1 rounded text-xs"
+                class="px-3 py-1 rounded-full text-xs font-medium"
               >
                 {{ getStatusText(jobFair.status) }}
               </span>
               <button
                 v-if="jobFair.status === 'PENDING'"
                 @click="showApprovalModal(jobFair)"
-                class="ml-2 px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
+                class="ml-2 px-3 py-1 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 shadow-sm hover:shadow-md transition-all duration-200 text-xs font-medium"
               >
                 审批
               </button>
             </div>
-            <div class="text-gray-600 text-sm mb-3">
-              <p>时间：{{ formatDateTime(jobFair.start_time) }} - {{ formatDateTime(jobFair.end_time) }}</p>
-              <p v-if="jobFair.location">地点：{{ jobFair.location }}</p>
-              <p v-if="jobFair.max_enterprises">最大企业数：{{ jobFair.max_enterprises }}</p>
+            <div class="text-gray-600 text-sm mb-3 ml-11 space-y-1">
+              <p class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                时间：{{ formatDateTime(jobFair.start_time) }} - {{ formatDateTime(jobFair.end_time) }}
+              </p>
+              <p v-if="jobFair.location" class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                地点：{{ jobFair.location }}
+              </p>
+              <p v-if="jobFair.max_enterprises" class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                最大企业数：{{ jobFair.max_enterprises }}
+              </p>
             </div>
-            <p v-if="jobFair.description" class="text-gray-700 line-clamp-2">
+            <p v-if="jobFair.description" class="text-gray-700 line-clamp-2 ml-11 bg-gray-50 p-3 rounded-lg border border-gray-200">
               {{ jobFair.description }}
             </p>
           </div>
           <div class="ml-6 flex flex-col space-y-2">
             <button
               @click="editJobFair(jobFair)"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
             >
               编辑
             </button>
             <button
               @click="viewRegistrations(jobFair.id)"
-              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              class="px-4 py-2 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium text-sm"
             >
               查看报名
             </button>
             <button
               @click="showInviteModal(jobFair)"
-              class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
             >
               邀请企业
             </button>
             <button
               @click="handleDeleteJobFair(jobFair.id)"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
             >
               删除
             </button>
@@ -79,140 +114,173 @@
     </div>
 
     <!-- 创建模态框 -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">创建双选会</h2>
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          创建双选会
+        </h2>
         <form @submit.prevent="saveCreate">
-          <div class="space-y-4">
+          <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium mb-2">标题 *</label>
-              <input v-model="createForm.title" type="text" required class="w-full px-3 py-2 border rounded-lg" />
+              <label class="block text-sm font-semibold text-gray-700 mb-2">标题 *</label>
+              <input v-model="createForm.title" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">描述</label>
-              <textarea v-model="createForm.description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">描述</label>
+              <textarea v-model="createForm.description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium mb-2">开始时间 *</label>
-                <input v-model="createForm.start_time" type="datetime-local" required class="w-full px-3 py-2 border rounded-lg" />
+                <label class="block text-sm font-semibold text-gray-700 mb-2">开始时间 *</label>
+                <input v-model="createForm.start_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
               </div>
               <div>
-                <label class="block text-sm font-medium mb-2">结束时间 *</label>
-                <input v-model="createForm.end_time" type="datetime-local" required class="w-full px-3 py-2 border rounded-lg" />
+                <label class="block text-sm font-semibold text-gray-700 mb-2">结束时间 *</label>
+                <input v-model="createForm.end_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">地点</label>
-              <input v-model="createForm.location" type="text" class="w-full px-3 py-2 border rounded-lg" />
+              <label class="block text-sm font-semibold text-gray-700 mb-2">地点</label>
+              <input v-model="createForm.location" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">最大企业数</label>
-              <input v-model.number="createForm.max_enterprises" type="number" min="1" class="w-full px-3 py-2 border rounded-lg" />
+              <label class="block text-sm font-semibold text-gray-700 mb-2">最大企业数</label>
+              <input v-model.number="createForm.max_enterprises" type="number" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
             </div>
           </div>
-          <div class="mt-6 flex justify-end space-x-3">
-            <button type="button" @click="showCreateModal = false" class="px-4 py-2 border rounded-lg">取消</button>
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">创建</button>
+          <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-4">
+            <button type="button" @click="showCreateModal = false" class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium">取消</button>
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              创建
+            </button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- 编辑模态框 -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">编辑双选会</h2>
+    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          编辑双选会
+        </h2>
         <form @submit.prevent="saveEdit">
-          <div class="space-y-4">
+          <div class="space-y-5">
             <div>
-              <label class="block text-sm font-medium mb-2">标题</label>
-              <input v-model="editForm.title" type="text" required class="w-full px-3 py-2 border rounded-lg" />
+              <label class="block text-sm font-semibold text-gray-700 mb-2">标题</label>
+              <input v-model="editForm.title" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">描述</label>
-              <textarea v-model="editForm.description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">描述</label>
+              <textarea v-model="editForm.description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium mb-2">开始时间</label>
-                <input v-model="editForm.start_time" type="datetime-local" required class="w-full px-3 py-2 border rounded-lg" />
+                <label class="block text-sm font-semibold text-gray-700 mb-2">开始时间</label>
+                <input v-model="editForm.start_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
               </div>
               <div>
-                <label class="block text-sm font-medium mb-2">结束时间</label>
-                <input v-model="editForm.end_time" type="datetime-local" required class="w-full px-3 py-2 border rounded-lg" />
+                <label class="block text-sm font-semibold text-gray-700 mb-2">结束时间</label>
+                <input v-model="editForm.end_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-2">地点</label>
-              <input v-model="editForm.location" type="text" class="w-full px-3 py-2 border rounded-lg" />
+              <label class="block text-sm font-semibold text-gray-700 mb-2">地点</label>
+              <input v-model="editForm.location" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
             </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">最大企业数</label>
-              <input v-model.number="editForm.max_enterprises" type="number" min="1" class="w-full px-3 py-2 border rounded-lg" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">状态</label>
-              <select v-model="editForm.status" class="w-full px-3 py-2 border rounded-lg">
-                <option value="DRAFT">草稿</option>
-                <option value="PUBLISHED">已发布</option>
-                <option value="ONGOING">进行中</option>
-                <option value="ENDED">已结束</option>
-              </select>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">最大企业数</label>
+                <input v-model.number="editForm.max_enterprises" type="number" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">状态</label>
+                <select v-model="editForm.status" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
+                  <option value="DRAFT">草稿</option>
+                  <option value="PUBLISHED">已发布</option>
+                  <option value="ONGOING">进行中</option>
+                  <option value="ENDED">已结束</option>
+                </select>
+              </div>
             </div>
           </div>
-          <div class="mt-6 flex justify-end space-x-3">
-            <button type="button" @click="showEditModal = false" class="px-4 py-2 border rounded-lg">取消</button>
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">保存</button>
+          <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-4">
+            <button type="button" @click="showEditModal = false" class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium">取消</button>
+            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              保存
+            </button>
           </div>
         </form>
       </div>
     </div>
 
     <!-- 报名列表模态框 -->
-    <div v-if="showRegistrationsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold">报名列表</h2>
+    <div v-if="showRegistrationsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            报名列表
+          </h2>
           <button
             v-if="registrations.length > 0"
             @click="exportJobFairRegistrations"
-            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center"
           >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
             导出清单
           </button>
         </div>
-        <div v-if="registrations.length === 0" class="text-center py-8 text-gray-500">
-          暂无报名信息
+        <div v-if="registrations.length === 0" class="text-center py-12 text-gray-500">
+          <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <p>暂无报名信息</p>
         </div>
-        <div v-else>
+        <div v-else class="overflow-x-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="bg-gray-50">
-                <th class="border px-4 py-2 text-left">企业名称</th>
-                <th class="border px-4 py-2 text-left">报名时间</th>
-                <th class="border px-4 py-2 text-left">状态</th>
-                <th class="border px-4 py-2 text-left">操作</th>
+              <tr class="bg-gray-50 border-b border-gray-200">
+                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">企业名称</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">报名时间</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">状态</th>
+                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="reg in registrations" :key="reg.id" class="hover:bg-gray-50">
-                <td class="border px-4 py-2">{{ reg.enterprise_name || reg.enterprise_id }}</td>
-                <td class="border px-4 py-2">{{ new Date(reg.created_at).toLocaleString('zh-CN') }}</td>
-                <td class="border px-4 py-2">
+              <tr v-for="reg in registrations" :key="reg.id" class="hover:bg-gray-50 transition-colors duration-200 border-b border-gray-200">
+                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ reg.enterprise_name || reg.enterprise_id }}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">{{ new Date(reg.created_at).toLocaleString('zh-CN') }}</td>
+                <td class="px-6 py-4">
                   <span :class="{
                     'bg-yellow-100 text-yellow-800': reg.status === 'PENDING',
                     'bg-green-100 text-green-800': reg.status === 'APPROVED',
                     'bg-red-100 text-red-800': reg.status === 'REJECTED',
                     'bg-blue-100 text-blue-800': reg.status === 'CHECKED_IN'
-                  }" class="px-2 py-1 rounded text-xs">
+                  }" class="px-3 py-1 rounded-full text-xs font-medium">
                     {{ reg.status }}
                   </span>
                 </td>
-                <td class="border px-4 py-2">
+                <td class="px-6 py-4">
                   <button
                     @click="viewEnterpriseDetail(reg)"
-                    class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
                   >
                     查看详情
                   </button>
@@ -221,60 +289,73 @@
             </tbody>
           </table>
         </div>
-        <div class="mt-6 flex justify-end">
-          <button @click="showRegistrationsModal = false" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">关闭</button>
+        <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end">
+          <button @click="showRegistrationsModal = false" class="px-6 py-2.5 bg-gray-600 text-white rounded-xl hover:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium">关闭</button>
         </div>
       </div>
     </div>
 
     <!-- 企业详情模态框 -->
-    <div v-if="showEnterpriseDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">企业详情</h2>
-        <div v-if="selectedEnterpriseDetail" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">企业名称</label>
-            <p class="mt-1 text-gray-900">{{ selectedEnterpriseDetail.company_name }}</p>
+    <div v-if="showEnterpriseDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          企业详情
+        </h2>
+        <div v-if="selectedEnterpriseDetail" class="space-y-4">
+          <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">企业名称</label>
+            <p class="text-gray-900 font-medium">{{ selectedEnterpriseDetail.company_name }}</p>
           </div>
-          <div v-if="selectedEnterpriseDetail.industry">
-            <label class="block text-sm font-medium text-gray-700">行业</label>
-            <p class="mt-1 text-gray-900">{{ selectedEnterpriseDetail.industry }}</p>
+          <div v-if="selectedEnterpriseDetail.industry" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">行业</label>
+            <p class="text-gray-900">{{ selectedEnterpriseDetail.industry }}</p>
           </div>
-          <div v-if="selectedEnterpriseDetail.scale">
-            <label class="block text-sm font-medium text-gray-700">规模</label>
-            <p class="mt-1 text-gray-900">{{ selectedEnterpriseDetail.scale }}</p>
+          <div v-if="selectedEnterpriseDetail.scale" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">规模</label>
+            <p class="text-gray-900">{{ selectedEnterpriseDetail.scale }}</p>
           </div>
-          <div v-if="selectedEnterpriseDetail.address">
-            <label class="block text-sm font-medium text-gray-700">地址</label>
-            <p class="mt-1 text-gray-900">{{ selectedEnterpriseDetail.address }}</p>
+          <div v-if="selectedEnterpriseDetail.address" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">地址</label>
+            <p class="text-gray-900">{{ selectedEnterpriseDetail.address }}</p>
           </div>
-          <div v-if="selectedEnterpriseDetail.website">
-            <label class="block text-sm font-medium text-gray-700">网站</label>
-            <p class="mt-1 text-gray-900">
-              <a :href="selectedEnterpriseDetail.website" target="_blank" class="text-blue-500 hover:underline">
+          <div v-if="selectedEnterpriseDetail.website" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">网站</label>
+            <p class="mt-1">
+              <a :href="selectedEnterpriseDetail.website" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
                 {{ selectedEnterpriseDetail.website }}
               </a>
             </p>
           </div>
-          <div v-if="selectedEnterpriseDetail.description">
-            <label class="block text-sm font-medium text-gray-700">描述</label>
-            <p class="mt-1 text-gray-900">{{ selectedEnterpriseDetail.description }}</p>
+          <div v-if="selectedEnterpriseDetail.description" class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">描述</label>
+            <p class="text-gray-900">{{ selectedEnterpriseDetail.description }}</p>
           </div>
         </div>
-        <div class="mt-6 flex justify-end">
-          <button @click="showEnterpriseDetailModal = false; selectedEnterpriseDetail = null" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">关闭</button>
+        <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end">
+          <button @click="showEnterpriseDetailModal = false; selectedEnterpriseDetail = null" class="px-6 py-2.5 bg-gray-600 text-white rounded-xl hover:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium">关闭</button>
         </div>
       </div>
     </div>
 
     <!-- 邀请企业模态框 -->
-    <div v-if="showInviteModalVisible" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 class="text-2xl font-bold mb-4">邀请企业</h2>
-        <div class="space-y-4">
+    <div v-if="showInviteModalVisible" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+          <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          邀请企业
+        </h2>
+        <div class="space-y-5">
           <div>
-            <label class="block text-sm font-medium mb-2">选择企业 *</label>
-            <select v-model="inviteEnterpriseId" required class="w-full px-3 py-2 border rounded-lg">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">选择企业 *</label>
+            <select v-model="inviteEnterpriseId" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
               <option value="">请选择企业</option>
               <option v-for="enterprise in enterpriseList" :key="enterprise.id" :value="enterprise.id">
                 {{ enterprise.company_name }}
@@ -282,20 +363,27 @@
             </select>
           </div>
         </div>
-        <div class="mt-6 flex justify-end space-x-3">
-          <button type="button" @click="showInviteModalVisible = false; inviteEnterpriseId = ''; currentJobFair = null" class="px-4 py-2 border rounded-lg">取消</button>
-          <button type="button" @click="handleInviteEnterprise" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">邀请</button>
+        <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-4">
+          <button type="button" @click="showInviteModalVisible = false; inviteEnterpriseId = ''; currentJobFair = null" class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium">取消</button>
+          <button type="button" @click="handleInviteEnterprise" class="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            邀请
+          </button>
         </div>
       </div>
     </div>
 
     <!-- 分页 -->
-    <Pagination
-      v-model:current-page="currentPage"
-      v-model:page-size="pageSize"
-      :total="total"
-      @change="handlePaginationChange"
-    />
+    <div class="mt-6">
+      <Pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        @change="handlePaginationChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -610,9 +698,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.teacher-job-fairs {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+/* 样式已内联到模板中 */
 </style>
 
