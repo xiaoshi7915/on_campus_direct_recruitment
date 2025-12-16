@@ -15,6 +15,22 @@ export interface School {
   logo_url?: string
   description?: string
   is_verified: boolean
+  // 新增字段：主管部门、院系介绍、主要专业介绍
+  charge_dep?: string  // 主管部门
+  department?: string  // 院系介绍
+  major?: string  // 主要专业介绍
+  // 扩展字段：双一流、211/985、学校类型、办学性质、办学层次等
+  dual_class?: string  // 双一流建设学科代码
+  dual_class_name?: string  // 双一流建设学科名称
+  f211?: string  // 是否211（是/否）
+  f985?: string  // 是否985（是/否）
+  school_type?: string  // 类型代码
+  school_type_name?: string  // 类型名称
+  nature?: string  // 办学性质代码
+  nature_name?: string  // 办学性质（公办、民办、中外合作等）
+  is_top?: string  // 是否顶尖高校（是/否）
+  level?: string  // 办学层次代码
+  level_name?: string  // 办学层次名称（本科、专科）
   created_at: string
   updated_at: string
   student_count?: number

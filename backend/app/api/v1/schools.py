@@ -3,7 +3,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, case
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -40,6 +40,22 @@ class SchoolResponse(BaseModel):
     logo_url: Optional[str]
     description: Optional[str]
     is_verified: bool
+    # 新增字段：主管部门、院系介绍、主要专业介绍
+    charge_dep: Optional[str] = None  # 主管部门
+    department: Optional[str] = None  # 院系介绍
+    major: Optional[str] = None  # 主要专业介绍
+    # 扩展字段：双一流、211/985、学校类型、办学性质、办学层次等
+    dual_class: Optional[str] = None  # 双一流建设学科代码
+    dual_class_name: Optional[str] = None  # 双一流建设学科名称
+    f211: Optional[str] = None  # 是否211（是/否）
+    f985: Optional[str] = None  # 是否985（是/否）
+    school_type: Optional[str] = None  # 类型代码
+    school_type_name: Optional[str] = None  # 类型名称
+    nature: Optional[str] = None  # 办学性质代码
+    nature_name: Optional[str] = None  # 办学性质（公办、民办、中外合作等）
+    is_top: Optional[str] = None  # 是否顶尖高校（是/否）
+    level: Optional[str] = None  # 办学层次代码
+    level_name: Optional[str] = None  # 办学层次名称（本科、专科）
     created_at: str
     updated_at: str
     # 关联信息（可选，用于前端显示）
@@ -118,9 +134,44 @@ async def get_schools(
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
     
-    # 分页查询
+    # 构建排序逻辑
+    # 优先级顺序：1. f985为1或2 -> 2. f211为1或2 -> 3. 北京市 -> 4. 上海市 -> 5. 其他按名称排序
+    # 使用多个排序字段来实现优先级
+    
+    # 分页查询，按照优先级排序
     offset = (page - 1) * page_size
-    query = query.order_by(School.name.asc()).offset(offset).limit(page_size)
+    
+    # 构建排序：使用case语句为每个条件分配优先级值
+    # f985优先级字段：f985为1或2时值为0，否则为1
+    f985_priority = case(
+        (or_(School.f985 == '1', School.f985 == '2'), 0),
+        else_=1
+    )
+    
+    # f211优先级字段：f211为1或2时值为0，否则为1（但只在f985不是1或2时生效）
+    f211_priority = case(
+        (or_(School.f211 == '1', School.f211 == '2'), 0),
+        else_=1
+    )
+    
+    # 城市优先级字段：北京市为0，上海市为1，其他为2
+    city_priority = case(
+        (School.city == '北京市', 0),
+        (School.city == '上海市', 1),
+        else_=2
+    )
+    
+    # 排序逻辑：
+    # 1. 首先按f985优先级排序（f985=1或2的排前面）
+    # 2. 然后按f211优先级排序（f211=1或2的排前面，但f985优先的已经排好了）
+    # 3. 然后按城市优先级排序（北京市、上海市优先）
+    # 4. 最后按学校名称排序
+    query = query.order_by(
+        f985_priority.asc(),      # f985为1或2的优先（值为0）
+        f211_priority.asc(),      # f211为1或2的优先（值为0）
+        city_priority.asc(),      # 北京市(0)、上海市(1)优先
+        School.name.asc()         # 同优先级按名称排序
+    ).offset(offset).limit(page_size)
     result = await db.execute(query)
     schools = result.scalars().all()
     

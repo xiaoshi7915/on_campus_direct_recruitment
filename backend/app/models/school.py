@@ -23,6 +23,22 @@ class School(Base):
     logo_url = Column(String(255), nullable=True, comment="Logo URL")
     description = Column(Text, nullable=True, comment="描述")
     is_verified = Column(Boolean, default=False, nullable=False, comment="是否认证")
+    # 新增字段：主管部门、院系介绍、主要专业介绍
+    charge_dep = Column(String(255), nullable=True, comment="主管部门")
+    department = Column(Text, nullable=True, comment="院系介绍")
+    major = Column(Text, nullable=True, comment="主要专业介绍")
+    # 扩展字段：双一流、211/985、学校类型、办学性质、办学层次等
+    dual_class = Column(String(255), nullable=True, comment="双一流建设学科代码")
+    dual_class_name = Column(String(255), nullable=True, comment="双一流建设学科名称")
+    f211 = Column(String(255), nullable=True, comment="是否211（是/否）")
+    f985 = Column(String(255), nullable=True, comment="是否985（是/否）")
+    school_type = Column(String(255), nullable=True, comment="类型代码")
+    school_type_name = Column(String(255), nullable=True, comment="类型名称")
+    nature = Column(String(255), nullable=True, comment="办学性质代码")
+    nature_name = Column(String(255), nullable=True, comment="办学性质（公办、民办、中外合作等）")
+    is_top = Column(String(255), nullable=True, comment="是否顶尖高校（是/否）")
+    level = Column(String(255), nullable=True, comment="办学层次代码")
+    level_name = Column(String(255), nullable=True, comment="办学层次名称（本科、专科）")
     created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="创建时间")
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
     
