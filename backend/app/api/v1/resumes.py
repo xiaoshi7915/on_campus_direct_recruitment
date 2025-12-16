@@ -10,6 +10,7 @@ from uuid import uuid4
 from app.core.database import get_db
 from app.api.v1.auth import get_current_user
 from app.models.user import User
+from app.models.user_type import UserType
 from app.models.job import Resume
 from app.models.profile import StudentProfile
 from app.schemas.resume import ResumeCreate, ResumeUpdate, ResumeResponse, ResumeListResponse
@@ -64,7 +65,7 @@ async def get_resumes(
         
         query = query.where(Resume.student_id == student.id)
     # 企业用户可以查看所有简历（用于人才搜索）
-    elif current_user.user_type == "ENTERPRISE":
+    elif current_user.user_type == UserType.ENTERPRISE:
         # 如果指定了student_id，只查看该学生的简历
         if actual_student_id:
             query = query.where(Resume.student_id == actual_student_id)
@@ -132,14 +133,17 @@ async def get_resume(
     Raises:
         HTTPException: 如果简历不存在或无权查看
     """
-    # 使用资源权限检查
-    from app.core.permissions import check_resource_access
-    has_access = await check_resource_access("resume", resume_id, current_user, db, "read")
-    if not has_access:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权查看此简历"
-        )
+    # 企业用户可以直接查看所有简历（用于人才搜索功能）
+    # 其他用户类型使用资源权限检查
+    if current_user.user_type != UserType.ENTERPRISE:
+        from app.core.permissions import check_resource_access
+        has_access = await check_resource_access("resume", resume_id, current_user, db, "read")
+        if not has_access:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看此简历"
+            )
+    # 企业用户跳过权限检查，直接允许查看
     
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
@@ -193,14 +197,18 @@ async def download_resume(
             detail="简历不存在"
         )
     
-    # 使用资源权限检查
-    from app.core.permissions import check_resource_access
-    has_access = await check_resource_access("resume", resume_id, current_user, db, "read")
-    if not has_access:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权下载此简历"
-        )
+    # 企业用户可以直接下载所有简历（用于人才搜索功能）
+    # 其他用户类型使用资源权限检查
+    if current_user.user_type != UserType.ENTERPRISE:
+        # 使用资源权限检查
+        from app.core.permissions import check_resource_access
+        has_access = await check_resource_access("resume", resume_id, current_user, db, "read")
+        if not has_access:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权下载此简历"
+            )
+    # 企业用户跳过权限检查，直接允许下载
     
     if not resume.file_url:
         raise HTTPException(

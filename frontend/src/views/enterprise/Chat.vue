@@ -547,6 +547,7 @@ import { inviteStudentToInfoSession, searchStudents } from '@/api/infoSessions'
 import { createInterview, type InterviewCreateRequest } from '@/api/interviews'
 import { getInfoSessions } from '@/api/infoSessions'
 import { getApplications } from '@/api/applications'
+import { getEnterpriseProfile } from '@/api/profile'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -834,8 +835,8 @@ const viewStudentResume = async () => {
   }
   
   if (defaultResume.value) {
-    // 打开新窗口查看简历
-    window.open(`/enterprise/resumes/${defaultResume.value.id}`, '_blank')
+    // 跳转到企业端简历详情页面
+    router.push(`/enterprise/resumes/${defaultResume.value.id}`)
   } else {
     alert('该学生暂无简历')
   }
@@ -940,10 +941,26 @@ const inviteToInfoSession = async () => {
     return
   }
   
-  // 加载宣讲会列表
+  // 加载宣讲会列表（只显示当前企业创建的已发布宣讲会）
   try {
-    const response = await getInfoSessions({ page_size: 100 })
-    infoSessions.value = response.items.filter(s => s.status === 'PUBLISHED')
+    // 获取当前企业信息
+    const enterpriseProfile = await getEnterpriseProfile()
+    
+    // 加载宣讲会列表，只获取当前企业创建的
+    const response = await getInfoSessions({ 
+      page_size: 100,
+      enterprise_id: enterpriseProfile.id 
+    })
+    
+    // 过滤出已发布的宣讲会，并且确保是企业自己的（双重检查）
+    infoSessions.value = response.items.filter(s => 
+      s.status === 'PUBLISHED' && s.enterprise_id === enterpriseProfile.id
+    )
+    
+    if (infoSessions.value.length === 0) {
+      alert('您还没有已发布的宣讲会，请先创建宣讲会')
+      return
+    }
     
     // 存储当前用户ID，用于邀请时查找学生ID
     currentInviteUserId.value = otherUserId

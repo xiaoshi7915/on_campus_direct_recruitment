@@ -473,9 +473,28 @@ const viewStudentResumes = async (studentId: string) => {
   try {
     // 获取学生信息以获取user_id
     const student = await getStudent(studentId)
-    // 跳转到简历列表页面，通过student_id过滤
-    router.push({ path: '/teacher/resumes', query: { student_id: studentId } })
+    
+    // 先获取该学生的简历列表
+    const resumeParams: any = {
+      page: 1,
+      page_size: 10,
+      student_id: studentId
+    }
+    const resumeResponse = await getResumes(resumeParams)
+    
+    // 如果只有一份简历，直接跳转到简历详情页
+    if (resumeResponse.items && resumeResponse.items.length === 1) {
+      router.push(`/teacher/resumes/${resumeResponse.items[0].id}`)
+    } else if (resumeResponse.items && resumeResponse.items.length > 1) {
+      // 如果有多份简历，跳转到简历列表页面
+      router.push({ path: '/teacher/resumes', query: { student_id: studentId } })
+    } else {
+      // 如果没有简历，跳转到简历列表页面并提示
+      router.push({ path: '/teacher/resumes', query: { student_id: studentId } })
+      alert('该学生暂无简历')
+    }
   } catch (error: any) {
+    console.error('查看简历失败:', error)
     alert('查看简历失败: ' + (error.response?.data?.detail || error.message))
   }
 }

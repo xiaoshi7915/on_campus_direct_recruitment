@@ -459,9 +459,8 @@ async def get_talents(
         
         # 如果没有简历ID，获取最新简历
         if not resume:
-            resume_result = await db.execute(
-                select(Resume).where(Resume.student_id == student.id).order_by(Resume.created_at.desc()).limit(1)
-            )
+            resume_query = select(Resume).where(Resume.student_id == student.id).order_by(Resume.created_at.desc()).limit(1)
+            resume_result = await db.execute(resume_query)
             resume = resume_result.scalar_one_or_none()
         
         talents.append(TalentItem(

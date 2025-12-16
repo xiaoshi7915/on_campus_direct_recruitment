@@ -46,6 +46,10 @@ class JobFairResponse(BaseModel):
     created_by: Optional[str]
     created_at: datetime
     updated_at: datetime
+    # 报名相关字段（可选，仅在"我的报名"接口中返回）
+    registration_id: Optional[str] = None
+    registration_status: Optional[str] = None
+    check_in_time: Optional[datetime] = None
     
     class Config:
         from_attributes = True

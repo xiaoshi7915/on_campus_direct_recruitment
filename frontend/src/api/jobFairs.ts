@@ -16,6 +16,10 @@ export interface JobFair {
   max_enterprises?: number
   created_at: string
   updated_at: string
+  // 报名相关字段（可选，仅在"我的报名"接口中返回）
+  registration_id?: string
+  registration_status?: string
+  check_in_time?: string
 }
 
 export interface JobFairListResponse {

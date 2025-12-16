@@ -59,6 +59,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/student/Resumes.vue'),
       },
       {
+        path: 'resumes/:id',
+        name: 'StudentResumeDetail',
+        component: () => import('@/views/common/ResumeDetail.vue'),
+      },
+      {
         path: 'applications',
         name: 'StudentApplications',
         component: () => import('@/views/student/Applications.vue'),
@@ -224,6 +229,11 @@ const routes: RouteRecordRaw[] = [
         path: 'preview',
         name: 'EnterprisePreview',
         component: () => import('@/views/enterprise/PreviewPage.vue'),
+      },
+      {
+        path: 'resumes/:id',
+        name: 'EnterpriseResumeDetail',
+        component: () => import('@/views/common/ResumeDetail.vue'),
       },
       {
         path: 'verification',

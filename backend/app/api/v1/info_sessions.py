@@ -70,7 +70,26 @@ async def get_info_sessions(
     # 而"我的报名"应该通过/my-registrations接口来获取报名的宣讲会
     # 这里不再自动过滤企业创建的宣讲会，因为前端有专门的"浏览宣讲会"和"我的报名"按钮
     if enterprise_id:
-        query = query.where(InfoSession.enterprise_id == enterprise_id)
+        # 如果当前用户是企业用户，需要获取所有相关的企业ID（包括主账号和子账号）
+        if current_user and current_user.user_type == "ENTERPRISE":
+            from app.models.profile import EnterpriseProfile
+            from app.services.enterprise_service import get_enterprise_ids_for_query
+            enterprise_result = await db.execute(
+                select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+            )
+            enterprise = enterprise_result.scalar_one_or_none()
+            if enterprise:
+                # 获取所有相关的企业ID（主账号+子账号）
+                enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+                # 如果传入的enterprise_id在列表中，使用列表过滤；否则使用单个ID过滤
+                if enterprise_id in enterprise_ids:
+                    query = query.where(InfoSession.enterprise_id.in_(enterprise_ids))
+                else:
+                    query = query.where(InfoSession.enterprise_id == enterprise_id)
+            else:
+                query = query.where(InfoSession.enterprise_id == enterprise_id)
+        else:
+            query = query.where(InfoSession.enterprise_id == enterprise_id)
     
     # 状态过滤
     if status_filter:
@@ -830,14 +849,15 @@ async def invite_student_to_info_session(
     logger.info(f"找到宣讲会 - session_id: {session_id}, enterprise_id: {info_session.enterprise_id}")
     
     # 检查权限（主账号和子账号都可以邀请主账号创建的宣讲会）
-    from app.services.enterprise_service import get_effective_enterprise_id
-    effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
-    logger.info(f"权限检查 - 宣讲会企业ID: {info_session.enterprise_id}, 当前企业有效ID: {effective_enterprise_id}")
+    # 使用 get_enterprise_ids_for_query 来获取所有相关的企业ID（包括主账号和子账号）
+    from app.services.enterprise_service import get_enterprise_ids_for_query
+    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+    logger.info(f"权限检查 - 宣讲会企业ID: {info_session.enterprise_id}, 当前企业ID: {enterprise.id}, is_main_account: {enterprise.is_main_account}, main_account_id: {enterprise.main_account_id}, 企业ID列表: {enterprise_ids}")
     
-    if info_session.enterprise_id != effective_enterprise_id:
+    if info_session.enterprise_id not in enterprise_ids:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"无权邀请学生参加此宣讲会（宣讲会企业ID: {info_session.enterprise_id}, 当前企业有效ID: {effective_enterprise_id}）"
+            detail=f"无权邀请学生参加此宣讲会（宣讲会企业ID: {info_session.enterprise_id}, 当前企业有效ID: {enterprise_ids[0] if enterprise_ids else enterprise.id}）"
         )
     
     # 检查学生是否存在
@@ -961,14 +981,15 @@ async def invite_students_batch(
     logger.info(f"找到宣讲会 - session_id: {session_id}, enterprise_id: {info_session.enterprise_id}")
     
     # 检查权限（主账号和子账号都可以邀请主账号创建的宣讲会）
-    from app.services.enterprise_service import get_effective_enterprise_id
-    effective_enterprise_id = await get_effective_enterprise_id(db, enterprise)
-    logger.info(f"权限检查 - 宣讲会企业ID: {info_session.enterprise_id}, 当前企业有效ID: {effective_enterprise_id}")
+    # 使用 get_enterprise_ids_for_query 来获取所有相关的企业ID（包括主账号和子账号）
+    from app.services.enterprise_service import get_enterprise_ids_for_query
+    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+    logger.info(f"权限检查 - 宣讲会企业ID: {info_session.enterprise_id}, 当前企业ID: {enterprise.id}, is_main_account: {enterprise.is_main_account}, main_account_id: {enterprise.main_account_id}, 企业ID列表: {enterprise_ids}")
     
-    if info_session.enterprise_id != effective_enterprise_id:
+    if info_session.enterprise_id not in enterprise_ids:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"无权邀请学生参加此宣讲会（宣讲会企业ID: {info_session.enterprise_id}, 当前企业有效ID: {effective_enterprise_id}）"
+            detail=f"无权邀请学生参加此宣讲会（宣讲会企业ID: {info_session.enterprise_id}, 当前企业有效ID: {enterprise_ids[0] if enterprise_ids else enterprise.id}）"
         )
     
     success_count = 0

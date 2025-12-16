@@ -180,15 +180,18 @@ async def get_my_job_fair_registrations(
             "updated_at": job_fair.updated_at,
         }
         
+        # 添加报名相关信息到字典中
+        if registration:
+            job_fair_dict["registration_id"] = registration.id
+            job_fair_dict["registration_status"] = registration.status
+            job_fair_dict["check_in_time"] = registration.check_in_time
+        else:
+            job_fair_dict["registration_id"] = None
+            job_fair_dict["registration_status"] = None
+            job_fair_dict["check_in_time"] = None
+        
         # 创建响应对象
         job_fair_response = JobFairResponse(**job_fair_dict)
-        
-        # 添加报名相关信息（通过动态属性，前端可以通过类型断言访问）
-        if registration:
-            job_fair_response.registration_id = registration.id  # type: ignore
-            job_fair_response.registration_status = registration.status  # type: ignore
-            job_fair_response.check_in_time = registration.check_in_time  # type: ignore
-        
         job_fair_list.append(job_fair_response)
     
     return {
@@ -316,7 +319,7 @@ async def create_job_fair(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    创建双选会（教师或企业用户）
+    创建双选会（仅教师用户）
     
     Args:
         job_fair_data: 双选会数据
@@ -329,27 +332,36 @@ async def create_job_fair(
     Raises:
         HTTPException: 如果用户类型不正确
     """
+    # 只有教师可以创建双选会，企业不能创建
+    if current_user.user_type != "TEACHER":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师才能创建双选会，企业只能报名参加"
+        )
+    
     # 使用新的权限检查机制
     from app.core.permissions import check_permission
-    
-    # 教师和企业都可以创建双选会，但企业子账号不能创建
-    if current_user.user_type == "TEACHER":
-        has_permission = await check_permission(current_user, "job_fair:create", db)
-    elif current_user.user_type == "ENTERPRISE":
-        has_permission = await check_permission(current_user, "job_fair:create", db)
-    else:
-        has_permission = False
+    has_permission = await check_permission(current_user, "job_fair:create", db)
     
     if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="只有教师或企业主账号才能创建双选会"
+            detail="无权创建双选会"
         )
     
-    # 创建双选会
-    # 如果是教师创建，状态设为PENDING等待审批；如果是企业创建，状态设为DRAFT
-    initial_status = "PENDING" if current_user.user_type == "TEACHER" else "DRAFT"
+    # 获取教师信息
+    teacher_result = await db.execute(
+        select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+    )
+    teacher = teacher_result.scalar_one_or_none()
     
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教师信息不存在"
+        )
+    
+    # 创建双选会（教师创建，状态设为PENDING等待审批）
     job_fair = JobFair(
         id=str(uuid4()),
         title=job_fair_data.title,
@@ -357,19 +369,10 @@ async def create_job_fair(
         start_time=job_fair_data.start_time,
         end_time=job_fair_data.end_time,
         location=job_fair_data.location,
-        school_id=job_fair_data.school_id,
+        school_id=teacher.school_id or job_fair_data.school_id,
         max_enterprises=job_fair_data.max_enterprises,
-        status=initial_status
+        status="PENDING"  # 教师创建的双选会需要审批
     )
-    
-    # 如果是企业用户，设置创建者
-    if current_user.user_type == "ENTERPRISE":
-        enterprise_result = await db.execute(
-            select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
-        )
-        enterprise = enterprise_result.scalar_one_or_none()
-        if enterprise:
-            job_fair.created_by = enterprise.id
     
     db.add(job_fair)
     await db.commit()

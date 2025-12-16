@@ -71,7 +71,7 @@ ROLE_PERMISSIONS = {
         # Offer管理
         "offer:create", "offer:read", "offer:update", "offer:delete",
         # 活动管理
-        "job_fair:create", "job_fair:read", "job_fair:update", "job_fair:register",
+        "job_fair:read", "job_fair:register",  # 企业不能创建双选会，只能查看和报名
         "info_session:create", "info_session:read", "info_session:update", "info_session:delete", "info_session:invite",
         # 学校管理
         "school:read", "school:request_info_session", "school:favorite",
@@ -453,14 +453,21 @@ async def check_resource_access(
         )
         student = student_result.scalar_one_or_none()
         if not student:
+            # 如果学生信息不存在，企业用户仍然可以查看（可能是数据问题）
+            # 但为了安全，非企业用户不允许查看
+            if current_user.user_type == UserType.ENTERPRISE:
+                return True
             return False
         
         # 学生：只能操作自己的简历
         if current_user.user_type == UserType.STUDENT:
             return student.user_id == current_user.id
         
-        # 企业：只能查看申请学生的简历
+        # 企业：可以查看所有简历（用于人才搜索和人才库）
+        # 如果简历关联了该企业的申请，则允许查看
+        # 如果简历在人才库中，也允许查看
         elif current_user.user_type == UserType.ENTERPRISE:
+            # 检查是否有该企业的申请记录
             from app.models.job import JobApplication
             application_result = await db.execute(
                 select(JobApplication).where(
@@ -468,22 +475,54 @@ async def check_resource_access(
                     JobApplication.resume_id == resource_id
                 )
             )
-            application = application_result.scalar_one_or_none()
-            if application:
+            applications = application_result.scalars().all()
+            
+            if applications:
                 from app.models.job import Job
-                job_result = await db.execute(
-                    select(Job).where(Job.id == application.job_id)
+                from app.models.profile import EnterpriseProfile
+                enterprise_result = await db.execute(
+                    select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
                 )
-                job = job_result.scalar_one_or_none()
-                if job:
-                    enterprise_result = await db.execute(
-                        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
-                    )
-                    enterprise = enterprise_result.scalar_one_or_none()
-                    if enterprise:
-                        from app.services.enterprise_service import get_enterprise_ids_for_query
-                        enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
-                        return job.enterprise_id in enterprise_ids
+                enterprise = enterprise_result.scalar_one_or_none()
+                if enterprise:
+                    from app.services.enterprise_service import get_enterprise_ids_for_query
+                    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+                    # 检查是否有任何申请关联到该企业的职位
+                    for application in applications:
+                        job_result = await db.execute(
+                            select(Job).where(Job.id == application.job_id)
+                        )
+                        job = job_result.scalar_one_or_none()
+                        if job and job.enterprise_id in enterprise_ids:
+                            return True
+            
+            # 检查是否在人才库中
+            from app.models.talent_pool import TalentPool
+            talent_pool_result = await db.execute(
+                select(TalentPool).where(
+                    TalentPool.student_id == student.id,
+                    TalentPool.resume_id == resource_id
+                )
+            )
+            talent_pools = talent_pool_result.scalars().all()
+            
+            if talent_pools:
+                from app.models.profile import EnterpriseProfile
+                enterprise_result = await db.execute(
+                    select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+                )
+                enterprise = enterprise_result.scalar_one_or_none()
+                if enterprise:
+                    from app.services.enterprise_service import get_enterprise_ids_for_query
+                    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+                    # 检查是否有任何人才库记录属于该企业
+                    for talent_pool in talent_pools:
+                        if talent_pool.enterprise_id in enterprise_ids:
+                            return True
+            
+            # 企业用户可以查看所有简历（用于人才搜索功能）
+            # 这是业务需求：企业需要能够搜索和查看所有学生的简历
+            return True
         
         # 教师：只能查看管辖学生的简历
         elif current_user.user_type == UserType.TEACHER:

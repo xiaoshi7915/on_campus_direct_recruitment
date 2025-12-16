@@ -275,8 +275,8 @@ const handlePaginationChange = (page: number, size: number) => {
 
 // 查看简历
 const viewResume = (resumeId: string) => {
-  // 跳转到简历详情页面
-  window.open(`/teacher/resumes/${resumeId}`, '_blank')
+  // 跳转到企业端简历详情页面
+  router.push(`/enterprise/resumes/${resumeId}`)
 }
 
 // 通过申请

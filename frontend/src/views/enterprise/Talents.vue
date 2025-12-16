@@ -326,8 +326,8 @@ const handlePaginationChange = (page: number, size: number) => {
 
 // 查看简历
 const viewResume = (resumeId: string) => {
-  // 跳转到简历详情页面（使用教师端路由，因为通用路由在教师端下）
-  router.push(`/teacher/resumes/${resumeId}`)
+  // 跳转到企业端简历详情页面
+  router.push(`/enterprise/resumes/${resumeId}`)
 }
 
 // 下载简历
@@ -424,9 +424,32 @@ const shareResume = async (resumeId: string) => {
       }
     }
     
-    // 复制到剪贴板
-    await navigator.clipboard.writeText(shareText)
-    alert('分享链接已复制到剪贴板')
+    // 复制到剪贴板 - 优先使用现代 Clipboard API，降级到传统方法
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(shareText)
+      alert('分享链接已复制到剪贴板')
+    } else {
+      // 降级方案：使用传统的 document.execCommand 方法
+      const textArea = document.createElement('textarea')
+      textArea.value = shareText
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      textArea.style.top = '-999999px'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      
+      try {
+        const successful = document.execCommand('copy')
+        if (successful) {
+          alert('分享链接已复制到剪贴板')
+        } else {
+          throw new Error('复制失败，请手动复制')
+        }
+      } finally {
+        document.body.removeChild(textArea)
+      }
+    }
   } catch (error: any) {
     console.error('分享失败:', error)
     alert('分享失败: ' + (error.message || '未知错误'))
