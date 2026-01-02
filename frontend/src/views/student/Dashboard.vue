@@ -3,7 +3,7 @@
     <!-- 页面标题 -->
     <div class="mb-10 animate-fade-in-up">
       <h1 class="text-5xl font-display font-bold text-gray-900 mb-3 bg-gradient-primary bg-clip-text text-transparent">学生工作台</h1>
-      <p class="text-gray-600 text-lg">欢迎回来，查看您的求职进展</p>
+      <p class="text-gray-600 text-lg">校园直聘，欢迎您，查看您的求职进展</p>
     </div>
     
     <!-- 统计卡片 -->
@@ -167,7 +167,7 @@
               </div>
               <button
                 @click.stop="handleApply(job.id)"
-                class="ml-4 px-6 py-3 bg-gradient-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold whitespace-nowrap transform hover:scale-105 shadow-md"
+                class="btn btn-primary btn-md ml-4 whitespace-nowrap"
               >
                 立即申请
               </button>
@@ -283,8 +283,8 @@ onMounted(() => {
 
 <style scoped>
 .student-dashboard {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
   padding: 0 1rem;
 }
 </style>

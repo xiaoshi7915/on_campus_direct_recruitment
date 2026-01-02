@@ -1,5 +1,5 @@
 <template>
-  <div class="sub-accounts-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="sub-accounts-page w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
         <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,12 +1,12 @@
 <template>
-  <div class="student-job-intentions max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-job-intentions w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900">求职意向</h1>
       <button
         @click="showForm = true; editingIntention = null"
-        class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center"
+        class="btn btn-primary btn-md"
       >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
         添加求职意向
@@ -77,18 +77,18 @@
           <div class="ml-6 flex space-x-2">
             <button
               @click="editIntention(intention)"
-              class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               编辑
             </button>
             <button
               @click="deleteIntention(intention.id)"
-              class="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center"
+              class="btn btn-danger btn-md"
             >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
               删除
@@ -124,21 +124,44 @@
         <form @submit.prevent="saveIntention" class="space-y-5">
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">职位类型</label>
-            <input
+            <select
               v-model="formData.job_type"
-              type="text"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
-              placeholder="如：前端开发、后端开发等"
-            />
+              class="select-base"
+            >
+              <option value="">请选择职位类型</option>
+              <option value="前端开发">前端开发</option>
+              <option value="后端开发">后端开发</option>
+              <option value="全栈开发">全栈开发</option>
+              <option value="移动开发">移动开发</option>
+              <option value="数据开发">数据开发</option>
+              <option value="算法工程师">算法工程师</option>
+              <option value="产品经理">产品经理</option>
+              <option value="UI/UX设计师">UI/UX设计师</option>
+              <option value="测试工程师">测试工程师</option>
+              <option value="运维工程师">运维工程师</option>
+              <option value="数据分析师">数据分析师</option>
+              <option value="其他">其他</option>
+            </select>
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">行业</label>
-            <input
+            <select
               v-model="formData.industry"
-              type="text"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
-              placeholder="如：互联网、金融等"
-            />
+              class="select-base"
+            >
+              <option value="">请选择行业</option>
+              <option value="互联网">互联网</option>
+              <option value="金融">金融</option>
+              <option value="教育">教育</option>
+              <option value="医疗">医疗</option>
+              <option value="制造业">制造业</option>
+              <option value="零售">零售</option>
+              <option value="房地产">房地产</option>
+              <option value="咨询">咨询</option>
+              <option value="媒体">媒体</option>
+              <option value="能源">能源</option>
+              <option value="其他">其他</option>
+            </select>
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">期望薪资（元/月）</label>
@@ -146,32 +169,43 @@
               v-model.number="formData.salary_expect"
               type="number"
               min="0"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              class="input-base"
               placeholder="如：8000"
             />
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">工作地点</label>
-            <input
+            <select
               v-model="formData.work_location"
-              type="text"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
-              placeholder="如：北京、上海等"
-            />
+              class="select-base"
+            >
+              <option value="">请选择工作地点</option>
+              <option value="北京">北京</option>
+              <option value="上海">上海</option>
+              <option value="广州">广州</option>
+              <option value="深圳">深圳</option>
+              <option value="杭州">杭州</option>
+              <option value="南京">南京</option>
+              <option value="成都">成都</option>
+              <option value="武汉">武汉</option>
+              <option value="西安">西安</option>
+              <option value="苏州">苏州</option>
+              <option value="其他">其他</option>
+            </select>
           </div>
           <div class="pt-4 border-t border-gray-200 flex justify-end space-x-4">
             <button
               type="button"
               @click="showForm = false"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               保存

@@ -1,11 +1,11 @@
 <template>
-  <div class="enterprise-system-messages max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-system-messages w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900">系统消息</h1>
       <button
         v-if="unreadCount > 0"
         @click="markAllRead"
-        class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center"
+        class="btn btn-primary btn-md"
       >
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -73,7 +73,7 @@
             <button
               v-if="!message.is_read"
               @click="markRead(message.id)"
-              class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium flex items-center"
+              class="btn btn-primary btn-sm"
             >
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

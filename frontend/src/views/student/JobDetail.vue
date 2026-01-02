@@ -1,5 +1,5 @@
 <template>
-  <div class="student-job-detail max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-job-detail w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div v-if="loading" class="text-center py-16">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <p class="mt-4 text-gray-600">加载中...</p>
@@ -12,15 +12,17 @@
     </div>
     <div v-else>
       <!-- 返回按钮 -->
-      <button
-        @click="$router.back()"
-        class="mb-6 text-blue-600 hover:text-blue-700 font-medium flex items-center transition-colors"
-      >
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        返回
-      </button>
+      <div class="mb-6 flex justify-end">
+        <button
+          @click="$router.back()"
+          class="text-blue-600 hover:text-blue-700 font-medium flex items-center transition-colors"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          返回
+        </button>
+      </div>
 
       <!-- 职位详情 -->
       <div class="bg-white rounded-xl shadow-md p-8 mb-6 border border-gray-200">
@@ -58,16 +60,16 @@
           <div class="flex flex-col space-y-3 lg:ml-6">
             <button
               @click="handleApply"
-              class="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center"
+              class="btn btn-primary btn-lg"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               立即申请
             </button>
             <button
               @click="handleFavorite"
-              class="px-8 py-3 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 font-medium flex items-center justify-center"
+              class="btn btn-outline-primary btn-lg"
             >
               <svg v-if="isFavorited" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />

@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-schedules w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-schedules w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">日程管理</h1>
       <button
@@ -403,5 +403,4 @@ onMounted(() => {
   loadSchedules()
 })
 </script>
-
 

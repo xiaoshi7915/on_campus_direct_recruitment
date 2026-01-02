@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-chat w-full mx-auto px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
+  <div class="enterprise-chat w-full max-w-full px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
     <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
@@ -70,43 +70,42 @@
                 <template v-if="otherUserType === 'STUDENT'">
                   <button
                     @click="viewStudentResume"
-                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="查看简历"
                   >
                     查看简历
                   </button>
                   <button
                     @click="markResume"
-                    class="px-4 py-2 text-sm bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-warning btn-sm"
                     title="标记简历"
                   >
                     标记简历
                   </button>
                   <button
                     @click="toggleResumeFavorite"
-                    :class="isResumeFavorited ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'"
-                    class="px-4 py-2 text-sm text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    :class="isResumeFavorited ? 'btn btn-danger btn-sm' : 'btn btn-secondary btn-sm'"
                     :title="isResumeFavorited ? '取消收藏' : '收藏简历'"
                   >
                     {{ isResumeFavorited ? '已收藏' : '收藏简历' }}
                   </button>
                   <button
                     @click="downloadResume"
-                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-success btn-sm"
                     title="下载简历"
                   >
                     下载简历
                   </button>
                   <button
                     @click="inviteToInfoSession"
-                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="宣讲会邀请"
                   >
                     宣讲会邀请
                   </button>
                   <button
                     @click="inviteToInterview"
-                    class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="面试邀请"
                   >
                     面试邀请
@@ -116,36 +115,35 @@
                 <template v-else-if="otherUserType === 'SCHOOL' || (otherUserType === 'TEACHER' && teacherSchoolId)">
                   <button
                     @click="viewSchoolDetail"
-                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="查看学校主页"
                   >
                     查看学校
                   </button>
                   <button
                     @click="markSchool"
-                    class="px-4 py-2 text-sm bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-warning btn-sm"
                     title="标记学校"
                   >
                     标记学校
                   </button>
                   <button
                     @click="toggleSchoolFavorite"
-                    :class="isSchoolFavorited ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'"
-                    class="px-4 py-2 text-sm text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    :class="isSchoolFavorited ? 'btn btn-danger btn-sm' : 'btn btn-secondary btn-sm'"
                     :title="isSchoolFavorited ? '取消收藏' : '收藏学校'"
                   >
                     {{ isSchoolFavorited ? '已收藏' : '收藏学校' }}
                   </button>
                   <button
                     @click="shareSchool"
-                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-success btn-sm"
                     title="分享学校"
                   >
                     分享学校
                   </button>
                   <button
                     @click="requestOfflineInfoSession"
-                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="申请线下宣讲会"
                   >
                     申请宣讲会
@@ -213,9 +211,9 @@
               />
               <button
                 type="submit"
-                class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+                class="btn btn-primary btn-md"
               >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
                 发送
@@ -260,15 +258,15 @@
             <button
               type="button"
               @click="showMarkResumeModal = false"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               保存
@@ -312,13 +310,13 @@
             <button
               type="button"
               @click="showMarkSchoolModal = false"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -359,7 +357,7 @@
         <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
           <button
             @click="showInviteInfoSessionModal = false"
-            class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+            class="btn btn-secondary btn-md"
           >
             取消
           </button>
@@ -396,7 +394,7 @@
         <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
           <button
             @click="showInviteInterviewModal = false"
-            class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+            class="btn btn-secondary btn-md"
           >
             取消
           </button>
@@ -505,13 +503,13 @@
             <button
               type="button"
               @click="showRequestInfoSessionModal = false"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

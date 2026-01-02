@@ -1,9 +1,9 @@
 <template>
-  <div :class="['main-layout', isChatPage ? 'h-screen flex flex-col' : 'h-screen flex flex-col overflow-hidden']">
+  <div :class="['main-layout', isChatPage ? 'h-screen flex flex-col' : 'h-screen flex flex-col']">
     <!-- 顶部导航栏 -->
-    <header :class="['bg-white/95 backdrop-blur-md shadow-lg relative z-20 border-b border-gray-100/50', isChatPage ? 'flex-shrink-0' : '']">
-      <nav class="container mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
+    <header :class="['bg-white/95 backdrop-blur-md shadow-lg relative z-20 border-b border-gray-100/50 w-full', isChatPage ? 'flex-shrink-0' : '']">
+      <nav class="w-full px-4 py-4 max-w-full">
+        <div class="flex items-center justify-between w-full max-w-full">
           <!-- Logo -->
           <router-link to="/" class="flex items-center space-x-3 group animate-fade-in-up">
             <div class="relative p-2.5 bg-gradient-primary rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
@@ -20,31 +20,28 @@
             <!-- 首页链接 -->
             <router-link
               :to="homePath"
-              class="px-4 py-2.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300 relative font-medium text-sm group"
-              active-class="text-primary-600 bg-gradient-to-r from-primary-50 to-primary-100/50 font-semibold shadow-sm"
+              class="nav-menu-item group"
+              active-class="active"
             >
               <span class="relative z-10">首页</span>
-              <div class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
             </router-link>
             
             <!-- 未登录用户可见的导航菜单 -->
             <template v-if="!authStore.isAuthenticated()">
               <router-link
                 to="/student/applications"
-                class="px-4 py-2.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300 relative font-medium text-sm group"
-                active-class="text-primary-600 bg-gradient-to-r from-primary-50 to-primary-100/50 font-semibold shadow-sm"
+                class="nav-menu-item group"
+                active-class="active"
               >
                 <span class="relative z-10">面试专区</span>
-                <div class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
               </router-link>
               
               <router-link
                 to="/student/resumes"
-                class="px-4 py-2.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300 relative font-medium text-sm group"
-                active-class="text-primary-600 bg-gradient-to-r from-primary-50 to-primary-100/50 font-semibold shadow-sm"
+                class="nav-menu-item group"
+                active-class="active"
               >
                 <span class="relative z-10">简历投递</span>
-                <div class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
               </router-link>
             </template>
             
@@ -59,8 +56,8 @@
                 @mouseleave="setHoveredModule(null, false)"
               >
                 <button
-                  class="px-4 py-2.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300 font-medium text-sm flex items-center space-x-1"
-                  :class="{ 'text-primary-600 bg-gradient-to-r from-primary-50 to-primary-100/50 font-semibold shadow-sm': isModuleActive(module) }"
+                  class="nav-menu-dropdown"
+                  :class="{ 'active': isModuleActive(module) }"
                   @click="() => {
                     if (module.items && module.items.length > 0) {
                       router.push(module.items[0].path)
@@ -68,7 +65,7 @@
                   }"
                 >
                   <span>{{ module.name }}</span>
-                  <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': hoveredModule === module.id }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="nav-menu-dropdown-icon" :class="{ 'rotated': hoveredModule === module.id }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -76,7 +73,7 @@
                 <!-- 下拉菜单 -->
                 <div
                   v-if="hoveredModule === module.id"
-                  class="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-100/50 py-2 z-[9999] min-w-max"
+                  class="nav-dropdown-menu"
                   style="pointer-events: auto !important; display: block !important; opacity: 1 !important; visibility: visible !important; position: absolute !important;"
                   @mouseenter="setHoveredModule(module.id, true)"
                   @mouseleave="setHoveredModule(null, false)"
@@ -85,15 +82,15 @@
                     v-for="item in module.items"
                     :key="item.path"
                     :to="item.path"
-                    class="block px-4 py-2.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 transition-all duration-200 text-sm flex items-center justify-between"
-                    active-class="text-primary-600 bg-primary-50 font-semibold"
+                    class="nav-dropdown-item"
+                    active-class="active"
                   >
                     <span class="flex items-center space-x-2">
                       <span>{{ item.name }}</span>
                     </span>
                     <span
                       v-if="typeof item.badge === 'number' && item.badge > 0"
-                      class="bg-gradient-warm text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center"
+                      class="nav-badge"
                     >
                       {{ item.badge > 99 ? '99+' : item.badge }}
                     </span>
@@ -106,11 +103,10 @@
                 v-for="item in directNavItems"
                 :key="item.path"
                 :to="item.path"
-                class="px-4 py-2.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-300 relative font-medium text-sm group"
-                active-class="text-primary-600 bg-gradient-to-r from-primary-50 to-primary-100/50 font-semibold shadow-sm"
+                class="nav-menu-item group"
+                active-class="active"
               >
                 <span class="relative z-10">{{ item.name }}</span>
-                <div class="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
               </router-link>
             </template>
             
@@ -124,7 +120,7 @@
               </div>
               <button
                 @click="handleLogout"
-                class="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg transition-all duration-300 font-medium transform hover:scale-105"
+                class="btn btn-danger btn-md"
               >
                 退出
               </button>
@@ -132,13 +128,13 @@
             <div v-else class="flex items-center space-x-3">
               <router-link
                 to="/login"
-                class="px-5 py-2.5 text-gray-700 hover:text-primary-600 font-medium transition-all duration-300 rounded-xl hover:bg-primary-50"
+                class="btn btn-outline-primary btn-md"
               >
                 登录
               </router-link>
               <router-link
                 to="/register"
-                class="px-5 py-2.5 bg-gradient-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium transform hover:scale-105 shadow-md"
+                class="btn btn-primary btn-md"
               >
                 注册
               </router-link>
@@ -149,16 +145,16 @@
     </header>
 
     <!-- 主要内容区域 -->
-    <main :class="['relative z-10 flex-1 flex flex-col', isChatPage ? 'min-h-0' : (route.path === '/' ? 'min-h-0 overflow-hidden' : 'container mx-auto px-4 py-8')]">
+    <main :class="['relative z-10 flex-1 flex flex-col w-full max-w-full min-h-0', isChatPage ? '' : (route.path === '/' ? '' : 'px-4 py-8 overflow-y-auto')]">
       <!-- 面包屑导航 -->
       <Breadcrumb v-if="!isChatPage && route.path !== '/'" :unread-count="unreadMessageCount" />
       <router-view />
     </main>
 
     <!-- 底部（聊天页面不显示） -->
-    <footer v-if="!isChatPage" class="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 text-white mt-auto relative z-20 border-t border-gray-700/50">
-      <div class="container mx-auto px-4 py-10">
-        <div class="text-center">
+    <footer v-if="!isChatPage" class="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 text-white mt-auto relative z-20 border-t border-gray-700/50 w-full">
+      <div class="w-full px-4 py-4 max-w-full">
+        <div class="text-center w-full max-w-full">
           <div class="flex items-center justify-center space-x-2 mb-3">
             <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +178,7 @@ import { getCurrentUser } from '@/api/users'
 import { getUnreadCount } from '@/api/systemMessages'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import { getMenuByUserType } from '@/config/menuConfig'
-import type { MenuModule, MenuItem } from '@/config/menuConfig'
+import type { MenuModule } from '@/config/menuConfig'
 import type { User } from '@/api/users'
 
 const router = useRouter()
@@ -355,9 +351,15 @@ onUnmounted(() => {
 <style scoped>
 .main-layout {
   @apply flex flex-col;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   height: 100vh;
   max-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 </style>
 

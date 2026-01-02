@@ -1,14 +1,19 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
       <div class="mb-6">
-        <button
-          @click="$router.back()"
-          class="text-blue-600 hover:text-blue-800 mb-4"
-        >
-          ← 返回
-        </button>
-        <h2 class="text-2xl font-bold">安排面试</h2>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold">安排面试</h2>
+          <button
+            @click="$router.back()"
+            class="text-blue-600 hover:text-blue-800 flex items-center"
+          >
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            返回
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="text-center py-12">加载中...</div>
@@ -93,14 +98,14 @@
           <button
             type="button"
             @click="$router.back()"
-            class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            class="btn btn-secondary btn-md"
           >
             取消
           </button>
           <button
             type="submit"
             :disabled="submitting"
-            class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="btn btn-primary btn-md"
           >
             {{ submitting ? '提交中...' : '创建面试' }}
           </button>

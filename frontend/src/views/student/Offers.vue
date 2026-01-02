@@ -1,5 +1,5 @@
 <template>
-  <div class="student-offers max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-offers w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8">我的Offer</h1>
 
     <!-- 筛选条件 -->

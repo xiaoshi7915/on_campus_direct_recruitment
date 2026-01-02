@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-talents max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-talents w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8">人才搜索</h1>
 
     <!-- 搜索和筛选 -->
@@ -17,7 +17,7 @@
               v-model="searchKeyword"
               type="text"
               placeholder="搜索简历..."
-              class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              class="input-search"
               @keyup.enter="handleSearch"
             />
           </div>
@@ -28,7 +28,7 @@
             v-model="filters.major"
             type="text"
             placeholder="例如：计算机科学"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="input-base"
             @change="handleSearch"
           />
         </div>
@@ -36,7 +36,7 @@
           <label class="block text-sm font-semibold text-gray-700 mb-2">学历</label>
           <select
             v-model="filters.education"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="select-base"
             @change="handleSearch"
           >
             <option value="">全部</option>
@@ -48,9 +48,9 @@
         <div class="flex items-end">
           <button
             @click="handleSearch"
-            class="w-full px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center justify-center"
+            class="btn btn-primary btn-md btn-full"
           >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             搜索
@@ -128,9 +128,9 @@
           <div class="ml-6 flex flex-col space-y-2">
             <button
               @click="viewResume(resume.id)"
-              class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center justify-center whitespace-nowrap"
+              class="btn btn-primary btn-md"
             >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
@@ -138,9 +138,9 @@
             </button>
             <button
               @click="downloadResume(resume.id)"
-              class="px-5 py-2.5 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 font-medium flex items-center justify-center whitespace-nowrap"
+              class="btn btn-outline-primary btn-md"
             >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               下载简历
@@ -148,8 +148,8 @@
             <button
               @click="markResume(resume.id)"
               :class="[
-                'px-5 py-2.5 border-2 rounded-xl hover:shadow-md transition-all duration-200 font-medium flex items-center justify-center whitespace-nowrap',
-                resumeMarkMap[resume.id] ? 'bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100' : 'border-gray-300 hover:border-yellow-500 hover:text-yellow-600 hover:bg-yellow-50'
+                'btn btn-md',
+                resumeMarkMap[resume.id] ? 'btn-warning' : 'btn-outline-warning'
               ]"
             >
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +159,7 @@
             </button>
             <button
               @click="shareResume(resume.id)"
-              class="px-5 py-2.5 border-2 border-gray-300 rounded-xl hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all duration-200 font-medium flex items-center justify-center whitespace-nowrap"
+              class="btn btn-outline-success btn-md whitespace-nowrap"
             >
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -168,7 +168,7 @@
             </button>
             <button
               @click="startChat(resume.student_id)"
-              class="px-5 py-2.5 border-2 border-gray-300 rounded-xl hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 font-medium flex items-center justify-center whitespace-nowrap"
+              class="btn btn-outline-primary btn-md whitespace-nowrap"
             >
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -239,13 +239,13 @@
           <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-4">
             <button
               @click="showMarkModal = false"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               @click="saveMark"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

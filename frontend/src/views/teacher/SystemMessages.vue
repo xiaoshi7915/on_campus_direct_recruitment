@@ -1,11 +1,11 @@
 <template>
-  <div class="teacher-system-messages">
+  <div class="teacher-system-messages w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">系统消息</h1>
       <button
         v-if="unreadCount > 0"
         @click="markAllRead"
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        class="btn btn-primary btn-md"
       >
         全部标记为已读
       </button>
@@ -159,8 +159,8 @@ onMounted(() => {
 
 <style scoped>
 .teacher-system-messages {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 </style>
 

@@ -1,10 +1,10 @@
 <template>
-  <div class="enterprise-feedback">
+  <div class="enterprise-feedback w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">意见反馈</h1>
       <button
         @click="showForm = true"
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        class="btn btn-primary btn-md"
       >
         提交反馈
       </button>
@@ -17,7 +17,7 @@
         <select
           v-model="statusFilter"
           @change="loadFeedbacks"
-          class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="select-base"
         >
           <option value="">全部</option>
           <option value="PENDING">待处理</option>
@@ -92,7 +92,7 @@
                   v-model="feedbackForm.title"
                   type="text"
                   required
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  class="input-base"
                   placeholder="请输入反馈标题"
                 />
               </div>
@@ -104,7 +104,7 @@
                   v-model="feedbackForm.content"
                   required
                   rows="6"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  class="textarea-base"
                   placeholder="请输入反馈内容"
                 ></textarea>
               </div>
@@ -113,7 +113,7 @@
                 <input
                   type="text"
                   v-model="feedbackForm.images"
-                  class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  class="input-base"
                   placeholder="图片URL，多个用逗号分隔"
                 />
               </div>
@@ -122,13 +122,13 @@
               <button
                 type="button"
                 @click="showForm = false"
-                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                class="btn btn-secondary btn-md"
               >
                 取消
               </button>
               <button
                 type="submit"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="btn btn-primary btn-md"
               >
                 提交
               </button>
@@ -250,10 +250,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.enterprise-feedback {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-</style>
 

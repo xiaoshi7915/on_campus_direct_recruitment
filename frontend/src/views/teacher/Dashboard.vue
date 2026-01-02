@@ -1,5 +1,5 @@
 <template>
-  <div class="teacher-dashboard max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="teacher-dashboard w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 bg-gradient-primary bg-clip-text text-transparent animate-fade-in-up">教师工作台</h1>
     
     <!-- 统计卡片 -->

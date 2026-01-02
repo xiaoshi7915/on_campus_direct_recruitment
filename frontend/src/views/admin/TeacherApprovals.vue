@@ -1,5 +1,5 @@
 <template>
-  <div class="teacher-approvals-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="teacher-approvals-page w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8 flex items-center">
       <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

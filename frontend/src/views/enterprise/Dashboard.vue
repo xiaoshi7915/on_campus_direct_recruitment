@@ -110,7 +110,7 @@
                 </span>
                 <button
                   @click="viewApplication(app.id)"
-                  class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 text-sm font-medium"
+                  class="btn btn-primary btn-sm"
                 >
                   查看详情
                 </button>
@@ -191,7 +191,7 @@
               </div>
               <button
                 @click.stop="goToJobDetail(job.id)"
-                class="ml-4 px-6 py-3 bg-gradient-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold whitespace-nowrap transform hover:scale-105 shadow-md"
+                class="btn btn-primary btn-md ml-4 whitespace-nowrap"
               >
                 管理
               </button>
@@ -309,8 +309,8 @@ onMounted(() => {
 
 <style scoped>
 .enterprise-dashboard {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
   padding: 0 1rem;
 }
 </style>

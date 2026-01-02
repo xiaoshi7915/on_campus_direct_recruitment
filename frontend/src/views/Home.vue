@@ -1,13 +1,13 @@
 <template>
-  <div class="home flex flex-col w-full" style="height: 100%; min-height: 100%; max-height: 100%;">
-    <!-- 图片显示区域 - 填满导航栏和底部之间的空间 -->
-    <div class="flex-1 flex items-center justify-center w-full overflow-hidden" style="min-height: 0; max-height: 100%;">
+  <div class="home flex flex-col w-full flex-1 min-h-0">
+    <!-- 图片显示区域 - 填满整个可用空间 -->
+    <div class="w-full h-full flex items-center justify-center overflow-hidden">
       <img 
         ref="heroImage"
         :src="heroImageSrc" 
         alt="校园直聘平台" 
-        class="w-full h-full object-contain"
-        style="display: block !important; visibility: visible !important; opacity: 1 !important; max-width: 100%; max-height: 100%;"
+        class="w-full h-full object-cover"
+        style="display: block !important; visibility: visible !important; opacity: 1 !important;"
         @error="handleImageError"
         @load="handleImageLoad"
       />

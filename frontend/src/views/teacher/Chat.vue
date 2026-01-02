@@ -1,5 +1,5 @@
 <template>
-  <div class="teacher-chat w-full mx-auto px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
+  <div class="teacher-chat w-full max-w-full px-4 sm:px-6 lg:px-8" style="height: calc(100vh - 120px); padding-top: 2rem; padding-bottom: 2rem;">
     <div class="flex h-full bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
       <!-- 会话列表 -->
       <div class="w-1/3 border-r border-gray-200 bg-gray-50 flex flex-col">
@@ -70,28 +70,28 @@
                 <template v-if="otherUserType === 'ENTERPRISE'">
                   <button
                     @click="viewEnterpriseProfile"
-                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="查看企业信息"
                   >
                     查看企业
                   </button>
                   <button
                     @click="viewEnterpriseJobs"
-                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-success btn-sm"
                     title="查看职位信息"
                   >
                     查看职位
                   </button>
                   <button
                     @click="viewEnterpriseInfoSessions"
-                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="查看宣讲会"
                   >
                     查看宣讲会
                   </button>
                   <button
                     @click="viewEnterpriseJobFairs"
-                    class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="查看双选会"
                   >
                     查看双选会
@@ -101,21 +101,21 @@
                 <template v-else-if="otherUserType === 'STUDENT'">
                   <button
                     @click="viewStudentProfile"
-                    class="px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="查看学生信息"
                   >
                     查看学生
                   </button>
                   <button
                     @click="viewStudentResumes"
-                    class="px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-success btn-sm"
                     title="查看简历"
                   >
                     查看简历
                   </button>
                   <button
                     @click="recommendToEnterprise"
-                    class="px-4 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                    class="btn btn-primary btn-sm"
                     title="推荐给企业"
                   >
                     推荐给企业
@@ -183,9 +183,9 @@
               />
               <button
                 type="submit"
-                class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+                class="btn btn-primary btn-md"
               >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
                 发送

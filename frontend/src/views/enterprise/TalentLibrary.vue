@@ -1,5 +1,5 @@
 <template>
-  <div class="talent-library-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="talent-library-page w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
         <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -23,7 +23,7 @@
           <select
             v-model="statusFilter"
             @change="loadTalents"
-            class="px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 min-w-[150px]"
+            class="select-base min-w-[150px]"
           >
             <option value="">全部</option>
             <option value="FAVORITED">已收藏</option>
@@ -37,15 +37,15 @@
             v-model="keyword"
             type="text"
             placeholder="搜索姓名、手机号、邮箱..."
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="input-base"
             @input="handleSearch"
           />
         </div>
         <button
           @click="loadTalents"
-          class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+          class="btn btn-primary btn-md"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           搜索

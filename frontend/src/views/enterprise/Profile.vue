@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-profile max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-profile w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8">企业中心</h1>
 
     <div v-if="loading" class="text-center py-16">

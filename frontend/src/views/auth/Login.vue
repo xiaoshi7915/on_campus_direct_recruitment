@@ -14,7 +14,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         </div>
-        <h2 class="text-4xl font-display font-bold text-gray-900 mb-3">欢迎回来</h2>
+        <h2 class="text-4xl font-display font-bold text-gray-900 mb-3">校园直聘，欢迎您</h2>
         <p class="text-gray-600 text-lg">登录您的账户以继续</p>
       </div>
 

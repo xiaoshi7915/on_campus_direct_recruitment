@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-job-edit max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-job-edit w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div v-if="loading" class="text-center py-16">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <p class="mt-4 text-gray-600">加载中...</p>
@@ -12,15 +12,17 @@
     </div>
     <div v-else>
       <!-- 返回按钮 -->
-      <button
-        @click="$router.back()"
-        class="mb-6 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium flex items-center"
-      >
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        返回
-      </button>
+      <div class="mb-6 flex justify-end">
+        <button
+          @click="$router.back()"
+          class="px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium flex items-center"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          返回
+        </button>
+      </div>
 
       <!-- 编辑表单 -->
       <div class="bg-white rounded-xl shadow-md p-8 border border-gray-200">
@@ -154,13 +156,13 @@
             <button
               type="button"
               @click="$router.back()"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center"
+              class="btn btn-primary btn-md"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

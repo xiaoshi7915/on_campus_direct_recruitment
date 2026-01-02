@@ -1,5 +1,5 @@
 <template>
-  <div class="resume-detail-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="resume-detail-page w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div v-if="loading" class="text-center py-16">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <p class="mt-4 text-gray-600">加载中...</p>

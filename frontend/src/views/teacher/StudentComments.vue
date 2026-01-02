@@ -1,5 +1,5 @@
 <template>
-  <div class="student-comments-page">
+  <div class="student-comments-page w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-3xl font-bold mb-6">学生点评管理</h1>
 
     <!-- 搜索和筛选 -->
@@ -11,14 +11,14 @@
             v-model="studentIdFilter"
             type="text"
             placeholder="筛选学生ID"
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+            class="input-base"
             @keyup.enter="handleSearch"
           />
         </div>
         <div class="flex items-end">
           <button
             @click="handleSearch"
-            class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            class="btn btn-primary btn-md btn-full"
           >
             搜索
           </button>
@@ -70,13 +70,13 @@
               <div class="ml-6 flex flex-col space-y-2">
                 <button
                   @click="editComment(comment)"
-                  class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  class="btn btn-primary btn-md"
                 >
                   编辑
                 </button>
                 <button
                   @click="confirmDelete(comment)"
-                  class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  class="btn btn-danger btn-md"
                 >
                   删除
                 </button>
@@ -153,13 +153,13 @@
               <button
                 type="button"
                 @click="showEditModal = false"
-                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                class="btn btn-secondary btn-md"
               >
                 取消
               </button>
               <button
                 type="submit"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="btn btn-primary btn-md"
               >
                 保存
               </button>
@@ -184,13 +184,13 @@
           <div class="flex justify-end space-x-4">
             <button
               @click="showDeleteModal = false"
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               @click="handleDelete"
-              class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              class="btn btn-danger btn-md"
             >
               删除
             </button>
@@ -344,8 +344,8 @@ onMounted(() => {
 
 <style scoped>
 .student-comments-page {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 </style>
 

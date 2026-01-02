@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-dashboard max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="admin-dashboard w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8">管理后台</h1>
     
     <!-- 统计卡片 -->

@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-job-detail max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-job-detail w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div v-if="loading" class="text-center py-16">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <p class="mt-4 text-gray-600">加载中...</p>
@@ -12,15 +12,17 @@
     </div>
     <div v-else>
       <!-- 返回按钮 -->
-      <button
-        @click="$router.back()"
-        class="mb-6 text-blue-600 hover:text-blue-700 font-medium flex items-center transition-colors"
-      >
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        返回
-      </button>
+      <div class="mb-6 flex justify-end">
+        <button
+          @click="$router.back()"
+          class="text-blue-600 hover:text-blue-700 font-medium flex items-center transition-colors"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          返回
+        </button>
+      </div>
 
       <!-- 职位详情 -->
       <div class="bg-white rounded-xl shadow-md p-8 mb-6 border border-gray-200">
@@ -66,16 +68,16 @@
           <div class="flex flex-col space-y-3 lg:ml-6">
             <button
               @click="handleEdit"
-              class="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center"
+              class="btn btn-primary btn-lg"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               编辑职位
             </button>
             <button
               @click="handleDelete"
-              class="px-8 py-3 bg-red-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center"
+              class="btn btn-danger btn-lg"
             >
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -180,7 +182,7 @@
               </div>
               <button
                 @click="viewApplication(application.id)"
-                class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center ml-4"
+                class="btn btn-primary btn-md ml-4"
               >
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

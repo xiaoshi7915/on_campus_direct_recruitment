@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-application-detail max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-application-detail w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div v-if="loading" class="text-center py-16">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <p class="mt-4 text-gray-600">加载中...</p>
@@ -12,15 +12,17 @@
     </div>
     <div v-else>
       <!-- 返回按钮 -->
-      <button
-        @click="$router.back()"
-        class="mb-6 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium flex items-center"
-      >
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        返回
-      </button>
+      <div class="mb-6 flex justify-end">
+        <button
+          @click="$router.back()"
+          class="px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all duration-200 font-medium flex items-center"
+        >
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          返回
+        </button>
+      </div>
 
       <!-- 申请详情 -->
       <div class="bg-white rounded-xl shadow-md p-8 mb-6 border border-gray-200">
@@ -53,9 +55,9 @@
             <button
               v-if="application.status === 'PENDING'"
               @click="handleAccept"
-              class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center"
+              class="btn btn-success btn-md"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               接受申请
@@ -63,9 +65,9 @@
             <button
               v-if="application.status === 'PENDING'"
               @click="handleReject"
-              class="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center"
+              class="btn btn-danger btn-md"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               拒绝申请

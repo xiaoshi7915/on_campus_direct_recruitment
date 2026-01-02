@@ -1,10 +1,10 @@
 <template>
-  <div class="talent-recommendations-page">
+  <div class="talent-recommendations-page w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-bold">推荐人才管理</h1>
       <button
         @click="showRecommendModal = true"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        class="btn btn-primary btn-md"
       >
         推荐人才
       </button>
@@ -36,7 +36,7 @@
         <div class="flex items-end">
           <button
             @click="handleSearch"
-            class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            class="btn btn-primary btn-md btn-full"
           >
             搜索
           </button>
@@ -150,7 +150,7 @@
               </button>
               <button
                 type="submit"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                class="btn btn-primary btn-md"
               >
                 推荐
               </button>
@@ -265,8 +265,8 @@ onMounted(() => {
 
 <style scoped>
 .talent-recommendations-page {
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 </style>
 

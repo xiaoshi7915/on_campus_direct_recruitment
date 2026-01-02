@@ -1,5 +1,5 @@
 <template>
-  <div class="student-notifications max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-notifications w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900">系统消息</h1>
       <div class="flex items-center space-x-4">

@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-info-sessions max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-info-sessions w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
         <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -9,9 +9,9 @@
       </h1>
       <button
         @click="showCreateModal = true"
-        class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center"
+        class="btn btn-primary btn-md"
       >
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
         创建宣讲会
@@ -91,7 +91,7 @@
               <a
                 :href="session.live_url"
                 target="_blank"
-                class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors duration-200 font-medium text-sm"
+                class="btn btn-ghost-primary btn-sm"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -103,25 +103,25 @@
           <div class="ml-6 flex flex-col space-y-2">
             <button
               @click="editInfoSession(session)"
-              class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
+              class="btn btn-primary btn-sm"
             >
               编辑
             </button>
             <button
               @click="viewRegistrations(session.id)"
-              class="px-4 py-2 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium text-sm"
+              class="btn btn-outline-secondary btn-sm"
             >
               查看报名
             </button>
             <button
               @click="showInviteModal(session.id)"
-              class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
+              class="btn btn-success btn-sm"
             >
               邀请学生
             </button>
             <button
               @click="handleDeleteInfoSession(session.id)"
-              class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
+              class="btn btn-danger btn-sm"
             >
               删除
             </button>
@@ -143,30 +143,30 @@
           <div class="space-y-5">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">标题 *</label>
-              <input v-model="createForm.title" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model="createForm.title" type="text" required class="input-base" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">描述</label>
-              <textarea v-model="createForm.description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"></textarea>
+              <textarea v-model="createForm.description" rows="3" class="textarea-base"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">开始时间 *</label>
-                <input v-model="createForm.start_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+                <input v-model="createForm.start_time" type="datetime-local" required class="input-base" />
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">结束时间 *</label>
-                <input v-model="createForm.end_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+                <input v-model="createForm.end_time" type="datetime-local" required class="input-base" />
               </div>
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">地点</label>
-              <input v-model="createForm.location" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model="createForm.location" type="text" class="input-base" />
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">类型 *</label>
-                <select v-model="createForm.session_type" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
+                <select v-model="createForm.session_type" required class="select-base">
                   <option value="OFFLINE">线下</option>
                   <option value="ONLINE">线上</option>
                   <option value="HYBRID">混合</option>
@@ -174,19 +174,19 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">最大人数</label>
-                <input v-model.number="createForm.max_students" type="number" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+                <input v-model.number="createForm.max_students" type="number" min="1" class="input-base" />
               </div>
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">直播链接</label>
-              <input v-model="createForm.live_url" type="url" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model="createForm.live_url" type="url" class="input-base" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">宣讲会资料</label>
               <div class="space-y-2">
                 <div v-for="(material, index) in createForm.materials" :key="index" class="flex items-center space-x-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
                   <a :href="material" target="_blank" class="text-blue-600 hover:text-blue-800 flex-1 truncate font-medium">{{ material }}</a>
-                  <button type="button" @click="createForm.materials.splice(index, 1)" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm font-medium">删除</button>
+                  <button type="button" @click="createForm.materials.splice(index, 1)" class="btn btn-outline-danger btn-sm">删除</button>
                 </div>
                 <input
                   type="file"
@@ -198,7 +198,7 @@
                 <button
                   type="button"
                   @click="createFileInput?.click()"
-                  class="px-4 py-2 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+                  class="btn btn-secondary btn-md"
                 >
                   上传资料
                 </button>
@@ -206,9 +206,9 @@
             </div>
           </div>
           <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-4">
-            <button type="button" @click="showCreateModal = false" class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium">取消</button>
-            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" @click="showCreateModal = false" class="btn btn-secondary btn-md">取消</button>
+            <button type="submit" class="btn btn-primary btn-md">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               创建
@@ -231,30 +231,30 @@
           <div class="space-y-5">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">标题</label>
-              <input v-model="editForm.title" type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model="editForm.title" type="text" required class="input-base" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">描述</label>
-              <textarea v-model="editForm.description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200 resize-none"></textarea>
+              <textarea v-model="editForm.description" rows="3" class="textarea-base"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">开始时间</label>
-                <input v-model="editForm.start_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+                <input v-model="editForm.start_time" type="datetime-local" required class="input-base" />
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">结束时间</label>
-                <input v-model="editForm.end_time" type="datetime-local" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+                <input v-model="editForm.end_time" type="datetime-local" required class="input-base" />
               </div>
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">地点</label>
-              <input v-model="editForm.location" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model="editForm.location" type="text" class="input-base" />
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">类型</label>
-                <select v-model="editForm.session_type" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
+                <select v-model="editForm.session_type" class="select-base">
                   <option value="OFFLINE">线下</option>
                   <option value="ONLINE">线上</option>
                   <option value="HYBRID">混合</option>
@@ -262,7 +262,7 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">状态</label>
-                <select v-model="editForm.status" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
+                <select v-model="editForm.status" class="select-base">
                   <option value="DRAFT">草稿</option>
                   <option value="PUBLISHED">已发布</option>
                   <option value="ONGOING">进行中</option>
@@ -272,18 +272,18 @@
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">直播链接</label>
-              <input v-model="editForm.live_url" type="url" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model="editForm.live_url" type="url" class="input-base" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">最大人数</label>
-              <input v-model.number="editForm.max_students" type="number" min="1" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" />
+              <input v-model.number="editForm.max_students" type="number" min="1" class="input-base" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">宣讲会资料</label>
               <div class="space-y-2">
                 <div v-for="(material, index) in editForm.materials" :key="index" class="flex items-center space-x-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
                   <a :href="material" target="_blank" class="text-blue-600 hover:text-blue-800 flex-1 truncate font-medium">{{ material }}</a>
-                  <button type="button" @click="editForm.materials.splice(index, 1)" class="px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm font-medium">删除</button>
+                  <button type="button" @click="editForm.materials.splice(index, 1)" class="btn btn-outline-danger btn-sm">删除</button>
                 </div>
                 <input
                   type="file"
@@ -295,7 +295,7 @@
                 <button
                   type="button"
                   @click="editFileInput?.click()"
-                  class="px-4 py-2 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium"
+                  class="btn btn-secondary btn-md"
                 >
                   上传资料
                 </button>
@@ -303,9 +303,9 @@
             </div>
           </div>
           <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-4">
-            <button type="button" @click="showEditModal = false" class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium">取消</button>
-            <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" @click="showEditModal = false" class="btn btn-secondary btn-md">取消</button>
+            <button type="submit" class="btn btn-primary btn-md">
+              <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               保存
@@ -330,18 +330,18 @@
           <div class="grid grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">搜索学生（姓名/学号）</label>
-              <input v-model="searchKeyword" type="text" @input="handleSearchStudents" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200" placeholder="输入姓名或学号" />
+              <input v-model="searchKeyword" type="text" @input="handleSearchStudents" class="input-base" placeholder="输入姓名或学号" />
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">院系</label>
-              <select v-model="searchDepartmentId" @change="handleSearchStudents" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
+              <select v-model="searchDepartmentId" @change="handleSearchStudents" class="select-base">
                 <option value="">全部</option>
                 <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
               </select>
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">年级</label>
-              <select v-model="searchGrade" @change="handleSearchStudents" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200">
+              <select v-model="searchGrade" @change="handleSearchStudents" class="select-base">
                 <option value="">全部</option>
                 <option value="2021">2021级</option>
                 <option value="2022">2022级</option>
@@ -351,8 +351,8 @@
               </select>
             </div>
           </div>
-          <button @click="handleSearchStudents" class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 font-semibold flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button @click="handleSearchStudents" class="btn btn-primary btn-md">
+            <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             搜索
@@ -392,9 +392,9 @@
         </div>
         
         <div class="pt-6 border-t border-gray-200 flex justify-end space-x-4">
-          <button type="button" @click="closeInviteModal" class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium">取消</button>
-          <button type="button" @click="handleInviteStudentsBatch" :disabled="selectedStudentIds.length === 0" class="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button type="button" @click="closeInviteModal" class="btn btn-secondary btn-md">取消</button>
+          <button type="button" @click="handleInviteStudentsBatch" :disabled="selectedStudentIds.length === 0" class="btn btn-success btn-md">
+            <svg class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             批量邀请 ({{ selectedStudentIds.length }})
@@ -438,7 +438,7 @@
           </div>
         </div>
         <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end">
-          <button @click="showRegistrationsModal = false" class="px-6 py-2.5 bg-gray-600 text-white rounded-xl hover:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-200 font-medium">关闭</button>
+          <button @click="showRegistrationsModal = false" class="btn btn-secondary btn-md">关闭</button>
         </div>
       </div>
     </div>

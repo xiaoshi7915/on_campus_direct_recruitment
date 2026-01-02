@@ -144,6 +144,16 @@ const routes: RouteRecordRaw[] = [
         name: 'StudentTodos',
         component: () => import('@/views/student/Todos.vue'),
       },
+      {
+        path: 'schedules',
+        name: 'StudentSchedules',
+        component: () => import('@/views/student/Schedules.vue'),
+        meta: {
+          module: 'settings',
+          title: '日程管理',
+          permission: 'settings:schedule',
+        },
+      },
     ],
   },
   // 企业端路由

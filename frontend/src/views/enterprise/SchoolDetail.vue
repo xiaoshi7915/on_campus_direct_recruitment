@@ -15,7 +15,7 @@
         <p class="text-gray-500 text-lg">学校不存在</p>
         <button
           @click="$router.back()"
-          class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="btn btn-primary btn-md mt-4"
         >
           返回
         </button>
@@ -23,17 +23,19 @@
     </div>
     
     <!-- 主要内容 -->
-    <div v-else class="container mx-auto px-4 py-8 space-y-6">
+    <div v-else class="w-full max-w-full px-4 py-8 space-y-6">
       <!-- 返回按钮 -->
-      <button
-        @click="$router.back()"
-        class="flex items-center text-blue-600 hover:text-blue-800 transition-colors mb-2 group"
-      >
-        <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        返回
-      </button>
+      <div class="mb-2 flex justify-end">
+        <button
+          @click="$router.back()"
+          class="flex items-center text-blue-600 hover:text-blue-800 transition-colors group"
+        >
+          <svg class="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          返回
+        </button>
+      </div>
 
       <!-- 学校基本信息卡片 -->
       <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -227,7 +229,7 @@
               </button>
               <button
                 @click="showMarkModal = true"
-                class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 flex items-center justify-center space-x-2"
+                class="btn btn-primary btn-md btn-full"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -236,7 +238,7 @@
               </button>
               <button
                 @click="handleShare"
-                class="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 flex items-center justify-center space-x-2"
+                class="btn btn-success btn-md btn-full"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -245,7 +247,7 @@
               </button>
               <button
                 @click="showRequestModal"
-                class="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 flex items-center justify-center space-x-2"
+                class="btn btn-primary btn-md btn-full"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -254,7 +256,7 @@
               </button>
               <button
                 @click="startChat"
-                class="w-full px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 flex items-center justify-center space-x-2"
+                class="btn btn-primary btn-md btn-full"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -384,7 +386,7 @@
                 
                 <button
                   @click="viewInfoSession(session.id)"
-                  class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 flex items-center justify-center space-x-2 whitespace-nowrap"
+                  class="btn btn-danger btn-md whitespace-nowrap"
                 >
                   <span>查看详情</span>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,14 +443,14 @@
             <button
               type="button"
               @click="showMarkModal = false"
-              class="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
               :disabled="submitting"
-              class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="btn btn-primary btn-md"
             >
               {{ submitting ? '保存中...' : '保存' }}
             </button>
@@ -580,7 +582,7 @@
             type="submit"
             @click="handleRequestInfoSession"
             :disabled="submitting"
-            class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl font-semibold shadow-lg transform transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="btn btn-primary btn-md"
           >
             {{ submitting ? '提交中...' : '提交申请' }}
           </button>

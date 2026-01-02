@@ -1,10 +1,10 @@
 <template>
-  <div class="teacher-feedback max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="teacher-feedback w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900">意见反馈</h1>
       <button
         @click="showForm = true"
-        class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center"
+        class="btn btn-primary btn-md"
       >
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -132,13 +132,13 @@
             <button
               type="button"
               @click="showForm = false"
-              class="px-6 py-2.5 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200"
+              class="btn btn-secondary btn-md"
             >
               取消
             </button>
             <button
               type="submit"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold"
+              class="btn btn-primary btn-md"
             >
               提交
             </button>
@@ -230,8 +230,8 @@ onMounted(() => {
 
 <style scoped>
 .teacher-feedback {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 </style>
 

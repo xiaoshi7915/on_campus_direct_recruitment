@@ -1,5 +1,5 @@
 <template>
-  <div class="student-resumes max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-resumes w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-10 animate-fade-in-up">
       <h1 class="text-5xl font-display font-bold text-gray-900 bg-gradient-primary bg-clip-text text-transparent">我的简历</h1>
       <button

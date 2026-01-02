@@ -1,5 +1,5 @@
 <template>
-  <div class="enterprise-job-fairs max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="enterprise-job-fairs w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
         <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10,15 +10,13 @@
       <div class="flex space-x-3">
         <button
           @click="showMyRegistrations = false"
-          :class="!showMyRegistrations ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'"
-          class="px-6 py-3 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+          :class="!showMyRegistrations ? 'btn btn-primary btn-md' : 'btn btn-secondary btn-md'"
         >
           浏览双选会
         </button>
         <button
           @click="showMyRegistrations = true"
-          :class="showMyRegistrations ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'"
-          class="px-6 py-3 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-semibold"
+          :class="showMyRegistrations ? 'btn btn-success btn-md' : 'btn btn-secondary btn-md'"
         >
           我的报名
         </button>

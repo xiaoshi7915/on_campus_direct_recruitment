@@ -1,5 +1,5 @@
 <template>
-  <div class="teacher-resumes">
+  <div class="teacher-resumes w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-3xl font-bold mb-6">简历管理</h1>
     
     <!-- 搜索栏 -->
@@ -13,7 +13,7 @@
       />
       <button
         @click="loadResumes"
-        class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        class="btn btn-primary btn-md ml-2"
       >
         搜索
       </button>
@@ -44,7 +44,7 @@
           <div class="ml-6 flex flex-col space-y-2">
             <button
               @click="viewResume(resume.id)"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              class="btn btn-primary btn-md"
             >
               查看详情
             </button>
@@ -58,7 +58,7 @@
             <button
               v-if="resume.file_url"
               @click="downloadResumeFile(resume.id)"
-              class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              class="btn btn-success btn-md"
             >
               下载文件
             </button>
@@ -167,8 +167,8 @@ onMounted(() => {
 
 <style scoped>
 .teacher-resumes {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 </style>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="student-job-fairs max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-job-fairs w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8">双选会</h1>
 
     <!-- 双选会列表 -->

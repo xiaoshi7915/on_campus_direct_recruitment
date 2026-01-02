@@ -1,5 +1,5 @@
 <template>
-  <div class="student-info-sessions max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="student-info-sessions w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-4xl font-extrabold text-gray-900 mb-8">宣讲会</h1>
 
     <!-- 宣讲会列表 -->
@@ -70,7 +70,7 @@
               <a
                 :href="session.live_url"
                 target="_blank"
-                class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium"
+                class="btn btn-danger btn-sm"
               >
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -93,15 +93,15 @@
               @click="handleRegister(session.id)"
               :disabled="session.status !== 'PUBLISHED'"
               :class="[
-                'px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center',
+                'btn btn-md',
                 isRegistered(session.id)
-                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'btn-success'
                   : session.status === 'PUBLISHED'
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'btn-primary'
+                  : 'btn-secondary'
               ]"
             >
-              <svg v-if="isRegistered(session.id)" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="isRegistered(session.id)" class="w-5 h-5 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               {{ isRegistered(session.id) ? '已报名' : '报名' }}
