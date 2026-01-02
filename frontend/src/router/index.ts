@@ -8,8 +8,14 @@ import type { RouteRecordRaw } from 'vue-router'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'Home',
-    component: () => import('@/views/Home.vue'),
+    component: () => import('@/components/layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/views/Home.vue'),
+      },
+    ],
   },
   {
     path: '/login',
@@ -47,6 +53,11 @@ const routes: RouteRecordRaw[] = [
         path: 'jobs',
         name: 'StudentJobs',
         component: () => import('@/views/student/Jobs.vue'),
+        meta: {
+          module: 'job_center',
+          title: '职位搜索',
+          // 未登录用户也可以查看职位搜索
+        },
       },
       {
         path: 'jobs/:id',
@@ -57,6 +68,11 @@ const routes: RouteRecordRaw[] = [
         path: 'resumes',
         name: 'StudentResumes',
         component: () => import('@/views/student/Resumes.vue'),
+        meta: {
+          module: 'personal',
+          title: '我的简历',
+          permission: 'resume:read',
+        },
       },
       {
         path: 'resumes/:id',
@@ -67,6 +83,11 @@ const routes: RouteRecordRaw[] = [
         path: 'applications',
         name: 'StudentApplications',
         component: () => import('@/views/student/Applications.vue'),
+        meta: {
+          module: 'job_center',
+          title: '我的申请',
+          permission: 'application:read',
+        },
       },
       {
         path: 'job-fairs',
@@ -87,6 +108,11 @@ const routes: RouteRecordRaw[] = [
         path: 'profile',
         name: 'StudentProfile',
         component: () => import('@/views/student/Profile.vue'),
+        meta: {
+          module: 'settings',
+          title: '学生中心',
+          permission: 'profile:read',
+        },
       },
       {
         path: 'favorites',
@@ -134,6 +160,11 @@ const routes: RouteRecordRaw[] = [
         path: 'jobs',
         name: 'EnterpriseJobs',
         component: () => import('@/views/enterprise/Jobs.vue'),
+        meta: {
+          module: 'job',
+          title: '职位管理',
+          permission: 'job:read',
+        },
       },
       {
         path: 'jobs/:id',
@@ -164,6 +195,11 @@ const routes: RouteRecordRaw[] = [
         path: 'talents',
         name: 'EnterpriseTalents',
         component: () => import('@/views/enterprise/Talents.vue'),
+        meta: {
+          module: 'talent',
+          title: '人才搜索',
+          permission: 'talent:search',
+        },
       },
       {
         path: 'job-fairs',
@@ -189,6 +225,11 @@ const routes: RouteRecordRaw[] = [
         path: 'sub-accounts',
         name: 'EnterpriseSubAccounts',
         component: () => import('@/views/enterprise/SubAccounts.vue'),
+        meta: {
+          module: 'settings',
+          title: '子账号管理',
+          permission: 'settings:sub_account',
+        },
       },
       {
         path: 'talent-library',
@@ -263,6 +304,11 @@ const routes: RouteRecordRaw[] = [
         path: 'students',
         name: 'TeacherStudents',
         component: () => import('@/views/teacher/Students.vue'),
+        meta: {
+          module: 'student',
+          title: '学生管理',
+          permission: 'student:read',
+        },
       },
       {
         path: 'job-fairs',
@@ -313,6 +359,11 @@ const routes: RouteRecordRaw[] = [
         path: 'sub-accounts',
         name: 'TeacherSubAccounts',
         component: () => import('@/views/teacher/SubAccounts.vue'),
+        meta: {
+          module: 'settings',
+          title: '子账号管理',
+          permission: 'settings:sub_account',
+        },
       },
       {
         path: 'chat',
@@ -323,6 +374,16 @@ const routes: RouteRecordRaw[] = [
         path: 'system-messages',
         name: 'TeacherSystemMessages',
         component: () => import('@/views/teacher/SystemMessages.vue'),
+      },
+      {
+        path: 'feedback',
+        name: 'TeacherFeedback',
+        component: () => import('@/views/teacher/Feedback.vue'),
+        meta: {
+          module: 'settings',
+          title: '意见反馈',
+          permission: 'settings:feedback',
+        },
       },
     ],
   },
@@ -364,6 +425,76 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// 路由守卫 - 权限检查
+router.beforeEach(async (to, from, next) => {
+  // 检查是否需要认证
+  if (to.meta.requiresAuth) {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath },
+      })
+      return
+    }
+  }
+
+  // 检查权限（如果有定义）
+  // 某些路由允许未登录用户访问（如职位搜索、学校搜索）
+  const publicRoutes = ['/student/jobs', '/enterprise/schools', '/teacher/schools']
+  const isPublicRoute = publicRoutes.some(route => to.path.startsWith(route))
+  
+  if (to.meta.permission && !isPublicRoute) {
+    try {
+      const { hasPermission } = await import('@/utils/permissions')
+      const { useAuthStore } = await import('@/stores/auth')
+      const authStore = useAuthStore()
+      
+      // 确保用户信息已加载
+      if (authStore.isAuthenticated() && !authStore.userInfo) {
+        console.log('[Router] User info not loaded, fetching...')
+        await authStore.fetchUserInfo()
+      }
+      
+      const user = authStore.userInfo
+      
+      console.log('[Router] Permission check:', {
+        path: to.path,
+        permission: to.meta.permission,
+        hasUser: !!user,
+        userType: user?.user_type,
+        hasPermission: hasPermission(to.meta.permission as string, user)
+      })
+
+      if (!hasPermission(to.meta.permission as string, user)) {
+        // 无权限，跳转到首页或显示错误
+        const homePath = user
+          ? user.user_type === 'STUDENT'
+            ? '/student'
+            : user.user_type === 'ENTERPRISE'
+            ? '/enterprise'
+            : user.user_type === 'TEACHER'
+            ? '/teacher'
+            : user.user_type === 'ADMIN'
+            ? '/admin'
+            : '/'
+          : '/'
+        console.warn('[Router] Permission denied, redirecting to:', homePath)
+        next({
+          path: homePath,
+          query: { error: 'no_permission' },
+        })
+        return
+      }
+    } catch (error) {
+      console.error('[Router] 权限检查失败:', error)
+      // 权限检查失败时允许访问（避免阻塞正常使用）
+    }
+  }
+
+  next()
 })
 
 export default router

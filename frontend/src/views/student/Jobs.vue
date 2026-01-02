@@ -1,9 +1,9 @@
 <template>
   <div class="student-jobs max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- 标题和搜索栏 -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-extrabold text-gray-900 mb-6">职位搜索</h1>
-      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+    <div class="mb-10 animate-fade-in-up">
+      <h1 class="text-5xl font-display font-bold text-gray-900 mb-6">职位搜索</h1>
+      <div class="card-elevated rounded-2xl p-6 border border-gray-100/50">
         <div class="flex flex-col sm:flex-row gap-4">
           <div class="flex-1 relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -15,13 +15,13 @@
               v-model="searchKeyword"
               type="text"
               placeholder="搜索职位名称、公司名称..."
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              class="w-full pl-10 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
               @keyup.enter="handleSearch"
             />
           </div>
           <button
             @click="handleSearch"
-            class="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center"
+            class="px-8 py-3.5 bg-gradient-primary text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center transform hover:scale-105"
           >
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -33,9 +33,10 @@
     </div>
 
     <!-- 筛选条件 -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="card-elevated rounded-2xl p-6 mb-8 border border-gray-100/50">
+      <h2 class="text-xl font-display font-semibold text-gray-900 mb-6 flex items-center">
+        <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
+        <svg class="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
         </svg>
         筛选条件
@@ -51,7 +52,7 @@
           </label>
           <select
             v-model="filters.location"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @change="handleSearch"
           >
             <option value="">全部</option>
@@ -71,7 +72,7 @@
           </label>
           <select
             v-model="filters.job_type"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @change="handleSearch"
           >
             <option value="">全部</option>
@@ -89,7 +90,7 @@
           </label>
           <select
             v-model="filters.salary"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @change="handleSearch"
           >
             <option value="">全部</option>
@@ -108,7 +109,7 @@
           </label>
           <select
             v-model="filters.education"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @change="handleSearch"
           >
             <option value="">全部</option>
@@ -137,16 +138,16 @@
       <div
         v-for="job in jobs"
         :key="job.id"
-        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-gray-200 cursor-pointer group"
+        class="card-elevated rounded-2xl p-6 border-2 border-gray-200 hover:border-primary-300 hover:bg-gradient-to-br hover:from-primary-50/50 hover:to-transparent transition-all duration-300 cursor-pointer group"
         @click="goToJobDetail(job.id)"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
             <div class="flex items-start justify-between mb-3">
-              <h3 class="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <h3 class="text-xl font-display font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
                 {{ job.title }}
               </h3>
-              <span v-if="job.salary_min && job.salary_max" class="text-blue-600 font-bold text-lg ml-4 whitespace-nowrap">
+              <span v-if="job.salary_min && job.salary_max" class="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent font-display font-bold text-lg ml-4 whitespace-nowrap">
                 {{ job.salary_min }}-{{ job.salary_max }}元
               </span>
             </div>
@@ -185,13 +186,13 @@
           <div class="ml-6 flex flex-col items-end space-y-2">
             <button
               @click.stop="handleApply(job.id)"
-              class="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium whitespace-nowrap"
+              class="px-6 py-3 bg-gradient-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold whitespace-nowrap transform hover:scale-105 shadow-md"
             >
               立即申请
             </button>
             <button
               @click.stop="handleFavorite(job.id)"
-              class="px-6 py-2.5 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 font-medium whitespace-nowrap"
+              class="px-6 py-3 border-2 border-gray-300 rounded-xl hover:border-primary-500 hover:text-primary-600 hover:bg-primary-50 transition-all duration-300 font-medium whitespace-nowrap"
             >
               <span v-if="isFavorite(job.id)" class="flex items-center">
                 <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">

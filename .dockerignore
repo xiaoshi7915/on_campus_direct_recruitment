@@ -1,0 +1,87 @@
+# Git相关
+.git
+.gitignore
+.gitattributes
+
+# 文档
+*.md
+!README.md
+docs/
+CHANGELOG.md
+LICENSE
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+logs/
+*.pid
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 测试相关
+tests/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+coverage/
+.nyc_output/
+
+# 构建产物
+dist/
+build/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# 依赖目录（Docker中会重新安装）
+node_modules/
+venv/
+env/
+ENV/
+py312/
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 备份文件
+backup/
+*.bak
+*.backup
+
+# Docker相关
+docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# 部署脚本
+deploy.sh
+start.sh
+
+# 其他
+.DS_Store
+Thumbs.db
+

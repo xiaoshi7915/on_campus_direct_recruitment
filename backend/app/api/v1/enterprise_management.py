@@ -223,12 +223,30 @@ async def create_sub_account(
             detail="企业信息不存在"
         )
     
-    # 检查是否是主账号
+    # 确保是主账号（一个企业只能有一个主账号）
     if not enterprise.is_main_account:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有主账号才能创建子账号"
         )
+    
+    # 验证主账号唯一性：通过unified_code检查该企业是否已有主账号
+    # 注意：由于unified_code是unique的，主账号创建时应该已经验证过唯一性
+    # 这里主要确保当前账号确实是主账号
+    if enterprise.unified_code:
+        main_account_result = await db.execute(
+            select(EnterpriseProfile).where(
+                EnterpriseProfile.unified_code == enterprise.unified_code,
+                EnterpriseProfile.is_main_account == True,
+                EnterpriseProfile.id != enterprise.id
+            )
+        )
+        existing_main = main_account_result.scalar_one_or_none()
+        if existing_main:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="该企业已存在主账号，一个企业只能有一个主账号"
+            )
     
     # 检查用户名是否已存在
     existing_user_result = await db.execute(

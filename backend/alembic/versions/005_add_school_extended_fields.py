@@ -80,3 +80,4 @@ def downgrade():
     op.drop_column('schools', 'major')
     op.drop_column('schools', 'department')
     op.drop_column('schools', 'charge_dep')
+

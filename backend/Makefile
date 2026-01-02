@@ -31,7 +31,7 @@ downgrade:
 	alembic downgrade -1
 
 run:
-	uvicorn app.main:app --reload --port 5011
+	uvicorn app.main:app --reload --port 6121
 
 
 

@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # 服务器配置
     HOST: str = "0.0.0.0"
-    PORT: int = 5011
+    PORT: int = 6121
     
     # 数据库配置（使用utf8mb4字符集）
     # 生产环境请通过环境变量配置，不要硬编码

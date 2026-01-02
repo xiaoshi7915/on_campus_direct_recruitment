@@ -1,16 +1,19 @@
 <template>
   <div class="teacher-students max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-8 flex items-center">
-      <svg class="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
+    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 bg-gradient-primary bg-clip-text text-transparent animate-fade-in-up flex items-center">
+      <div class="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+        <svg class="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </div>
       学生管理
     </h1>
 
     <!-- 搜索和筛选 -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="card-elevated rounded-2xl p-6 mb-8 border border-gray-100/50 animate-fade-in-up" style="animation-delay: 0.1s;">
+      <h2 class="text-xl font-display font-semibold text-gray-900 mb-6 flex items-center">
+        <div class="w-1 h-5 bg-gradient-primary rounded-full mr-3"></div>
+        <svg class="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
         </svg>
         搜索和筛选
@@ -22,7 +25,7 @@
             v-model="searchKeyword"
             type="text"
             placeholder="搜索学生姓名或学号..."
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @keyup.enter="handleSearch"
           />
         </div>
@@ -32,7 +35,7 @@
             v-model="filters.grade"
             type="text"
             placeholder="例如：2024"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @change="handleSearch"
           />
         </div>
@@ -42,7 +45,7 @@
             v-model="filters.major"
             type="text"
             placeholder="例如：计算机科学"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
             @change="handleSearch"
           />
         </div>
@@ -64,7 +67,7 @@
       <div
         v-for="student in students"
         :key="student.id"
-        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-200 border border-gray-100"
+        class="card-elevated rounded-2xl p-6 border-2 border-gray-200 hover:border-primary-300 hover:bg-gradient-to-br hover:from-primary-50/30 hover:to-transparent transition-all duration-300"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
@@ -74,7 +77,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 class="text-xl font-semibold text-gray-900">{{ student.real_name }}</h3>
+              <h3 class="text-xl font-display font-semibold text-gray-900">{{ student.real_name }}</h3>
             </div>
             <div class="text-gray-600 text-sm mb-3 ml-11 space-y-1">
               <p v-if="student.student_id" class="flex items-center">

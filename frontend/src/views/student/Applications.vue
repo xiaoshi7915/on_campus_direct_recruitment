@@ -1,9 +1,9 @@
 <template>
   <div class="student-applications max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">我的申请</h1>
+    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 bg-gradient-primary bg-clip-text text-transparent animate-fade-in-up">我的申请</h1>
 
     <!-- 筛选条件 -->
-    <div class="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
+    <div class="card-elevated rounded-2xl p-6 mb-8 border border-gray-100/50 animate-fade-in-up" style="animation-delay: 0.1s;">
       <div class="flex items-center space-x-4">
         <label class="text-sm font-semibold text-gray-700 flex items-center">
           <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,7 +14,7 @@
         <select
           v-model="statusFilter"
           @change="loadApplications"
-          class="px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+          class="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
         >
           <option value="">全部</option>
           <option value="PENDING">待审核</option>
@@ -41,7 +41,7 @@
       <div
         v-for="app in applications"
         :key="app.id"
-        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-gray-200"
+        class="card-elevated rounded-2xl p-6 border-2 border-gray-200 hover:border-primary-300 hover:bg-gradient-to-br hover:from-primary-50/30 hover:to-transparent transition-all duration-300"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
@@ -51,7 +51,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 class="text-xl font-semibold text-gray-900">{{ app.job?.title || '职位' }}</h3>
+              <h3 class="text-xl font-display font-semibold text-gray-900">{{ app.job?.title || '职位' }}</h3>
             </div>
             <div class="flex flex-wrap gap-4 text-gray-600 text-sm mb-3 ml-11">
               <span class="flex items-center">

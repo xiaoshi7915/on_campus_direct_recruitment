@@ -1,63 +1,63 @@
 <template>
   <div class="enterprise-dashboard">
     <!-- 页面标题 -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">企业工作台</h1>
-      <p class="text-gray-600">管理您的招聘业务，查看数据统计</p>
+    <div class="mb-10 animate-fade-in-up">
+      <h1 class="text-5xl font-display font-bold text-gray-900 mb-3 bg-gradient-primary bg-clip-text text-transparent">企业工作台</h1>
+      <p class="text-gray-600 text-lg">管理您的招聘业务，查看数据统计</p>
     </div>
     
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.1s;">
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <div class="text-gray-600 text-sm font-medium mb-2">发布职位</div>
-            <div class="text-3xl font-bold text-blue-600">{{ jobCount }}</div>
+            <div class="text-gray-600 text-sm font-semibold mb-3">发布职位</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">{{ jobCount }}</div>
           </div>
-          <div class="ml-4 p-3 bg-blue-50 rounded-lg">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="ml-4 p-4 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.2s;">
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <div class="text-gray-600 text-sm font-medium mb-2">收到申请</div>
-            <div class="text-3xl font-bold text-green-600">{{ applicationCount }}</div>
+            <div class="text-gray-600 text-sm font-semibold mb-3">收到申请</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-secondary-600 to-secondary-400 bg-clip-text text-transparent">{{ applicationCount }}</div>
           </div>
-          <div class="ml-4 p-3 bg-green-50 rounded-lg">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="ml-4 p-4 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.3s;">
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <div class="text-gray-600 text-sm font-medium mb-2">待处理面试</div>
-            <div class="text-3xl font-bold text-orange-600">{{ interviewCount }}</div>
+            <div class="text-gray-600 text-sm font-semibold mb-3">待处理面试</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-accent-600 to-accent-400 bg-clip-text text-transparent">{{ interviewCount }}</div>
           </div>
-          <div class="ml-4 p-3 bg-orange-50 rounded-lg">
-            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="ml-4 p-4 bg-gradient-to-br from-accent-100 to-accent-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.4s;">
         <div class="flex items-center justify-between">
           <div class="flex-1">
-            <div class="text-gray-600 text-sm font-medium mb-2">已发Offer</div>
-            <div class="text-3xl font-bold text-purple-600">{{ offerCount }}</div>
+            <div class="text-gray-600 text-sm font-semibold mb-3">已发Offer</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-warm-600 to-warm-400 bg-clip-text text-transparent">{{ offerCount }}</div>
           </div>
-          <div class="ml-4 p-3 bg-purple-50 rounded-lg">
-            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="ml-4 p-4 bg-gradient-to-br from-warm-100 to-warm-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-warm-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -66,9 +66,12 @@
     </div>
 
     <!-- 最近申请 -->
-    <div class="bg-white rounded-xl shadow-md mb-6 border border-gray-100">
-      <div class="p-6 border-b border-gray-100">
-        <h2 class="text-xl font-semibold text-gray-900">最近申请</h2>
+    <div class="card-elevated rounded-2xl mb-8 border border-gray-100/50">
+      <div class="p-6 border-b border-gray-100/50">
+        <h2 class="text-2xl font-display font-semibold text-gray-900 flex items-center">
+          <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
+          最近申请
+        </h2>
       </div>
       <div class="p-6">
         <div v-if="loading" class="text-center py-12">
@@ -119,9 +122,12 @@
     </div>
 
     <!-- 热门职位 -->
-    <div class="bg-white rounded-xl shadow-md border border-gray-100">
-      <div class="p-6 border-b border-gray-100">
-        <h2 class="text-xl font-semibold text-gray-900">热门职位</h2>
+    <div class="card-elevated rounded-2xl border border-gray-100/50">
+      <div class="p-6 border-b border-gray-100/50">
+        <h2 class="text-2xl font-display font-semibold text-gray-900 flex items-center">
+          <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
+          热门职位
+        </h2>
       </div>
       <div class="p-6">
         <div v-if="loading" class="text-center py-12">
@@ -138,7 +144,7 @@
           <div
             v-for="job in popularJobs"
             :key="job.id"
-            class="border border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-blue-200 transition-all duration-200 bg-white cursor-pointer group"
+            class="border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:border-primary-300 hover:bg-gradient-to-br hover:from-primary-50/50 hover:to-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm cursor-pointer group"
             @click="goToJobDetail(job.id)"
           >
             <div class="flex justify-between items-start">
@@ -185,7 +191,7 @@
               </div>
               <button
                 @click.stop="goToJobDetail(job.id)"
-                class="ml-4 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium whitespace-nowrap"
+                class="ml-4 px-6 py-3 bg-gradient-primary text-white rounded-xl hover:shadow-lg transition-all duration-300 font-semibold whitespace-nowrap transform hover:scale-105 shadow-md"
               >
                 管理
               </button>

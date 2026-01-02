@@ -62,7 +62,7 @@ python scripts/set_charset.py
 ### 6. 启动服务
 
 ```bash
-uvicorn app.main:app --reload --port 5001
+uvicorn app.main:app --reload --port 6121
 ```
 
 ## 数据库迁移
@@ -100,8 +100,8 @@ alembic history
 ## API文档
 
 启动服务后，访问：
-- Swagger UI: http://localhost:5001/docs
-- ReDoc: http://localhost:5001/redoc
+- Swagger UI: http://localhost:6121/docs
+- ReDoc: http://localhost:6121/redoc
 
 ## 项目结构
 

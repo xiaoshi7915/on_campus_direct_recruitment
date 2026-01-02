@@ -51,6 +51,8 @@
 
 ### Docker部署（推荐）
 
+#### 快速启动
+
 ```bash
 # 1. 克隆项目
 git clone https://github.com/xiaoshi7915/on_campus_direct_recruitment.git
@@ -58,19 +60,144 @@ cd on_campus_direct_recruitment
 
 # 2. 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，填入实际配置
+# 编辑 .env 文件，填入实际配置（数据库、OSS、JWT密钥等）
 
-# 3. 启动服务
+# 3. 启动所有服务（包括MySQL、Redis、后端、前端）
 docker-compose up -d
 
-# 4. 初始化数据库
+# 4. 查看服务状态
+docker-compose ps
+
+# 5. 初始化数据库
 docker-compose exec backend alembic upgrade head
 ```
 
-访问地址：
-- 前端: http://localhost:8008
-- 后端API: http://localhost:5001
-- API文档: http://localhost:5001/docs
+#### 常用Docker命令
+
+```bash
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f              # 查看所有日志
+docker-compose logs -f backend      # 查看后端日志
+docker-compose logs -f frontend     # 查看前端日志
+
+# 停止服务
+docker-compose stop
+
+# 重启服务
+docker-compose restart
+
+# 停止并删除容器
+docker-compose down
+
+# 停止并删除容器和数据卷（谨慎使用）
+docker-compose down -v
+
+# 重新构建并启动
+docker-compose up -d --build
+
+# 进入容器
+docker-compose exec backend bash     # 进入后端容器
+docker-compose exec frontend sh     # 进入前端容器
+docker-compose exec mysql mysql -u appuser -p college_zhaopin  # 进入数据库
+```
+
+#### 访问地址
+
+启动成功后，访问以下地址：
+- **前端**: http://localhost:8008
+- **后端API**: http://localhost:6121
+- **API文档**: http://localhost:6121/docs
+- **ReDoc**: http://localhost:6121/redoc
+
+### 服务管理脚本（本地开发）
+
+项目提供了便捷的服务管理脚本 `start.sh`，用于管理前后端服务：
+
+#### 快速开始
+
+```bash
+# 启动服务
+./start.sh
+
+# 查看状态
+./start.sh status
+
+# 停止服务
+./start.sh stop
+
+# 重启服务
+./start.sh restart
+
+# 查看日志
+./start.sh logs
+```
+
+#### 详细命令
+
+**1. 启动服务**
+```bash
+./start.sh          # 启动前后端服务（默认）
+./start.sh start    # 启动前后端服务
+```
+
+**2. 停止服务**
+```bash
+./start.sh stop     # 停止所有服务
+```
+
+**3. 重启服务**
+```bash
+./start.sh restart  # 先停止，再启动
+```
+
+**4. 查看状态**
+```bash
+./start.sh status   # 显示服务运行状态、PID、端口、地址等信息
+```
+
+**5. 查看日志**
+```bash
+./start.sh logs              # 查看所有日志（最后20行）
+./start.sh logs all          # 查看所有日志
+./start.sh logs backend      # 查看后端日志（实时）
+./start.sh logs b            # 查看后端日志（实时，简写）
+./start.sh logs frontend     # 查看前端日志（实时）
+./start.sh logs f            # 查看前端日志（实时，简写）
+```
+
+**6. 帮助信息**
+```bash
+./start.sh help     # 显示帮助信息
+./start.sh --help    # 显示帮助信息
+./start.sh -h        # 显示帮助信息
+```
+
+#### 服务配置
+
+- **后端端口**: 6121
+- **前端端口**: 8008
+- **后端地址**: http://localhost:6121
+- **后端API文档**: http://localhost:6121/docs
+- **前端地址**: http://localhost:8008
+
+#### PID和日志文件位置
+
+- 后端PID: `.backend.pid`
+- 前端PID: `.frontend.pid`
+- 后端日志: `.backend.log`
+- 前端日志: `.frontend.log`
+
+#### 注意事项
+
+1. 脚本会自动检测并使用正确的Python版本（优先使用py312/bin/python）
+2. 启动前会自动清理端口占用
+3. 停止服务时会先尝试优雅停止，然后强制终止
+4. 状态检查会验证进程和端口是否匹配
+
+> 📖 更多详细信息请参考 [服务管理文档](./SERVICE_MANAGEMENT.md)
 
 ### Linux一键部署
 
@@ -89,7 +216,7 @@ python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 5001
+uvicorn app.main:app --reload --port 6121
 
 # 前端（新终端）
 cd frontend
@@ -101,6 +228,7 @@ npm run dev
 
 - [功能说明文档](./FEATURES.md) - 详细功能列表
 - [部署文档](./DEPLOYMENT.md) - 部署指南和配置说明
+- [服务管理文档](./SERVICE_MANAGEMENT.md) - 服务管理脚本使用说明
 - [设计文档](./design.md) - 系统架构和数据模型
 - [需求文档](./requirements.md) - 需求规格说明
 
@@ -163,9 +291,11 @@ college_zhaopin/
 │   └── package.json        # Node依赖
 ├── docker-compose.yml      # Docker编排
 ├── deploy.sh              # Linux部署脚本
+├── start.sh               # 服务管理脚本
 ├── .env.example           # 环境变量示例
 ├── FEATURES.md            # 功能说明文档
 ├── DEPLOYMENT.md          # 部署文档
+├── SERVICE_MANAGEMENT.md  # 服务管理文档
 └── README.md              # 项目说明
 ```
 
@@ -198,8 +328,8 @@ npm run test
 ## 📖 API文档
 
 启动后端服务后，访问以下地址查看API文档：
-- Swagger UI: http://localhost:5001/docs
-- ReDoc: http://localhost:5001/redoc
+- Swagger UI: http://localhost:6121/docs
+- ReDoc: http://localhost:6121/redoc
 
 ## 🤝 贡献指南
 

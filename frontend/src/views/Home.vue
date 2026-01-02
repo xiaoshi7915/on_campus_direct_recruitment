@@ -1,122 +1,245 @@
 <template>
-  <MainLayout>
-    <div class="home min-h-screen">
-      <!-- 主要内容区域 -->
-      <div class="container mx-auto px-4 py-12">
-        <!-- 顶部标题区域 -->
-        <div class="text-center mb-12">
-          <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
-            校园直聘平台
-          </h1>
-          <p class="text-xl text-gray-600 mb-2">连接高校人才与企业需求的综合性招聘服务平台</p>
-          <p class="text-lg text-gray-500">为高校教师、企业和学生提供便捷的招聘求职服务</p>
-        </div>
-
-        <!-- 图片展示区域 -->
-        <div class="mb-12 flex justify-center">
-          <div class="relative w-full max-w-4xl">
-            <img 
-              src="/images/background.jpg" 
-              alt="校园直聘平台" 
-              class="w-full h-auto rounded-2xl shadow-2xl object-cover"
-              style="max-height: 500px;"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
-          </div>
-        </div>
-
-        <!-- 功能特色卡片 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">多角色支持</h3>
-            <p class="text-gray-600 text-sm">学生、企业、教师、管理员四种角色</p>
-          </div>
-          
-          <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">实时聊天</h3>
-            <p class="text-gray-600 text-sm">支持文字、图片、文件等多种消息类型</p>
-          </div>
-          
-          <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300 border border-gray-100">
-            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">数据统计</h3>
-            <p class="text-gray-600 text-sm">多维度数据分析和报表</p>
-          </div>
-        </div>
-
-        <!-- 操作按钮区域 -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <router-link
-            to="/login"
-            class="btn-primary px-8 py-3 text-base font-semibold"
-          >
-            立即登录
-          </router-link>
-          <router-link
-            to="/register"
-            class="btn-secondary px-8 py-3 text-base font-semibold"
-          >
-            免费注册
-          </router-link>
-        </div>
-      </div>
+  <div class="home flex flex-col w-full" style="height: 100%; min-height: 100%; max-height: 100%;">
+    <!-- 图片显示区域 - 填满导航栏和底部之间的空间 -->
+    <div class="flex-1 flex items-center justify-center w-full overflow-hidden" style="min-height: 0; max-height: 100%;">
+      <img 
+        ref="heroImage"
+        :src="heroImageSrc" 
+        alt="校园直聘平台" 
+        class="w-full h-full object-contain"
+        style="display: block !important; visibility: visible !important; opacity: 1 !important; max-width: 100%; max-height: 100%;"
+        @error="handleImageError"
+        @load="handleImageLoad"
+      />
     </div>
-  </MainLayout>
+  </div>
 </template>
 
 <script setup lang="ts">
-import MainLayout from '@/components/layouts/MainLayout.vue'
-// 首页组件
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+
+const heroImage = ref<HTMLImageElement | null>(null)
+const heroImageSrc = ref('/images/hero.png')
+
+// #region agent log
+console.log('[DEBUG A] heroImage ref initialized', { heroImageValue: heroImage.value, heroImageSrc: heroImageSrc.value })
+// #endregion
+
+
+// 处理图片加载错误
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  console.error('图片加载失败:', img.src, '错误:', event)
+  // 如果 hero.png 加载失败，回退到 background.jpg
+  if (img.src.includes('hero.png')) {
+    console.log('回退到 background.jpg')
+    img.src = '/images/background.jpg'
+  }
+}
+
+// 图片加载成功回调
+const handleImageLoad = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  // #region agent log
+  console.log('[DEBUG D] handleImageLoad called', {
+    src: img.src,
+    naturalWidth: img.naturalWidth,
+    naturalHeight: img.naturalHeight,
+    refValue: heroImage.value === img,
+    isRefBound: !!heroImage.value
+  })
+  // #endregion
+  console.log('图片加载成功:', {
+    src: img.src,
+    naturalWidth: img.naturalWidth,
+    naturalHeight: img.naturalHeight,
+    width: img.width,
+    height: img.height,
+    offsetWidth: img.offsetWidth,
+    offsetHeight: img.offsetHeight,
+    clientWidth: img.clientWidth,
+    clientHeight: img.clientHeight,
+    scrollWidth: img.scrollWidth,
+    scrollHeight: img.scrollHeight,
+    style: {
+      display: img.style.display,
+      visibility: img.style.visibility,
+      opacity: img.style.opacity,
+      width: img.style.width,
+      height: img.style.height
+    },
+    computedStyle: {
+      display: window.getComputedStyle(img).display,
+      visibility: window.getComputedStyle(img).visibility,
+      opacity: window.getComputedStyle(img).opacity,
+      width: window.getComputedStyle(img).width,
+      height: window.getComputedStyle(img).height,
+      position: window.getComputedStyle(img).position,
+      zIndex: window.getComputedStyle(img).zIndex
+    },
+    parentElement: img.parentElement?.tagName,
+    parentStyle: img.parentElement ? {
+      display: window.getComputedStyle(img.parentElement).display,
+      overflow: window.getComputedStyle(img.parentElement).overflow,
+      width: window.getComputedStyle(img.parentElement).width,
+      height: window.getComputedStyle(img.parentElement).height
+    } : null
+  })
+  
+  // 如果图片尺寸为0，尝试强制设置尺寸
+  if (img.naturalWidth > 0 && img.naturalHeight > 0 && (img.offsetWidth === 0 || img.offsetHeight === 0)) {
+    console.warn('图片尺寸为0，尝试修复...')
+    const aspectRatio = img.naturalWidth / img.naturalHeight
+    const maxHeight = 550
+    const calculatedWidth = maxHeight * aspectRatio
+    img.style.width = `${calculatedWidth}px`
+    img.style.height = `${maxHeight}px`
+    console.log('已设置图片尺寸:', { width: calculatedWidth, height: maxHeight })
+  }
+}
+
+onMounted(() => {
+  // #region agent log
+  console.log('[DEBUG A] onMounted called', { heroImageValue: heroImage.value, heroImageSrc: heroImageSrc.value })
+  // #endregion
+  
+  // 立即检查
+  // #region agent log
+  const immediateCheck = heroImage.value;
+  console.log('[DEBUG A] immediate ref check in onMounted', { heroImageValue: immediateCheck, hasRef: !!immediateCheck, refType: immediateCheck?.constructor?.name })
+  // #endregion
+  
+  // 使用 nextTick 检查
+  nextTick(() => {
+    // #region agent log
+    const nextTickCheck = heroImage.value;
+    console.log('[DEBUG C] nextTick ref check', { 
+      heroImageValue: nextTickCheck, 
+      hasRef: !!nextTickCheck, 
+      refType: nextTickCheck?.constructor?.name,
+      parentElement: nextTickCheck?.parentElement?.tagName,
+      allImages: document.querySelectorAll('img').length,
+      imagesWithAlt: Array.from(document.querySelectorAll('img')).map(i => ({ alt: i.alt, src: i.src }))
+    })
+    // #endregion
+    
+    if (nextTickCheck) {
+      // #region agent log
+      const computedStyle = window.getComputedStyle(nextTickCheck);
+      console.log('[DEBUG D] nextTick image state', {
+        complete: nextTickCheck.complete,
+        naturalWidth: nextTickCheck.naturalWidth,
+        naturalHeight: nextTickCheck.naturalHeight,
+        offsetWidth: nextTickCheck.offsetWidth,
+        offsetHeight: nextTickCheck.offsetHeight,
+        src: nextTickCheck.src,
+        display: computedStyle.display,
+        visibility: computedStyle.visibility,
+        opacity: computedStyle.opacity
+      })
+      // #endregion
+    } else {
+      // #region agent log
+      const querySelectorImg = document.querySelector('img[alt="校园直聘平台"]');
+      const allImages = document.querySelectorAll('img');
+      console.log('[DEBUG B] nextTick - image not found, querySelector fallback', {
+        querySelectorResult: querySelectorImg,
+        hasImgInDOM: !!querySelectorImg,
+        allImagesCount: allImages.length,
+        allImagesWithAlt: Array.from(allImages).map(i => ({ alt: i.alt, src: i.src, className: i.className }))
+      })
+      // #endregion
+    }
+  })
+  
+  // 延迟检查图片状态
+  setTimeout(() => {
+    const img = heroImage.value
+    // #region agent log
+    console.log('[DEBUG E] setTimeout 1000ms check', {
+      heroImageValue: img,
+      hasRef: !!img,
+      refType: img?.constructor?.name,
+      querySelectorResult: document.querySelector('img[alt="校园直聘平台"]')?.tagName
+    })
+    // #endregion
+    
+    if (img) {
+      console.log('onMounted 检查图片状态:', {
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        offsetWidth: img.offsetWidth,
+        offsetHeight: img.offsetHeight,
+        src: img.src
+      })
+      
+      // #region agent log
+      console.log('[DEBUG D] image found in setTimeout', {
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        offsetWidth: img.offsetWidth,
+        offsetHeight: img.offsetHeight,
+        src: img.src
+      })
+      // #endregion
+      
+      if (!img.complete) {
+        console.log('图片尚未加载完成，等待加载事件...')
+      } else if (img.naturalWidth === 0) {
+        console.error('图片加载失败或无效')
+      } else {
+        console.log('图片已加载，但可能不可见')
+      }
+    } else {
+      console.error('图片元素未找到')
+      // #region agent log
+      const querySelectorImg = document.querySelector('img[alt="校园直聘平台"]');
+      const allImages = document.querySelectorAll('img');
+      console.log('[DEBUG B] image not found - querySelector fallback', {
+        querySelectorResult: querySelectorImg,
+        hasImgInDOM: !!querySelectorImg,
+        allImagesCount: allImages.length,
+        allImagesWithAlt: Array.from(allImages).map(i => ({ alt: i.alt, src: i.src, className: i.className }))
+      })
+      // #endregion
+    }
+  }, 1000)
+})
+
+onUnmounted(() => {
+  // Cleanup if needed
+})
 </script>
 
 <style scoped>
 .home {
-  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+  position: relative;
+  overflow: visible;
 }
 
-.btn-primary {
-  background-color: #2563eb;
-  color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s;
-  transform: translateY(0);
+.home::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
-.btn-primary:hover {
-  background-color: #1d4ed8;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background-color: white;
-  color: #2563eb;
-  border: 2px solid #2563eb;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s;
-  transform: translateY(0);
-}
-
-.btn-secondary:hover {
-  background-color: #eff6ff;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
+.home::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 </style>
-

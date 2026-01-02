@@ -774,7 +774,7 @@ info:
   description: 校园直聘平台RESTful API文档
 
 servers:
-  - url: http://localhost:5001/api/v1
+  - url: http://localhost:6121/api/v1
     description: 开发环境
   - url: https://api.college-zhaopin.com/api/v1
     description: 生产环境
@@ -1104,7 +1104,7 @@ components:
 | 4000 | 409 | 资源冲突 |
 | 4001 | 409 | 用户已存在 |
 | 5000 | 500 | 服务器内部错误 |
-| 5001 | 500 | 数据库错误 |
+| 6121 | 500 | 数据库错误 |
 
 ### 错误响应格式
 

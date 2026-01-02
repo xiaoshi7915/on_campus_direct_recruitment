@@ -231,8 +231,8 @@
 ## API文档
 
 启动后端服务后，访问以下地址查看API文档：
-- Swagger UI: http://localhost:5001/docs
-- ReDoc: http://localhost:5001/redoc
+- Swagger UI: http://localhost:6121/docs
+- ReDoc: http://localhost:6121/redoc
 
 ## 部署说明
 
@@ -281,7 +281,7 @@ python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate     # Windows
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 5001
+uvicorn app.main:app --reload --port 6121
 
 # 前端
 cd frontend

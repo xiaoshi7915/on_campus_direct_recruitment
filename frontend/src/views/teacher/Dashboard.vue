@@ -1,59 +1,68 @@
 <template>
   <div class="teacher-dashboard max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">教师工作台</h1>
+    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 bg-gradient-primary bg-clip-text text-transparent animate-fade-in-up">教师工作台</h1>
     
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 flex items-center space-x-4">
-        <div class="p-3 bg-blue-50 rounded-lg">
-          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-        </div>
-        <div>
-          <div class="text-gray-600 text-sm mb-1">管辖学生</div>
-          <div class="text-3xl font-bold text-blue-600">{{ statistics.total_students }}</div>
-        </div>
-      </div>
-      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 flex items-center space-x-4">
-        <div class="p-3 bg-green-50 rounded-lg">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div>
-          <div class="text-gray-600 text-sm mb-1">活跃学生</div>
-          <div class="text-3xl font-bold text-green-600">{{ statistics.active_students }}</div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-gray-600 text-sm font-semibold mb-3">管辖学生</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">{{ statistics.total_students }}</div>
+          </div>
+          <div class="ml-4 p-4 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
         </div>
       </div>
-      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 flex items-center space-x-4">
-        <div class="p-3 bg-orange-50 rounded-lg">
-          <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <div>
-          <div class="text-gray-600 text-sm mb-1">双选会</div>
-          <div class="text-3xl font-bold text-orange-600">{{ jobFairAnalysis.total_job_fairs }}</div>
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-gray-600 text-sm font-semibold mb-3">活跃学生</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-secondary-600 to-secondary-400 bg-clip-text text-transparent">{{ statistics.active_students }}</div>
+          </div>
+          <div class="ml-4 p-4 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
       </div>
-      <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 flex items-center space-x-4">
-        <div class="p-3 bg-purple-50 rounded-lg">
-          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.3s;">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-gray-600 text-sm font-semibold mb-3">双选会</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-accent-600 to-accent-400 bg-clip-text text-transparent">{{ jobFairAnalysis.total_job_fairs }}</div>
+          </div>
+          <div class="ml-4 p-4 bg-gradient-to-br from-accent-100 to-accent-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
         </div>
-        <div>
-          <div class="text-gray-600 text-sm mb-1">宣讲会</div>
-          <div class="text-3xl font-bold text-purple-600">{{ infoSessionAnalysis.total_info_sessions }}</div>
+      </div>
+      <div class="card-elevated rounded-2xl p-6 group cursor-pointer animate-fade-in-up" style="animation-delay: 0.4s;">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <div class="text-gray-600 text-sm font-semibold mb-3">宣讲会</div>
+            <div class="text-4xl font-display font-bold bg-gradient-to-r from-warm-600 to-warm-400 bg-clip-text text-transparent">{{ infoSessionAnalysis.total_info_sessions }}</div>
+          </div>
+          <div class="ml-4 p-4 bg-gradient-to-br from-warm-100 to-warm-200 rounded-2xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+            <svg class="w-7 h-7 text-warm-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 学生活跃度统计 -->
-    <div class="bg-white rounded-xl shadow-md mb-6 border border-gray-100">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+    <div class="card-elevated rounded-2xl mb-8 border border-gray-100/50">
+      <div class="p-6 border-b border-gray-100/50">
+        <h2 class="text-2xl font-display font-semibold text-gray-900 flex items-center">
+          <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
           <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
@@ -68,7 +77,7 @@
             <input
               v-model="studentFilter.start_date"
               type="date"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
               @change="loadStudentStatistics"
             />
           </div>
@@ -77,7 +86,7 @@
             <input
               v-model="studentFilter.end_date"
               type="date"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
               @change="loadStudentStatistics"
             />
           </div>
@@ -87,7 +96,7 @@
               v-model="studentFilter.department_id"
               type="text"
               placeholder="院系ID（可选）"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300 hover:border-primary-300"
               @change="loadStudentStatistics"
             />
           </div>
@@ -138,9 +147,10 @@
     </div>
 
     <!-- 双选会统计分析 -->
-    <div class="bg-white rounded-xl shadow-md mb-6 border border-gray-100">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+    <div class="card-elevated rounded-2xl mb-8 border border-gray-100/50">
+      <div class="p-6 border-b border-gray-100/50">
+        <h2 class="text-2xl font-display font-semibold text-gray-900 flex items-center">
+          <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
           <svg class="w-6 h-6 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -245,9 +255,10 @@
     </div>
 
     <!-- 宣讲会统计分析 -->
-    <div class="bg-white rounded-xl shadow-md mb-6 border border-gray-100">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+    <div class="card-elevated rounded-2xl mb-8 border border-gray-100/50">
+      <div class="p-6 border-b border-gray-100/50">
+        <h2 class="text-2xl font-display font-semibold text-gray-900 flex items-center">
+          <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
           <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
@@ -353,9 +364,10 @@
     </div>
 
     <!-- 日程管理 -->
-    <div class="bg-white rounded-xl shadow-md border border-gray-100">
-      <div class="p-6 border-b border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+    <div class="card-elevated rounded-2xl border border-gray-100/50">
+      <div class="p-6 border-b border-gray-100/50">
+        <h2 class="text-2xl font-display font-semibold text-gray-900 flex items-center">
+          <div class="w-1 h-6 bg-gradient-primary rounded-full mr-3"></div>
           <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -626,4 +638,6 @@ onMounted(() => {
 <style scoped>
 /* 样式已内联到模板中 */
 </style>
+
+
 

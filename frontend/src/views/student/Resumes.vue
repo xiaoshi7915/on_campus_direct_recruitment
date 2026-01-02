@@ -1,10 +1,10 @@
 <template>
   <div class="student-resumes max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-4xl font-extrabold text-gray-900">我的简历</h1>
+    <div class="flex justify-between items-center mb-10 animate-fade-in-up">
+      <h1 class="text-5xl font-display font-bold text-gray-900 bg-gradient-primary bg-clip-text text-transparent">我的简历</h1>
       <button
         @click="showCreateModal = true"
-        class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center"
+        class="px-6 py-3 bg-gradient-primary text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 flex items-center transform hover:scale-105"
       >
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -29,7 +29,7 @@
       <div
         v-for="resume in resumes"
         :key="resume.id"
-        class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-gray-200"
+        class="card-elevated rounded-2xl p-6 border-2 border-gray-200 hover:border-primary-300 hover:bg-gradient-to-br hover:from-primary-50/30 hover:to-transparent transition-all duration-300"
       >
         <div class="flex justify-between items-start">
           <div class="flex-1">
@@ -39,7 +39,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 class="text-xl font-semibold text-gray-900">{{ resume.title }}</h3>
+              <h3 class="text-xl font-display font-semibold text-gray-900">{{ resume.title }}</h3>
               <span
                 v-if="resume.is_default"
                 class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium"

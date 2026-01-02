@@ -202,6 +202,29 @@ async def create_sub_account(
             detail="教师信息不存在"
         )
     
+    # 确保是主账号（一个学校只能有一个主账号）
+    if not teacher.is_main_account:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有主账号才能创建子账号"
+        )
+    
+    # 验证主账号唯一性：检查该学校是否已有主账号（应该是当前账号）
+    if teacher.school_id:
+        main_account_result = await db.execute(
+            select(TeacherProfile).where(
+                TeacherProfile.school_id == teacher.school_id,
+                TeacherProfile.is_main_account == True,
+                TeacherProfile.id != teacher.id
+            )
+        )
+        existing_main = main_account_result.scalar_one_or_none()
+        if existing_main:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="该学校已存在主账号，一个学校只能有一个主账号"
+            )
+    
     # 检查用户名是否已存在
     existing_user_result = await db.execute(
         select(User).where(User.username == account_data.username)

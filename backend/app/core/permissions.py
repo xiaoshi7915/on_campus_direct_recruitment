@@ -32,6 +32,70 @@ PERMISSION_ACTIONS = {
     "cancel": "取消"
 }
 
+# ==================== 模块化权限定义 ====================
+
+# 功能模块定义
+MODULES = {
+    "settings": {
+        "name": "个人设置",
+        "icon": "settings",
+        "permissions": [
+            "settings:profile",  # 个人中心管理
+            "settings:feedback",  # 意见反馈
+            "settings:sub_account",  # 子账号管理（仅主账号）
+            "settings:system_message",  # 系统消息
+            "settings:schedule",  # 日程管理
+        ]
+    },
+    "job": {
+        "name": "职位管理",
+        "icon": "briefcase",
+        "permissions": [
+            "job:create", "job:read", "job:update", "job:delete",
+            "job:apply", "job:publish"
+        ]
+    },
+    "talent": {
+        "name": "人才管理",
+        "icon": "users",
+        "permissions": [
+            "talent:search", "talent:library", "talent:application",
+            "talent:resume", "talent:recommend", "talent:mark"
+        ]
+    },
+    "school": {
+        "name": "学校管理",
+        "icon": "school",
+        "permissions": [
+            "school:search", "school:job_fair", "school:info_session",
+            "school:department", "school:read", "school:update", "school:verify"
+        ]
+    },
+    "student": {
+        "name": "学生管理",
+        "icon": "graduation-cap",
+        "permissions": [
+            "student:read", "student:update", "student:comment", "student:recommend"
+        ]
+    },
+    "statistics": {
+        "name": "数据统计",
+        "icon": "chart-bar",
+        "permissions": [
+            "statistics:read:personal", "statistics:read:enterprise",
+            "statistics:read:teacher", "statistics:read:admin"
+        ]
+    }
+}
+
+# 角色可访问的模块映射
+ROLE_MODULES: Dict[UserType, Set[str]] = {
+    UserType.STUDENT: {"settings", "job", "school", "statistics"},
+    UserType.ENTERPRISE: {"settings", "job", "talent", "school", "statistics"},
+    UserType.TEACHER: {"settings", "student", "school", "statistics"},
+    UserType.ADMIN: {"settings", "job", "talent", "school", "student", "statistics"}
+}
+
 # 完善的角色权限映射（使用Set提高查找效率）
 ROLE_PERMISSIONS = {
     UserType.STUDENT: {
@@ -195,6 +259,110 @@ async def check_permission(
         return True
     
     return False
+
+
+async def get_user_modules(user: User, db: Optional[AsyncSession] = None) -> List[str]:
+    """
+    获取用户可访问的模块列表
+    
+    Args:
+        user: 用户对象
+        db: 数据库会话（可选，用于检查子账号权限）
+        
+    Returns:
+        List[str]: 可访问的模块ID列表
+    """
+    # 管理员可以访问所有模块
+    if user.user_type == UserType.ADMIN:
+        return list(MODULES.keys())
+    
+    # 获取角色可访问的模块
+    modules = ROLE_MODULES.get(user.user_type, set())
+    
+    # 如果是子账号，检查是否有模块访问限制
+    if db:
+        if user.user_type == UserType.ENTERPRISE:
+            from app.models.profile import EnterpriseProfile
+            enterprise_result = await db.execute(
+                select(EnterpriseProfile).where(EnterpriseProfile.user_id == user.id)
+            )
+            enterprise = enterprise_result.scalar_one_or_none()
+            if enterprise and not enterprise.is_main_account:
+                # 企业子账号不能访问子账号管理模块
+                modules = modules - {"settings"} if "sub_account:create" not in ROLE_PERMISSIONS.get(user.user_type, set()) else modules
+        elif user.user_type == UserType.TEACHER:
+            teacher_result = await db.execute(
+                select(TeacherProfile).where(TeacherProfile.user_id == user.id)
+            )
+            teacher = teacher_result.scalar_one_or_none()
+            if teacher and not teacher.is_main_account:
+                # 教师子账号不能访问子账号管理模块
+                modules = modules - {"settings"} if "sub_account:create" not in ROLE_PERMISSIONS.get(user.user_type, set()) else modules
+    
+    return list(modules)
+
+
+async def has_module_access(user: User, module_id: str, db: Optional[AsyncSession] = None) -> bool:
+    """
+    检查用户是否有模块访问权限
+    
+    Args:
+        user: 用户对象
+        module_id: 模块ID
+        db: 数据库会话（可选）
+        
+    Returns:
+        bool: 是否有权限访问该模块
+    """
+    modules = await get_user_modules(user, db)
+    return module_id in modules
+
+
+def require_module(module_id: str):
+    """
+    模块访问权限装饰器
+    
+    Args:
+        module_id: 模块ID
+        
+    Returns:
+        装饰器函数
+    """
+    def decorator(func: Callable):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            current_user = None
+            db_session = None
+            
+            for key, value in kwargs.items():
+                if isinstance(value, User):
+                    current_user = value
+                elif isinstance(value, AsyncSession):
+                    db_session = value
+            
+            if not current_user:
+                for arg in args:
+                    if isinstance(arg, User):
+                        current_user = arg
+                    elif isinstance(arg, AsyncSession):
+                        db_session = arg
+            
+            if not current_user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="需要登录"
+                )
+            
+            has_access = await has_module_access(current_user, module_id, db_session)
+            if not has_access:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"无权访问模块：{MODULES.get(module_id, {}).get('name', module_id)}"
+                )
+            
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
 def require_permission(*permissions: str):

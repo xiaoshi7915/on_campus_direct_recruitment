@@ -1,6 +1,6 @@
 <template>
   <div class="student-profile max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">个人中心</h1>
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">学生中心</h1>
 
     <div v-if="loading" class="text-center py-16">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

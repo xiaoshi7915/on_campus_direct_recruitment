@@ -62,8 +62,29 @@ docker-compose up -d
 # 查看服务状态
 docker-compose ps
 
-# 查看日志
+# 查看所有服务日志
 docker-compose logs -f
+
+# 查看特定服务日志
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f mysql
+docker-compose logs -f redis
+```
+
+#### 服务健康检查
+
+Docker Compose 配置了健康检查，确保服务正常运行：
+
+- **MySQL**: 每10秒检查一次，最多重试5次
+- **Redis**: 每10秒检查一次，最多重试5次
+- **后端**: 每30秒检查一次，最多重试3次
+- **前端**: 每30秒检查一次，最多重试3次
+
+可以通过以下命令查看服务健康状态：
+
+```bash
+docker-compose ps
 ```
 
 ### 4. 初始化数据库
@@ -79,8 +100,8 @@ docker-compose exec backend python scripts/seed_data.py
 ### 5. 访问服务
 
 - 前端: http://your-server-ip:8008
-- 后端API: http://your-server-ip:5001
-- API文档: http://your-server-ip:5001/docs
+- 后端API: http://your-server-ip:6121
+- API文档: http://your-server-ip:6121/docs
 
 ### 6. 常用命令
 
@@ -97,17 +118,79 @@ docker-compose down
 # 停止并删除容器和数据卷（谨慎使用）
 docker-compose down -v
 
-# 查看后端日志
-docker-compose logs -f backend
+# 重新构建并启动（代码更新后）
+docker-compose up -d --build
 
-# 查看前端日志
-docker-compose logs -f frontend
+# 查看服务状态和健康检查
+docker-compose ps
 
-# 进入后端容器
-docker-compose exec backend bash
+# 查看日志
+docker-compose logs -f              # 所有服务
+docker-compose logs -f backend       # 后端日志
+docker-compose logs -f frontend      # 前端日志
+docker-compose logs -f mysql         # MySQL日志
+docker-compose logs -f redis         # Redis日志
 
-# 进入数据库容器
+# 进入容器
+docker-compose exec backend bash     # 进入后端容器
+docker-compose exec frontend sh      # 进入前端容器
+docker-compose exec mysql bash       # 进入MySQL容器
+docker-compose exec redis sh         # 进入Redis容器
+
+# 数据库操作
 docker-compose exec mysql mysql -u appuser -papppassword college_zhaopin
+docker-compose exec backend alembic upgrade head  # 执行数据库迁移
+docker-compose exec backend alembic current        # 查看当前迁移版本
+```
+
+### 7. 生产环境配置
+
+#### 修改启动命令
+
+在 `docker-compose.yml` 中，开发环境默认使用 `--reload` 模式。生产环境建议：
+
+**后端服务**：取消注释生产环境命令，注释掉开发环境命令
+```yaml
+# 开发环境命令（注释掉）
+# command: uvicorn app.main:app --host 0.0.0.0 --port 6121 --reload
+
+# 生产环境命令（取消注释）
+command: uvicorn app.main:app --host 0.0.0.0 --port 6121 --workers 4 --log-level info
+```
+
+**前端服务**：需要先构建，然后使用预览模式
+```yaml
+# 在 Dockerfile 中取消注释构建命令
+# RUN npm run build
+# CMD ["npm", "run", "preview", "--", "--host"]
+```
+
+#### 资源限制
+
+Docker Compose 已配置资源限制，可根据服务器配置调整：
+
+```yaml
+deploy:
+  resources:
+    limits:
+      cpus: '2'      # CPU限制
+      memory: 2G     # 内存限制
+    reservations:
+      cpus: '0.5'    # CPU保留
+      memory: 512M   # 内存保留
+```
+
+#### 环境变量配置
+
+生产环境必须修改以下环境变量：
+
+```bash
+# .env 文件
+SECRET_KEY=your-strong-random-secret-key-here  # 必须修改，至少32字符
+DEBUG=False                                     # 生产环境关闭调试
+DATABASE_URL=mysql+pymysql://user:pass@mysql:3306/college_zhaopin?charset=utf8mb4
+CORS_ORIGINS=https://your-domain.com            # 限制为具体域名，不要使用 *
+REDIS_PASSWORD=your-redis-password             # 设置Redis密码
 ```
 
 ## 方式二：Linux一键部署脚本
@@ -176,7 +259,7 @@ server {
 
     # 后端API
     location /api {
-        proxy_pass http://localhost:5001;
+        proxy_pass http://localhost:6121;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -185,7 +268,7 @@ server {
 
     # WebSocket支持（用于聊天）
     location /ws {
-        proxy_pass http://localhost:5001;
+        proxy_pass http://localhost:6121;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -298,17 +381,49 @@ sudo journalctl -u college-zhaopin-frontend -f
 
 ## 更新部署
 
+### Docker方式更新
+
 ```bash
-# 拉取最新代码
+# 1. 拉取最新代码
 git pull
 
-# 重新构建并启动
+# 2. 停止服务
 docker-compose down
+
+# 3. 重新构建镜像（可选，如果代码有依赖变更）
 docker-compose build --no-cache
+
+# 4. 启动服务
 docker-compose up -d
 
-# 执行数据库迁移
+# 5. 执行数据库迁移
 docker-compose exec backend alembic upgrade head
+
+# 6. 查看服务状态
+docker-compose ps
+docker-compose logs -f
+```
+
+### 本地服务更新（使用 start.sh）
+
+```bash
+# 1. 拉取最新代码
+git pull
+
+# 2. 停止服务
+./start.sh stop
+
+# 3. 更新依赖（如需要）
+cd backend && pip install -r requirements.txt
+cd ../frontend && npm install
+
+# 4. 执行数据库迁移
+cd backend
+alembic upgrade head
+
+# 5. 启动服务
+cd ..
+./start.sh start
 ```
 
 ## 安全建议

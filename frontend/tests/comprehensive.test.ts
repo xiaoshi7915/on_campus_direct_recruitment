@@ -10,14 +10,14 @@ import { createPinia } from 'pinia'
 // 测试API调用
 describe('API调用测试', () => {
   it('应该能够调用健康检查接口', async () => {
-    const response = await fetch('http://localhost:5001/health')
+    const response = await fetch('http://localhost:6121/health')
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data.status).toBe('healthy')
   })
 
   it('应该能够发送短信验证码', async () => {
-    const response = await fetch('http://localhost:5001/api/v1/sms/send', {
+    const response = await fetch('http://localhost:6121/api/v1/sms/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ describe('API调用测试', () => {
 
   it('应该能够验证短信验证码', async () => {
     // 先发送验证码
-    const sendResponse = await fetch('http://localhost:5001/api/v1/sms/send', {
+    const sendResponse = await fetch('http://localhost:6121/api/v1/sms/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ describe('API调用测试', () => {
     
     if (sendData.code) {
       // 验证验证码
-      const verifyResponse = await fetch('http://localhost:5001/api/v1/sms/verify', {
+      const verifyResponse = await fetch('http://localhost:6121/api/v1/sms/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ describe('API调用测试', () => {
   })
 
   it('应该能够获取职位列表', async () => {
-    const response = await fetch('http://localhost:5001/api/v1/jobs?page=1&page_size=10')
+    const response = await fetch('http://localhost:6121/api/v1/jobs?page=1&page_size=10')
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data).toHaveProperty('items')
@@ -73,7 +73,7 @@ describe('API调用测试', () => {
   })
 
   it('应该能够搜索职位', async () => {
-    const response = await fetch('http://localhost:5001/api/v1/jobs?keyword=软件&page=1&page_size=10')
+    const response = await fetch('http://localhost:6121/api/v1/jobs?keyword=软件&page=1&page_size=10')
     expect(response.ok).toBe(true)
     const data = await response.json()
     expect(data).toHaveProperty('items')

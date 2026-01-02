@@ -1,26 +1,32 @@
 <template>
-  <div class="register-container min-h-screen flex items-center justify-center py-12 px-4">
-    <div class="register-box w-full max-w-md">
+  <div class="register-container min-h-screen flex items-center justify-center py-12 px-4 relative overflow-hidden">
+    <!-- 背景装饰 -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-secondary-200/20 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-accent-200/20 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="register-box w-full max-w-md relative z-10 animate-fade-in-up">
       <!-- Logo和标题 -->
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl mb-6 shadow-xl transform hover:scale-105 transition-transform">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
           </svg>
         </div>
-        <h2 class="text-3xl font-bold text-gray-900 mb-2">创建账户</h2>
-        <p class="text-gray-600">注册新账户以开始使用</p>
+        <h2 class="text-4xl font-display font-bold text-gray-900 mb-3">创建账户</h2>
+        <p class="text-gray-600 text-lg">注册新账户以开始使用</p>
       </div>
 
       <!-- 注册表单 -->
       <form @submit.prevent="handleRegister" class="space-y-5">
         <div class="form-group">
-          <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="username" class="block text-sm font-semibold text-gray-700 mb-3">
             用户名 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
@@ -37,12 +43,12 @@
         </div>
         
         <div class="form-group">
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="password" class="block text-sm font-semibold text-gray-700 mb-3">
             密码 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
@@ -130,17 +136,17 @@
 
         <button
           type="submit"
-          class="btn-submit w-full"
+          class="btn-submit w-full relative overflow-hidden"
           :disabled="loading"
         >
-          <span v-if="loading" class="flex items-center justify-center">
+          <span v-if="loading" class="flex items-center justify-center relative z-10">
             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             注册中...
           </span>
-          <span v-else class="flex items-center justify-center">
+          <span v-else class="flex items-center justify-center relative z-10">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
@@ -232,17 +238,23 @@ const handleRegister = async () => {
 
 <style scoped>
 .register-container {
-  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+  background: var(--gradient-soft);
 }
 
 .register-box {
-  @apply bg-white p-8 rounded-2xl border border-gray-100;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+  @apply bg-white/95 backdrop-blur-md p-10 rounded-3xl border border-gray-100/50;
+  box-shadow: 
+    0 20px 60px -15px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 .form-input {
-  @apply w-full py-3 pr-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200;
-  padding-left: 3.75rem; /* 60px - 确保图标和文字不重合 */
+  @apply w-full py-3.5 pr-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 bg-white/80 transition-all duration-300;
+  padding-left: 3.5rem;
+}
+
+.form-input:hover {
+  @apply border-primary-300;
 }
 
 .form-input::placeholder {
@@ -254,24 +266,42 @@ const handleRegister = async () => {
 }
 
 .btn-submit {
-  background-color: #2563eb;
+  background: var(--gradient-primary);
   color: white;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   font-weight: 600;
-  padding: 0.875rem 1.5rem;
-  min-height: 3rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s;
+  padding: 1rem 1.5rem;
+  min-height: 3.5rem;
+  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-submit:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .btn-submit:hover:not(:disabled) {
-  background-color: #1d4ed8;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.5);
 }
 
 .btn-submit:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 </style>
 

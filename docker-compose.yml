@@ -10,6 +10,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-college_zhaopin}
       MYSQL_USER: ${MYSQL_USER:-appuser}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-apppassword}
+      TZ: ${TZ:-Asia/Shanghai}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
@@ -22,8 +23,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+8:00'
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # Redis缓存服务
   redis:
@@ -40,23 +50,36 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
 
   # 后端API服务
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        - PYTHON_VERSION=${PYTHON_VERSION:-3.11}
     container_name: college_zhaopin_backend
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DATABASE_URL:-mysql+aiomysql://appuser:apppassword@mysql:3306/college_zhaopin}
+      DATABASE_URL: ${DATABASE_URL:-mysql+pymysql://appuser:apppassword@mysql:3306/college_zhaopin?charset=utf8mb4}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      TZ: ${TZ:-Asia/Shanghai}
     ports:
-      - "${BACKEND_PORT:-5011}:5011"
+      - "${BACKEND_PORT:-6121}:6121"
     volumes:
       - ./backend:/app
       - backend_logs:/app/logs
@@ -67,14 +90,33 @@ services:
         condition: service_healthy
     networks:
       - college_zhaopin_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6121/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 5011 --reload
+    # 开发环境使用 reload，生产环境建议使用 workers
+    command: uvicorn app.main:app --host 0.0.0.0 --port 6121 --reload
+    # 生产环境命令（取消注释使用）:
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 6121 --workers 4 --log-level info
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # 前端服务
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NODE_VERSION=${NODE_VERSION:-18}
     container_name: college_zhaopin_frontend
     ports:
       - "${FRONTEND_PORT:-8008}:8008"
@@ -85,8 +127,25 @@ services:
       - backend
     networks:
       - college_zhaopin_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8008"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
+    # 开发环境命令
     command: npm run dev -- --host
+    # 生产环境命令（需要先构建）:
+    # command: npm run preview -- --host
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
 networks:
   college_zhaopin_network:
