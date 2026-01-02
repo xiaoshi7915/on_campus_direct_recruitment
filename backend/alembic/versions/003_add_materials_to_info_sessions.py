@@ -17,10 +17,14 @@ depends_on = None
 
 
 def upgrade():
-    # 添加materials字段到info_sessions表
-    op.add_column('info_sessions', 
-        sa.Column('materials', sa.Text(), nullable=True, comment='宣讲会资料URLs（JSON数组，存储多个文件URL）')
-    )
+    # 添加materials字段到info_sessions表（如果不存在）
+    conn = op.get_bind()
+    # 检查列是否已存在
+    result = conn.execute(sa.text("SHOW COLUMNS FROM info_sessions LIKE 'materials'"))
+    if not result.fetchone():
+        op.add_column('info_sessions', 
+            sa.Column('materials', sa.Text(), nullable=True, comment='宣讲会资料URLs（JSON数组，存储多个文件URL）')
+        )
 
 
 def downgrade():

@@ -13,7 +13,9 @@ from app.api.v1.auth import get_current_user
 from app.core.permissions import require_admin
 from app.models.user import User
 from app.models.profile import EnterpriseProfile
-from app.models.verification import EnterpriseVerification, PersonalVerification
+from app.models.verification import EnterpriseVerification, PersonalVerification, SchoolVerification
+from app.models.profile import TeacherProfile
+from app.models.school import School
 from app.models.enums import VerificationStatus
 from app.schemas.verification import (
     EnterpriseVerificationCreate,
@@ -24,6 +26,10 @@ from app.schemas.verification import (
     PersonalVerificationUpdate,
     PersonalVerificationResponse,
     PersonalVerificationListResponse,
+    SchoolVerificationCreate,
+    SchoolVerificationUpdate,
+    SchoolVerificationResponse,
+    SchoolVerificationListResponse,
 )
 
 router = APIRouter()
@@ -182,14 +188,24 @@ async def get_enterprise_verifications(
     result = await db.execute(query)
     verifications = result.scalars().all()
     
-    # 解析other_documents
+    # 解析other_documents并获取企业名称
     import json
+    from app.models.profile import EnterpriseProfile
     verification_list = []
     for verification in verifications:
         other_docs = json.loads(verification.other_documents) if verification.other_documents else None
+        
+        # 获取企业名称
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.id == verification.enterprise_id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        enterprise_name = enterprise.company_name if enterprise else None
+        
         verification_list.append({
             "id": verification.id,
             "enterprise_id": verification.enterprise_id,
+            "enterprise_name": enterprise_name,
             "status": verification.status.value,
             "business_license_url": verification.business_license_url,
             "legal_person_id_front_url": verification.legal_person_id_front_url,
@@ -570,3 +586,359 @@ async def update_personal_verification(
         "updated_at": verification.updated_at,
     }
 
+
+
+# ==================== 学校认证 ====================
+
+@router.post("/school", response_model=SchoolVerificationResponse, status_code=status.HTTP_201_CREATED)
+async def create_school_verification(
+    verification_data: SchoolVerificationCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    创建学校认证申请（仅教师用户）
+    """
+    if current_user.user_type != "TEACHER":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师用户才能申请学校认证"
+        )
+    
+    teacher_result = await db.execute(
+        select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+    )
+    teacher = teacher_result.scalar_one_or_none()
+    
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教师信息不存在，请先完善教师档案"
+        )
+    
+    # 检查是否已有待审核的申请
+    existing_result = await db.execute(
+        select(SchoolVerification).where(
+            SchoolVerification.teacher_id == teacher.id,
+            SchoolVerification.status == VerificationStatus.PENDING
+        )
+    )
+    existing = existing_result.scalar_one_or_none()
+    
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="已有待审核的学校认证申请，请等待审核结果"
+        )
+    
+    import json
+    verification = SchoolVerification(
+        id=str(uuid4()),
+        school_id=verification_data.school_id,
+        teacher_id=teacher.id,
+        status=VerificationStatus.PENDING,
+        school_certificate_url=verification_data.school_certificate_url,
+        teacher_work_certificate_url=verification_data.teacher_certificate_url,
+        teacher_id_card_front_url=verification_data.id_card_front_url,
+        teacher_id_card_back_url=verification_data.id_card_back_url,
+        authorization_letter_url=verification_data.authorization_letter_url,
+        other_documents=json.dumps(verification_data.other_documents) if verification_data.other_documents else None,
+        contact_person=verification_data.contact_person,
+        contact_phone=verification_data.contact_phone,
+        contact_email=verification_data.contact_email,
+    )
+    
+    db.add(verification)
+    await db.commit()
+    await db.refresh(verification)
+    
+    other_docs = json.loads(verification.other_documents) if verification.other_documents else None
+    
+    # 获取学校名称和教师名称
+    school_result = await db.execute(
+        select(School).where(School.id == verification.school_id)
+    )
+    school = school_result.scalar_one_or_none()
+    school_name = school.name if school else None
+    
+    teacher_name = teacher.real_name if teacher else None
+    
+    return {
+        "id": verification.id,
+        "school_id": verification.school_id,
+        "school_name": school_name,
+        "teacher_id": verification.teacher_id,
+        "teacher_name": teacher_name,
+        "status": verification.status.value,
+        "school_certificate_url": verification.school_certificate_url,
+        "teacher_certificate_url": verification.teacher_work_certificate_url,
+        "id_card_front_url": verification.teacher_id_card_front_url,
+        "id_card_back_url": verification.teacher_id_card_back_url,
+        "authorization_letter_url": verification.authorization_letter_url,
+        "other_documents": other_docs,
+        "contact_person": verification.contact_person,
+        "contact_phone": verification.contact_phone,
+        "contact_email": verification.contact_email,
+        "reviewer_id": verification.reviewer_id,
+        "review_comment": verification.review_comment,
+        "reviewed_at": verification.reviewed_at,
+        "created_at": verification.created_at,
+        "updated_at": verification.updated_at,
+    }
+
+
+@router.get("/school", response_model=SchoolVerificationListResponse)
+async def get_school_verifications(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    status_filter: Optional[str] = Query(None, alias="status", description="状态过滤"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取学校认证申请列表
+    """
+    query = select(SchoolVerification, School.name, TeacherProfile.real_name).join(
+        School, SchoolVerification.school_id == School.id, isouter=True
+    ).join(
+        TeacherProfile, SchoolVerification.teacher_id == TeacherProfile.id, isouter=True
+    )
+    
+    if current_user.user_type == "TEACHER":
+        teacher_result = await db.execute(
+            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+        )
+        teacher = teacher_result.scalar_one_or_none()
+        
+        if not teacher:
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
+        
+        query = query.where(SchoolVerification.teacher_id == teacher.id)
+    elif current_user.user_type != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看学校认证申请列表"
+        )
+    
+    if status_filter:
+        query = query.where(SchoolVerification.status == status_filter)
+    
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    offset = (page - 1) * page_size
+    query = query.order_by(SchoolVerification.created_at.desc()).offset(offset).limit(page_size)
+    
+    result = await db.execute(query)
+    verifications_with_names = result.all()
+    
+    import json
+    verification_list = []
+    for verification, school_name, teacher_name in verifications_with_names:
+        other_docs = json.loads(verification.other_documents) if verification.other_documents else None
+        verification_list.append({
+            "id": verification.id,
+            "school_id": verification.school_id,
+            "school_name": school_name,
+            "teacher_id": verification.teacher_id,
+            "teacher_name": teacher_name,
+            "status": verification.status.value,
+            "school_certificate_url": verification.school_certificate_url,
+            "teacher_certificate_url": verification.teacher_work_certificate_url,
+            "id_card_front_url": verification.teacher_id_card_front_url,
+            "id_card_back_url": verification.teacher_id_card_back_url,
+            "authorization_letter_url": verification.authorization_letter_url,
+            "other_documents": other_docs,
+            "contact_person": verification.contact_person,
+            "contact_phone": verification.contact_phone,
+            "contact_email": verification.contact_email,
+            "reviewer_id": verification.reviewer_id,
+            "review_comment": verification.review_comment,
+            "reviewed_at": verification.reviewed_at,
+            "created_at": verification.created_at,
+            "updated_at": verification.updated_at,
+        })
+    
+    return {
+        "items": verification_list,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
+@router.get("/school/{verification_id}", response_model=SchoolVerificationResponse)
+async def get_school_verification(
+    verification_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取学校认证申请详情
+    """
+    result = await db.execute(
+        select(SchoolVerification).where(SchoolVerification.id == verification_id)
+    )
+    verification = result.scalar_one_or_none()
+    
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="认证申请不存在"
+        )
+    
+    if current_user.user_type == "TEACHER":
+        teacher_result = await db.execute(
+            select(TeacherProfile).where(TeacherProfile.user_id == current_user.id)
+        )
+        teacher = teacher_result.scalar_one_or_none()
+        
+        if not teacher or verification.teacher_id != teacher.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="无权查看此认证申请"
+            )
+    elif current_user.user_type != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权查看此认证申请"
+        )
+    
+    import json
+    other_docs = json.loads(verification.other_documents) if verification.other_documents else None
+    
+    # 获取学校名称和教师名称
+    school_result = await db.execute(
+        select(School).where(School.id == verification.school_id)
+    )
+    school = school_result.scalar_one_or_none()
+    school_name = school.name if school else None
+    
+    teacher_result = await db.execute(
+        select(TeacherProfile).where(TeacherProfile.id == verification.teacher_id)
+    )
+    teacher = teacher_result.scalar_one_or_none()
+    teacher_name = teacher.real_name if teacher else None
+    
+    return {
+        "id": verification.id,
+        "school_id": verification.school_id,
+        "school_name": school_name,
+        "teacher_id": verification.teacher_id,
+        "teacher_name": teacher_name,
+        "status": verification.status.value,
+        "school_certificate_url": verification.school_certificate_url,
+        "teacher_certificate_url": verification.teacher_work_certificate_url,
+        "id_card_front_url": verification.teacher_id_card_front_url,
+        "id_card_back_url": verification.teacher_id_card_back_url,
+        "authorization_letter_url": verification.authorization_letter_url,
+        "other_documents": other_docs,
+        "contact_person": verification.contact_person,
+        "contact_phone": verification.contact_phone,
+        "contact_email": verification.contact_email,
+        "reviewer_id": verification.reviewer_id,
+        "review_comment": verification.review_comment,
+        "reviewed_at": verification.reviewed_at,
+        "created_at": verification.created_at,
+        "updated_at": verification.updated_at,
+    }
+
+
+@router.put("/school/{verification_id}", response_model=SchoolVerificationResponse)
+async def update_school_verification(
+    verification_id: str,
+    verification_data: SchoolVerificationUpdate,
+    current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    审核学校认证申请（仅管理员）
+    """
+    result = await db.execute(
+        select(SchoolVerification).where(SchoolVerification.id == verification_id)
+    )
+    verification = result.scalar_one_or_none()
+    
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="认证申请不存在"
+        )
+    
+    if verification.status != VerificationStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="该认证申请已审核，无法再次审核"
+        )
+    
+    verification.status = verification_data.status
+    verification.reviewer_id = current_user.id
+    verification.review_comment = verification_data.review_comment
+    verification.reviewed_at = datetime.utcnow()
+    
+    if verification_data.status == VerificationStatus.APPROVED:
+        # 更新教师为学校主账号
+        teacher_result = await db.execute(
+            select(TeacherProfile).where(TeacherProfile.id == verification.teacher_id)
+        )
+        teacher = teacher_result.scalar_one_or_none()
+        if teacher:
+            teacher.is_main_account = True
+            db.add(teacher)
+        
+        # 更新学校为已认证状态
+        school_result = await db.execute(
+            select(School).where(School.id == verification.school_id)
+        )
+        school = school_result.scalar_one_or_none()
+        if school:
+            school.is_verified = True
+            db.add(school)
+    
+    await db.commit()
+    await db.refresh(verification)
+    
+    import json
+    other_docs = json.loads(verification.other_documents) if verification.other_documents else None
+    
+    # 获取学校名称和教师名称
+    school_result = await db.execute(
+        select(School).where(School.id == verification.school_id)
+    )
+    school = school_result.scalar_one_or_none()
+    school_name = school.name if school else None
+    
+    teacher_result = await db.execute(
+        select(TeacherProfile).where(TeacherProfile.id == verification.teacher_id)
+    )
+    teacher = teacher_result.scalar_one_or_none()
+    teacher_name = teacher.real_name if teacher else None
+    
+    return {
+        "id": verification.id,
+        "school_id": verification.school_id,
+        "school_name": school_name,
+        "teacher_id": verification.teacher_id,
+        "teacher_name": teacher_name,
+        "status": verification.status.value,
+        "school_certificate_url": verification.school_certificate_url,
+        "teacher_certificate_url": verification.teacher_work_certificate_url,
+        "id_card_front_url": verification.teacher_id_card_front_url,
+        "id_card_back_url": verification.teacher_id_card_back_url,
+        "authorization_letter_url": verification.authorization_letter_url,
+        "other_documents": other_docs,
+        "contact_person": verification.contact_person,
+        "contact_phone": verification.contact_phone,
+        "contact_email": verification.contact_email,
+        "reviewer_id": verification.reviewer_id,
+        "review_comment": verification.review_comment,
+        "reviewed_at": verification.reviewed_at,
+        "created_at": verification.created_at,
+        "updated_at": verification.updated_at,
+    }

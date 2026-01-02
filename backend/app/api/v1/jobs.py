@@ -57,8 +57,40 @@ async def get_jobs(
             )
             # 如果全文搜索成功，直接返回
             if jobs and len(jobs) > 0:
-                # 将ORM对象转换为响应模型
-                job_responses = [JobResponse.model_validate(job) for job in jobs]
+                # 将ORM对象转换为响应模型，并获取企业信息
+                job_responses = []
+                for job in jobs:
+                    # 获取企业信息
+                    enterprise_result = await db.execute(
+                        select(EnterpriseProfile).where(EnterpriseProfile.id == job.enterprise_id)
+                    )
+                    enterprise = enterprise_result.scalar_one_or_none()
+                    
+                    job_dict = {
+                        "id": job.id,
+                        "enterprise_id": job.enterprise_id,
+                        "enterprise_name": enterprise.company_name if enterprise else None,
+                        "enterprise_logo": enterprise.logo_url if enterprise else None,
+                        "enterprise_industry": enterprise.industry if enterprise else None,
+                        "enterprise_scale": enterprise.scale if enterprise else None,
+                        "title": job.title,
+                        "department": job.department,
+                        "job_type": job.job_type,
+                        "salary_min": job.salary_min,
+                        "salary_max": job.salary_max,
+                        "work_location": job.work_location,
+                        "experience": job.experience,
+                        "education": job.education,
+                        "description": job.description,
+                        "requirements": job.requirements,
+                        "status": job.status,
+                        "view_count": job.view_count,
+                        "apply_count": job.apply_count,
+                        "tags": job.tags,
+                        "created_at": job.created_at,
+                        "updated_at": job.updated_at,
+                    }
+                    job_responses.append(JobResponse.model_validate(job_dict))
                 return {
                     "items": job_responses,
                     "total": total,
@@ -150,8 +182,40 @@ async def get_jobs(
     result = await db.execute(query)
     jobs = result.scalars().all()
     
-    # 将ORM对象转换为响应模型
-    job_responses = [JobResponse.model_validate(job) for job in jobs]
+    # 将ORM对象转换为响应模型，并获取企业信息
+    job_responses = []
+    for job in jobs:
+        # 获取企业信息
+        enterprise_result = await db.execute(
+            select(EnterpriseProfile).where(EnterpriseProfile.id == job.enterprise_id)
+        )
+        enterprise = enterprise_result.scalar_one_or_none()
+        
+        job_dict = {
+            "id": job.id,
+            "enterprise_id": job.enterprise_id,
+            "enterprise_name": enterprise.company_name if enterprise else None,
+            "enterprise_logo": enterprise.logo_url if enterprise else None,
+            "enterprise_industry": enterprise.industry if enterprise else None,
+            "enterprise_scale": enterprise.scale if enterprise else None,
+            "title": job.title,
+            "department": job.department,
+            "job_type": job.job_type,
+            "salary_min": job.salary_min,
+            "salary_max": job.salary_max,
+            "work_location": job.work_location,
+            "experience": job.experience,
+            "education": job.education,
+            "description": job.description,
+            "requirements": job.requirements,
+            "status": job.status,
+            "view_count": job.view_count,
+            "apply_count": job.apply_count,
+            "tags": job.tags,
+            "created_at": job.created_at,
+            "updated_at": job.updated_at,
+        }
+        job_responses.append(JobResponse.model_validate(job_dict))
     
     response_data = {
         "items": job_responses,
@@ -198,7 +262,38 @@ async def get_job(
     await db.commit()
     await db.refresh(job)
     
-    return job
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.id == job.enterprise_id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    job_dict = {
+        "id": job.id,
+        "enterprise_id": job.enterprise_id,
+        "enterprise_name": enterprise.company_name if enterprise else None,
+        "enterprise_logo": enterprise.logo_url if enterprise else None,
+        "enterprise_industry": enterprise.industry if enterprise else None,
+        "enterprise_scale": enterprise.scale if enterprise else None,
+        "title": job.title,
+        "department": job.department,
+        "job_type": job.job_type,
+        "salary_min": job.salary_min,
+        "salary_max": job.salary_max,
+        "work_location": job.work_location,
+        "experience": job.experience,
+        "education": job.education,
+        "description": job.description,
+        "requirements": job.requirements,
+        "status": job.status,
+        "view_count": job.view_count,
+        "apply_count": job.apply_count,
+        "tags": job.tags,
+        "created_at": job.created_at,
+        "updated_at": job.updated_at,
+    }
+    
+    return JobResponse.model_validate(job_dict)
 
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)

@@ -15,6 +15,7 @@ from app.models.enums import (
 from app.models.school import School, Department, Class
 from app.models.profile import StudentProfile, TeacherProfile, EnterpriseProfile
 from app.models.job import Resume, Job, JobIntention, JobApplication
+from app.models.industry_job_type import IndustryCategory, SubIndustry, JobType
 from app.models.activity import JobFair, JobFairRegistration, InfoSession, InfoSessionRegistration
 from app.models.interview import Interview, Offer
 from app.models.chat import ChatSession, Message
@@ -23,7 +24,8 @@ from app.models.todo import Todo
 from app.models.mark import Mark
 from app.models.rights import Rights, RightsPackage, RightsPackageItem, UserRights, RightsPurchase
 from app.models.talent_pool import TalentPool
-from app.models.verification import EnterpriseVerification, PersonalVerification
+from app.models.verification import EnterpriseVerification, PersonalVerification, SchoolVerification
+from app.models.student_comment import StudentComment
 
 __all__ = [
     # 用户相关
@@ -45,6 +47,10 @@ __all__ = [
     "JobIntention",
     "JobApplication",
     "ApplicationStatus",
+    # 行业职位类型维表
+    "IndustryCategory",
+    "SubIndustry",
+    "JobType",
     # 活动相关
     "JobFair",
     "JobFairStatus",

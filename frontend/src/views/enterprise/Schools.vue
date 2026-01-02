@@ -194,6 +194,15 @@
               </svg>
               申请宣讲会
             </button>
+            <button
+              @click.stop="startChat(school.id)"
+              class="btn btn-primary btn-md whitespace-nowrap"
+            >
+              <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              发起聊天
+            </button>
           </div>
         </div>
       </div>
@@ -350,6 +359,7 @@ import { useRouter } from 'vue-router'
 import { getSchools, type School, requestOfflineInfoSession, type OfflineInfoSessionRequest } from '@/api/schools'
 import { addFavorite, removeFavorite, checkFavorite } from '@/api/favorites'
 import { getSchoolShareLink } from '@/api/schools'
+import { createOrGetChatSession } from '@/api/chat'
 import Pagination from '@/components/Pagination.vue'
 
 const router = useRouter()
@@ -526,6 +536,19 @@ const handleRequestInfoSession = async () => {
     alert('提交申请失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     submitting.value = false
+  }
+}
+
+// 发起聊天
+const startChat = async (schoolId: string) => {
+  try {
+    // 创建或获取与学校的聊天会话
+    const session = await createOrGetChatSession(undefined, undefined, schoolId)
+    // 跳转到聊天页面
+    router.push(`/enterprise/chat?session_id=${session.id}`)
+  } catch (error: any) {
+    console.error('发起聊天失败:', error)
+    alert('发起聊天失败: ' + (error.response?.data?.detail || error.message))
   }
 }
 

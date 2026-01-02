@@ -275,6 +275,7 @@ export function getAdminMenu(user: User | null): MenuModule[] {
       items: [
         { name: '用户管理', path: '/admin/users', icon: 'users' },
         { name: '教师审批', path: '/admin/teacher-approvals', icon: 'check-circle' },
+        { name: '认证审核', path: '/admin/verifications', icon: 'shield-check' },
       ],
     },
     {

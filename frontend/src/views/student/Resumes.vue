@@ -1,7 +1,7 @@
 <template>
   <div class="student-resumes w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-10 animate-fade-in-up">
-      <h1 class="text-5xl font-display font-bold text-gray-900 bg-gradient-primary bg-clip-text text-transparent">我的简历</h1>
+      <h1 class="text-5xl font-display font-bold text-gray-900">我的简历</h1>
       <button
         @click="showCreateModal = true"
         class="px-6 py-3 bg-gradient-primary text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 flex items-center transform hover:scale-105"
@@ -29,17 +29,13 @@
       <div
         v-for="resume in resumes"
         :key="resume.id"
-        class="card-elevated rounded-2xl p-6 border-2 border-gray-200 hover:border-primary-300 hover:bg-gradient-to-br hover:from-primary-50/30 hover:to-transparent transition-all duration-300"
+        class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all duration-200"
       >
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <div class="flex items-center space-x-3 mb-3">
-              <div class="p-2 bg-blue-50 rounded-lg">
-                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 class="text-xl font-display font-semibold text-gray-900">{{ resume.title }}</h3>
+        <div class="space-y-6">
+          <!-- 简历标题和默认标签 -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <h3 class="text-2xl font-bold text-gray-900">{{ resume.title }}</h3>
               <span
                 v-if="resume.is_default"
                 class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium"
@@ -47,7 +43,40 @@
                 默认简历
               </span>
             </div>
-            <div class="flex flex-wrap gap-4 text-gray-600 text-sm mb-3 ml-11">
+          </div>
+
+          <!-- 简历内容 -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">简历内容</label>
+            <div class="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 bg-gray-50 whitespace-pre-wrap min-h-[200px] max-h-[400px] overflow-y-auto">
+              {{ resume.content }}
+            </div>
+          </div>
+
+          <!-- 电子版简历文件 -->
+          <div v-if="resume.file_url">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">电子版简历文件（PDF、Word等）</label>
+            <div class="flex items-center space-x-4">
+              <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-200 flex-1">
+                已上传文件：{{ resume.file_url }}
+              </p>
+              <button
+                type="button"
+                @click="viewResumeFile(resume.file_url!)"
+                class="btn btn-primary btn-md whitespace-nowrap"
+              >
+                <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                查看附件
+              </button>
+            </div>
+          </div>
+
+          <!-- 统计信息和操作按钮 -->
+          <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+            <div class="flex flex-wrap gap-4 text-gray-600 text-sm">
               <span class="flex items-center">
                 <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -61,43 +90,40 @@
                 </svg>
                 下载次数：{{ resume.download_count }}
               </span>
+              <span class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                创建时间：{{ formatDate(resume.created_at) }}
+              </span>
             </div>
-            <p class="text-gray-700 line-clamp-3 mb-3 ml-11 bg-gray-50 p-3 rounded-lg border border-gray-200">
-              {{ resume.content }}
-            </p>
-            <p class="text-gray-500 text-sm mt-3 ml-11 flex items-center">
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              创建时间：{{ formatDate(resume.created_at) }}
-            </p>
-          </div>
-          <div class="ml-6 flex flex-col space-y-2">
-            <button
-              @click="editResume(resume)"
-              class="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center justify-center"
-            >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              编辑
-            </button>
-            <button
-              @click="setDefault(resume.id)"
-              v-if="!resume.is_default"
-              class="px-5 py-2.5 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 font-medium"
-            >
-              设为默认
-            </button>
-            <button
-              @click="handleDeleteResume(resume.id)"
-              class="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium flex items-center justify-center"
-            >
-              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              删除
-            </button>
+            <div class="flex space-x-2">
+              <button
+                @click="editResume(resume)"
+                class="btn btn-primary btn-md"
+              >
+                <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                编辑
+              </button>
+              <button
+                @click="setDefault(resume.id)"
+                v-if="!resume.is_default"
+                class="btn btn-outline-secondary btn-md"
+              >
+                设为默认
+              </button>
+              <button
+                @click="handleDeleteResume(resume.id)"
+                class="btn btn-danger btn-md"
+              >
+                <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                删除
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -336,6 +362,11 @@ const previewFile = () => {
   if (resumeForm.value.file_url) {
     window.open(resumeForm.value.file_url, '_blank')
   }
+}
+
+// 查看简历附件
+const viewResumeFile = (fileUrl: string) => {
+  window.open(fileUrl, '_blank')
 }
 
 // 编辑简历

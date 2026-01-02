@@ -59,6 +59,14 @@ async def get_offers(
         enterprise = enterprise_result.scalar_one_or_none()
         if enterprise:
             query = query.where(Offer.enterprise_id == enterprise.id)
+        else:
+            # 企业档案不存在，返回空列表
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
     elif current_user.user_type == "STUDENT":
         student_result = await db.execute(
             select(StudentProfile).where(StudentProfile.user_id == current_user.id)
@@ -66,6 +74,14 @@ async def get_offers(
         student = student_result.scalar_one_or_none()
         if student:
             query = query.where(Offer.student_id == student.id)
+        else:
+            # 学生档案不存在，返回空列表
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
     
     # 企业ID过滤（管理员可查看所有）
     if enterprise_id and current_user.user_type == "ADMIN":
@@ -135,6 +151,14 @@ async def get_interviews(
         enterprise = enterprise_result.scalar_one_or_none()
         if enterprise:
             query = query.where(Interview.enterprise_id == enterprise.id)
+        else:
+            # 企业档案不存在，返回空列表
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
     elif current_user.user_type == "STUDENT":
         student_result = await db.execute(
             select(StudentProfile).where(StudentProfile.user_id == current_user.id)
@@ -142,6 +166,14 @@ async def get_interviews(
         student = student_result.scalar_one_or_none()
         if student:
             query = query.where(Interview.student_id == student.id)
+        else:
+            # 学生档案不存在，返回空列表
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
     
     # 企业ID过滤（管理员可查看所有）
     if enterprise_id and current_user.user_type == "ADMIN":

@@ -43,6 +43,12 @@
                 </svg>
                 {{ job.job_type }}
               </span>
+              <span v-if="job.experience" class="flex items-center">
+                <svg class="w-5 h-5 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.564 23.564 0 0112 15c-3.183 0-6.22-1.04-8.755-2.745M9 10a3 3 0 11-6 0 3 3 0 016 0zm12 0a3 3 0 11-6 0 3 3 0 016 0zm-9 10a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {{ job.experience }}
+              </span>
               <span v-if="job.salary_min && job.salary_max" class="flex items-center text-blue-600 font-bold">
                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -55,6 +61,41 @@
                 </svg>
                 {{ job.education || '不限' }}
               </span>
+            </div>
+            <!-- 企业信息 -->
+            <div v-if="job.enterprise_name" class="bg-gray-50 rounded-xl p-6 border border-gray-200 mb-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                发布企业
+              </h3>
+              <div class="flex items-start gap-4">
+                <img
+                  v-if="job.enterprise_logo"
+                  :src="job.enterprise_logo"
+                  :alt="job.enterprise_name"
+                  class="w-16 h-16 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                  @error="(e: any) => e.target.style.display = 'none'"
+                />
+                <div class="flex-1">
+                  <h4 class="text-xl font-bold text-gray-900 mb-2">{{ job.enterprise_name }}</h4>
+                  <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <span v-if="job.enterprise_industry" class="flex items-center">
+                      <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      {{ job.enterprise_industry }}
+                    </span>
+                    <span v-if="job.enterprise_scale" class="flex items-center">
+                      <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      {{ job.enterprise_scale }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="flex flex-col space-y-3 lg:ml-6">

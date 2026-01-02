@@ -246,6 +246,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   getSubAccounts,
   createSubAccount,
@@ -254,6 +255,8 @@ import {
   type SubAccountCreate
 } from '@/api/enterpriseManagement'
 import Pagination from '@/components/Pagination.vue'
+
+const router = useRouter()
 
 // 数据
 const subAccounts = ref<EnterpriseSubAccount[]>([])
@@ -324,7 +327,12 @@ const loadSubAccounts = async () => {
   } catch (error: any) {
     console.error('加载子账号列表失败:', error)
     const errorMessage = error.response?.data?.detail || error.message
-    if (error.response?.status === 403) {
+    // 如果是企业信息不存在的错误，直接跳转到企业中心页面，不显示错误提示
+    if (error.response?.status === 404 && (errorMessage?.includes('企业信息不存在') || errorMessage?.includes('企业档案不存在'))) {
+      // 直接跳转，不显示错误提示（全局错误处理已经跳过显示）
+      router.push('/enterprise/profile')
+      return
+    } else if (error.response?.status === 403) {
       alert('权限不足：只有主账号才能查看子账号列表。如果您需要此功能，请联系管理员。')
     } else {
       alert('加载子账号列表失败: ' + errorMessage)

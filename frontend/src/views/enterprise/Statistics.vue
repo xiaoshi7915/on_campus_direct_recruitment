@@ -137,7 +137,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getEnterprisePersonalStatistics } from '@/api/statistics'
+
+const router = useRouter()
 
 const statistics = ref({
   total_jobs: 0,
@@ -164,6 +167,13 @@ const loadStatistics = async () => {
     statistics.value = response
   } catch (error: any) {
     console.error('加载统计数据失败:', error)
+    // 如果是企业信息不存在的错误，直接跳转到企业中心页面，不显示错误提示
+    if (error.response?.status === 404 && (error.response?.data?.detail?.includes('企业信息不存在') || error.response?.data?.detail?.includes('企业档案不存在'))) {
+      // 直接跳转，不显示错误提示（全局错误处理已经跳过显示）
+      router.push('/enterprise/profile')
+      return
+    }
+    // 其他错误才显示提示
     alert('加载统计数据失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     loading.value = false

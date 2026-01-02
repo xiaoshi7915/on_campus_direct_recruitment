@@ -73,7 +73,20 @@ export function handleApiError(error: any): void {
         break
       case 404:
         errorInfo.message = errorInfo.message || '请求的资源不存在'
-        showMessage(errorInfo.message, 'warning')
+        // 如果是企业信息不存在的错误，不显示错误提示（组件会自己处理跳转）
+        if (errorInfo.message.includes('企业信息不存在') || errorInfo.message.includes('企业档案不存在')) {
+          // 不显示错误提示，让组件自己处理
+          console.log('企业信息不存在，组件将处理跳转')
+        } else if (errorInfo.message.includes('教师信息不存在') || errorInfo.message.includes('教师档案不存在')) {
+          // 教师信息不存在，跳转到学校认证页面（不显示错误提示）
+          console.log('教师信息不存在，跳转到学校认证页面')
+          // 延迟跳转，让用户看到提示
+          setTimeout(() => {
+            window.location.href = '/teacher/school-verification'
+          }, 1000)
+        } else {
+          showMessage(errorInfo.message, 'warning')
+        }
         break
       case 429:
         errorInfo.message = '请求过于频繁，请稍后再试'

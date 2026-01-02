@@ -502,3 +502,92 @@ async def get_talents(
         "page_size": page_size
     }
 
+
+class TalentUpdate(BaseModel):
+    """更新人才库请求"""
+    status: Optional[str] = Field(None, description="状态：ALL, FAVORITED, COMMUNICATING, INTERVIEWED, HIRED")
+    notes: Optional[str] = Field(None, description="备注")
+    tags: Optional[str] = Field(None, description="标签（逗号分隔）")
+
+
+@router.put("/talents/{student_id}", response_model=dict)
+async def update_talent(
+    student_id: str,
+    talent_data: TalentUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    更新人才库信息（状态、备注、标签）
+    
+    Args:
+        student_id: 学生ID
+        talent_data: 更新数据
+        current_user: 当前登录用户（企业）
+        db: 数据库会话
+        
+    Returns:
+        dict: 更新结果
+    """
+    # 检查用户类型
+    if current_user.user_type != "ENTERPRISE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有企业用户才能更新人才库"
+        )
+    
+    # 获取企业信息
+    enterprise_result = await db.execute(
+        select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
+    )
+    enterprise = enterprise_result.scalar_one_or_none()
+    
+    if not enterprise:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="企业信息不存在"
+        )
+    
+    # 从人才库表读取数据（主账号和子账号都可以更新主账号的人才库）
+    from app.services.enterprise_service import get_enterprise_ids_for_query
+    enterprise_ids = await get_enterprise_ids_for_query(db, enterprise)
+    
+    result = await db.execute(
+        select(TalentPool).where(
+            TalentPool.student_id == student_id,
+            TalentPool.enterprise_id.in_(enterprise_ids)
+        )
+    )
+    talent_pool = result.scalar_one_or_none()
+    
+    if not talent_pool:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="人才库记录不存在"
+        )
+    
+    # 更新字段
+    if talent_data.status is not None:
+        valid_statuses = ["ALL", "FAVORITED", "COMMUNICATING", "INTERVIEWED", "HIRED"]
+        if talent_data.status not in valid_statuses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"无效的状态值，必须是: {', '.join(valid_statuses)}"
+            )
+        talent_pool.status = talent_data.status
+    
+    if talent_data.notes is not None:
+        talent_pool.notes = talent_data.notes
+    
+    if talent_data.tags is not None:
+        talent_pool.tags = talent_data.tags
+    
+    # 更新最后联系时间
+    from datetime import datetime
+    talent_pool.last_contact_time = datetime.now()
+    
+    await db.commit()
+    await db.refresh(talent_pool)
+    
+    return {"message": "更新成功", "id": talent_pool.id}
+

@@ -141,9 +141,17 @@ async def register(
             detail="用户名已存在"
         )
     
+    # 禁止管理员通过注册接口注册
+    if request.user_type == "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="管理员账号不能通过注册接口创建，请联系系统管理员"
+        )
+    
     # 创建新用户（处理空字符串）
-    # 如果是教师注册，状态设为PENDING等待审批；其他用户类型设为ACTIVE
-    initial_status = "PENDING" if request.user_type == "TEACHER" else "ACTIVE"
+    # 教师注册后状态设为ACTIVE（需要完成学校认证后才能成为主账号）
+    # 学生和企业用户注册后状态设为ACTIVE
+    initial_status = "ACTIVE"
     
     user = User(
         id=str(uuid4()),

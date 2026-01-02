@@ -96,14 +96,17 @@
               <button
                 v-if="!jobFair.check_in_time"
                 @click="handleCheckIn(jobFair.id)"
-                class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm"
+                class="btn btn-success btn-md whitespace-nowrap"
               >
+                <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 签到
               </button>
               <button
                 v-else
                 disabled
-                class="px-4 py-2 bg-gray-300 text-gray-600 rounded-xl cursor-not-allowed font-medium text-sm"
+                class="btn btn-secondary btn-md whitespace-nowrap"
               >
                 已签到
               </button>
@@ -114,18 +117,32 @@
                 v-if="!registeredJobFairIds.has(jobFair.id)"
                 @click="handleRegisterJobFair(jobFair.id)"
                 :disabled="jobFair.status !== 'PUBLISHED'"
-                class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                class="btn btn-primary btn-md whitespace-nowrap"
               >
+                <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 报名
               </button>
               <button
                 v-else
                 disabled
-                class="px-4 py-2 bg-gray-300 text-gray-600 rounded-xl cursor-not-allowed font-medium text-sm"
+                class="btn btn-secondary btn-md whitespace-nowrap"
               >
                 已报名
               </button>
             </template>
+            <!-- 发起聊天按钮 -->
+            <button
+              v-if="jobFair.school_id"
+              @click="startChat(jobFair)"
+              class="btn btn-primary btn-md whitespace-nowrap"
+            >
+              <svg class="w-4 h-4 btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              发起聊天
+            </button>
           </div>
         </div>
       </div>
@@ -185,14 +202,20 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { getJobFairs, getMyJobFairRegistrations, checkInJobFair, registerJobFair, type JobFair, type JobFairRegistration } from '@/api/jobFairs'
+import { createOrGetChatSession } from '@/api/chat'
 import Pagination from '@/components/Pagination.vue'
+
+const router = useRouter()
 
 // 双选会列表
 const jobFairs = ref<JobFair[]>([])
 const loading = ref(false)
 const showMyRegistrations = ref(false) // false=浏览所有双选会，true=我的报名
 const registeredJobFairIds = ref<Set<string>>(new Set()) // 已报名的双选会ID集合
+const showRegistrationsModal = ref(false) // 报名列表模态框显示状态
+const registrations = ref<any[]>([]) // 报名列表数据
 
 // 格式化日期时间
 const formatDateTime = (dateString: string) => {
@@ -253,7 +276,7 @@ const loadJobFairs = async () => {
       })
       // 加载已报名的双选会ID列表（用于显示"已报名"状态）
       try {
-        const myRegistrations = await getMyJobFairRegistrations({ page: 1, page_size: 1000 })
+        const myRegistrations = await getMyJobFairRegistrations({ page: 1, page_size: 100 })
         registeredJobFairIds.value = new Set(myRegistrations.items.map(jf => jf.id))
       } catch (error) {
         console.error('加载已报名列表失败:', error)
@@ -312,6 +335,24 @@ watch(showMyRegistrations, () => {
   loadJobFairs()
 })
 
+// 发起聊天（带双选会信息）
+const startChat = async (jobFair: JobFair) => {
+  if (!jobFair.school_id) {
+    alert('该双选会未关联学校，无法发起聊天')
+    return
+  }
+  
+  try {
+    // 创建或获取与学校的聊天会话
+    const session = await createOrGetChatSession(undefined, undefined, jobFair.school_id)
+    // 跳转到聊天页面，并传递双选会信息作为初始消息
+    const jobFairInfo = `双选会：${jobFair.title}\n时间：${formatDateTime(jobFair.start_time)} - ${formatDateTime(jobFair.end_time)}\n地点：${jobFair.location || '待定'}\n${jobFair.description ? `描述：${jobFair.description}` : ''}`
+    router.push(`/enterprise/chat?session_id=${session.id}&initial_message=${encodeURIComponent(jobFairInfo)}`)
+  } catch (error: any) {
+    console.error('发起聊天失败:', error)
+    alert('发起聊天失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
 
 onMounted(() => {
   loadJobFairs()

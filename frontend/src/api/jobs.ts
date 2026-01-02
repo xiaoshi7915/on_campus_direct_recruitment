@@ -7,13 +7,17 @@ import request from './request'
 export interface Job {
   id: string
   enterprise_id: string
+  enterprise_name?: string  // 企业名称
+  enterprise_logo?: string  // 企业Logo
+  enterprise_industry?: string  // 企业行业
+  enterprise_scale?: string  // 企业规模
   title: string
   department?: string
   job_type?: string
   salary_min?: number
   salary_max?: number
   work_location?: string
-  experience?: string
+  experience?: string  // 工作经验要求
   education?: string
   description: string
   requirements?: string

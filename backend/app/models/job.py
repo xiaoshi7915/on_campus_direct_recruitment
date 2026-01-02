@@ -70,10 +70,23 @@ class JobIntention(Base):
     
     id = Column(String(36), primary_key=True, comment="求职意向ID")
     student_id = Column(String(36), ForeignKey("student_profiles.id", ondelete="CASCADE"), nullable=False, index=True, comment="学生ID")
-    job_type = Column(String(50), nullable=True, comment="职位类型")
-    industry = Column(String(100), nullable=True, comment="行业")
-    salary_expect = Column(Integer, nullable=True, comment="期望薪资")
-    work_location = Column(String(100), nullable=True, comment="工作地点")
+    
+    # 旧字段（保留兼容性）
+    job_type = Column(String(50), nullable=True, comment="职位类型（旧字段，已废弃）")
+    industry = Column(String(100), nullable=True, comment="行业（旧字段，已废弃）")
+    salary_expect = Column(Integer, nullable=True, comment="期望薪资（旧字段，已废弃）")
+    work_location = Column(String(100), nullable=True, comment="工作地点（旧字段，已废弃）")
+    
+    # 新字段
+    job_type_list = Column(Text, nullable=True, comment="职位类型列表（JSON数组）")
+    industry_list = Column(Text, nullable=True, comment="行业列表（JSON数组，包含一级和二级行业）")
+    work_location_list = Column(Text, nullable=True, comment="工作地点列表（JSON数组）")
+    job_nature = Column(String(20), nullable=True, comment="求职类型：FULL_TIME（全职）、PART_TIME（兼职）")
+    salary_min = Column(Integer, nullable=True, comment="期望薪资最小值（单位：千元/月）")
+    salary_max = Column(Integer, nullable=True, comment="期望薪资最大值（单位：千元/月）")
+    part_time_days = Column(String(50), nullable=True, comment="兼职每周工作天数（如：1-2天、3-4天、5天）")
+    work_time_slot = Column(String(50), nullable=True, comment="兼职工作时间段（如：工作日、周末、晚上、灵活）")
+    
     created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="创建时间")
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
     

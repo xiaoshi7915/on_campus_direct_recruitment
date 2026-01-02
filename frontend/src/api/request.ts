@@ -46,7 +46,17 @@ requestForm.interceptors.response.use(
     return response.data
   },
   (error) => {
-    handleApiError(error)
+    // 检查是否是"企业信息不存在"、"企业档案不存在"或"教师信息不存在"的404错误
+    if (error.response?.status === 404) {
+      const errorDetail = error.response?.data?.detail || ''
+      if (errorDetail.includes('企业信息不存在') || errorDetail.includes('企业档案不存在') || errorDetail.includes('教师信息不存在') || errorDetail.includes('教师档案不存在')) {
+        error.__skipGlobalErrorHandler = true
+      }
+    }
+    
+    if (!error.__skipGlobalErrorHandler) {
+      handleApiError(error)
+    }
     return Promise.reject(error)
   }
 )
@@ -126,8 +136,25 @@ service.interceptors.response.use(
     return response.data
   },
   (error) => {
-    // 使用统一的错误处理
-    handleApiError(error)
+    // 检查是否是"企业信息不存在"、"企业档案不存在"、"教师信息不存在"或"教师档案不存在"的404错误
+    if (error.response?.status === 404) {
+      const errorDetail = error.response?.data?.detail || ''
+      if (errorDetail.includes('企业信息不存在') || errorDetail.includes('企业档案不存在') || errorDetail.includes('教师信息不存在') || errorDetail.includes('教师档案不存在')) {
+        error.__skipGlobalErrorHandler = true // 标记此错误，全局错误处理将跳过显示
+        // 如果是教师信息不存在，自动跳转到学校认证页面
+        if (errorDetail.includes('教师信息不存在') || errorDetail.includes('教师档案不存在')) {
+          setTimeout(() => {
+            if (window.location.pathname !== '/teacher/school-verification') {
+              window.location.href = '/teacher/school-verification'
+            }
+          }, 1000)
+        }
+      }
+    }
+    
+    if (!error.__skipGlobalErrorHandler) {
+      handleApiError(error)
+    }
     return Promise.reject(error)
   }
 )

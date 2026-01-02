@@ -1,6 +1,7 @@
 """
 求职意向相关API路由
 """
+import json
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -51,6 +52,14 @@ async def get_job_intentions(
         student = student_result.scalar_one_or_none()
         if student:
             query = query.where(JobIntention.student_id == student.id)
+        else:
+            # 学生档案不存在，返回空列表
+            return {
+                "items": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size
+            }
     elif current_user.user_type == "ADMIN":
         # 管理员可以查看所有
         if student_id:
@@ -172,10 +181,20 @@ async def create_job_intention(
     intention = JobIntention(
         id=str(uuid4()),
         student_id=student.id,
+        # 旧字段（保留兼容性）
         job_type=intention_data.job_type,
         industry=intention_data.industry,
         salary_expect=intention_data.salary_expect,
-        work_location=intention_data.work_location
+        work_location=intention_data.work_location,
+        # 新字段
+        job_type_list=json.dumps(intention_data.job_type_list) if intention_data.job_type_list else None,
+        industry_list=json.dumps(intention_data.industry_list) if intention_data.industry_list else None,
+        work_location_list=json.dumps(intention_data.work_location_list) if intention_data.work_location_list else None,
+        job_nature=intention_data.job_nature,
+        salary_min=intention_data.salary_min,
+        salary_max=intention_data.salary_max,
+        part_time_days=intention_data.part_time_days,
+        work_time_slot=intention_data.work_time_slot
     )
     
     db.add(intention)
@@ -236,6 +255,15 @@ async def update_job_intention(
     
     # 更新求职意向信息
     update_data = intention_data.model_dump(exclude_unset=True)
+    
+    # 处理JSON字段
+    if 'job_type_list' in update_data and update_data['job_type_list'] is not None:
+        update_data['job_type_list'] = json.dumps(update_data['job_type_list']) if update_data['job_type_list'] else None
+    if 'industry_list' in update_data and update_data['industry_list'] is not None:
+        update_data['industry_list'] = json.dumps(update_data['industry_list']) if update_data['industry_list'] else None
+    if 'work_location_list' in update_data and update_data['work_location_list'] is not None:
+        update_data['work_location_list'] = json.dumps(update_data['work_location_list']) if update_data['work_location_list'] else None
+    
     for field, value in update_data.items():
         setattr(intention, field, value)
     

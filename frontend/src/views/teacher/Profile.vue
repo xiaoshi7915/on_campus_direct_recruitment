@@ -171,8 +171,44 @@
         </div>
       </div>
 
-      <!-- 右侧：统计信息 -->
+      <!-- 右侧：统计信息和认证状态 -->
       <div class="space-y-6">
+        <!-- 学校认证状态 -->
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            学校认证
+          </h2>
+          <div v-if="profile?.is_main_account" class="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-green-600 font-semibold">您已是学校管理员（主账号）</span>
+            </div>
+          </div>
+          <div v-else class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-yellow-600 font-semibold flex items-center">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                未认证为学校管理员
+              </span>
+              <router-link
+                to="/teacher/school-verification"
+                class="btn btn-primary btn-sm"
+              >
+                立即认证
+              </router-link>
+            </div>
+            <p class="text-yellow-600 text-xs mt-2">完成学校认证后，您将成为学校管理员（主账号），可以管理学校信息、创建子账号等</p>
+          </div>
+        </div>
+
+        <!-- 统计信息 -->
         <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
             <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

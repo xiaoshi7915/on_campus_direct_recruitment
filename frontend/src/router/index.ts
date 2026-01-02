@@ -351,6 +351,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/Profile.vue'),
       },
       {
+        path: 'school-verification',
+        name: 'TeacherSchoolVerification',
+        component: () => import('@/views/teacher/SchoolVerification.vue'),
+        meta: { title: '学校认证', requiresAuth: true },
+      },
+      {
         path: 'departments',
         name: 'TeacherDepartments',
         component: () => import('@/views/teacher/Departments.vue'),
@@ -426,6 +432,11 @@ const routes: RouteRecordRaw[] = [
         path: 'teacher-approvals',
         name: 'AdminTeacherApprovals',
         component: () => import('@/views/admin/TeacherApprovals.vue'),
+      },
+      {
+        path: 'verifications',
+        name: 'AdminVerifications',
+        component: () => import('@/views/admin/Verifications.vue'),
       },
     ],
   },

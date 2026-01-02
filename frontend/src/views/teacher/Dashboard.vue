@@ -1,6 +1,6 @@
 <template>
   <div class="teacher-dashboard w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 bg-gradient-primary bg-clip-text text-transparent animate-fade-in-up">教师工作台</h1>
+    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 animate-fade-in-up">教师工作台</h1>
     
     <!-- 统计卡片 -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
@@ -538,8 +538,14 @@ const loadStudentStatistics = async () => {
     }
     const response = await getStudentActivityStatistics(params)
     statistics.value = response
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载学生统计数据失败:', error)
+    // 如果是教师信息不存在的错误，跳转到学校认证页面
+    if (error.response?.status === 404 && (error.response?.data?.detail?.includes('教师信息不存在') || error.response?.data?.detail?.includes('教师档案不存在'))) {
+      alert('请先完成学校认证')
+      window.location.href = '/teacher/school-verification'
+      return
+    }
   } finally {
     loading.value = false
   }
@@ -564,8 +570,14 @@ const loadJobFairAnalysis = async () => {
     }
     const response = await getJobFairAnalysis(params)
     jobFairAnalysis.value = response
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载双选会统计分析失败:', error)
+    // 如果是教师信息不存在的错误，跳转到学校认证页面
+    if (error.response?.status === 404 && (error.response?.data?.detail?.includes('教师信息不存在') || error.response?.data?.detail?.includes('教师档案不存在'))) {
+      alert('请先完成学校认证')
+      window.location.href = '/teacher/school-verification'
+      return
+    }
   } finally {
     loading.value = false
   }
@@ -593,8 +605,14 @@ const loadInfoSessionAnalysis = async () => {
     }
     const response = await getInfoSessionAnalysis(params)
     infoSessionAnalysis.value = response
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载宣讲会统计分析失败:', error)
+    // 如果是教师信息不存在的错误，跳转到学校认证页面
+    if (error.response?.status === 404 && (error.response?.data?.detail?.includes('教师信息不存在') || error.response?.data?.detail?.includes('教师档案不存在'))) {
+      alert('请先完成学校认证')
+      window.location.href = '/teacher/school-verification'
+      return
+    }
   } finally {
     loading.value = false
   }
@@ -613,8 +631,14 @@ const loadSchedules = async () => {
       ...(jobFairSchedules.items || []),
       ...(infoSessionSchedules.items || []),
     ].slice(0, 10) // 最多显示10条
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载日程失败:', error)
+    // 如果是教师信息不存在的错误，跳转到学校认证页面
+    if (error.response?.status === 404 && (error.response?.data?.detail?.includes('教师信息不存在') || error.response?.data?.detail?.includes('教师档案不存在'))) {
+      alert('请先完成学校认证')
+      window.location.href = '/teacher/school-verification'
+      return
+    }
   } finally {
     loading.value = false
   }

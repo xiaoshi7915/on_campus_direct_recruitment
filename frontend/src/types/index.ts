@@ -29,10 +29,20 @@ export interface OfferListResponse {
 export interface JobIntentionResponse {
   id: string
   student_id: string
+  // 旧字段（保留兼容性）
   job_type?: string
   industry?: string
   salary_expect?: number
   work_location?: string
+  // 新字段
+  job_type_list?: string  // JSON字符串
+  industry_list?: string  // JSON字符串
+  work_location_list?: string  // JSON字符串
+  job_nature?: string  // FULL_TIME | PART_TIME
+  salary_min?: number  // 单位：千元/月
+  salary_max?: number  // 单位：千元/月
+  part_time_days?: string
+  work_time_slot?: string
   created_at: string
   updated_at: string
 }

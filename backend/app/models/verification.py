@@ -69,3 +69,41 @@ class PersonalVerification(Base):
     user = relationship("User", foreign_keys=[user_id])
     reviewer = relationship("User", foreign_keys=[reviewer_id])
 
+
+class SchoolVerification(Base):
+    """
+    学校认证申请表模型
+    """
+    __tablename__ = "school_verifications"
+    
+    id = Column(String(36), primary_key=True, comment="认证ID")
+    teacher_id = Column(String(36), ForeignKey("teacher_profiles.id", ondelete="CASCADE"), nullable=False, index=True, comment="教师ID")
+    school_id = Column(String(36), ForeignKey("schools.id", ondelete="CASCADE"), nullable=False, index=True, comment="学校ID")
+    status = Column(SQLEnum(VerificationStatus), default=VerificationStatus.PENDING, nullable=False, index=True, comment="认证状态")
+    
+    # 认证材料
+    school_certificate_url = Column(String(255), nullable=True, comment="学校证明文件URL")
+    teacher_certificate_url = Column(String(255), nullable=True, comment="教师工作证明URL")
+    id_card_front_url = Column(String(255), nullable=True, comment="身份证正面URL")
+    id_card_back_url = Column(String(255), nullable=True, comment="身份证反面URL")
+    authorization_letter_url = Column(String(255), nullable=True, comment="授权委托书URL")
+    other_documents = Column(Text, nullable=True, comment="其他材料URLs（JSON数组）")
+    
+    # 联系信息
+    contact_person = Column(String(50), nullable=True, comment="联系人")
+    contact_phone = Column(String(20), nullable=True, comment="联系电话")
+    contact_email = Column(String(100), nullable=True, comment="联系邮箱")
+    
+    # 审核信息
+    reviewer_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, comment="审核人ID")
+    review_comment = Column(Text, nullable=True, comment="审核意见")
+    reviewed_at = Column(DateTime, nullable=True, comment="审核时间")
+    
+    created_at = Column(DateTime, server_default=func.now(), nullable=False, comment="创建时间")
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, comment="更新时间")
+    
+    # 关联关系
+    teacher = relationship("TeacherProfile", foreign_keys=[teacher_id])
+    school = relationship("School", foreign_keys=[school_id])
+    reviewer = relationship("User", foreign_keys=[reviewer_id])
+

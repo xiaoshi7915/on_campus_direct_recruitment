@@ -2,7 +2,7 @@
 职位相关的Pydantic模式
 """
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -41,13 +41,17 @@ class JobResponse(BaseModel):
     """职位响应模式"""
     id: str
     enterprise_id: str
+    enterprise_name: Optional[str] = None  # 企业名称
+    enterprise_logo: Optional[str] = None  # 企业Logo
+    enterprise_industry: Optional[str] = None  # 企业行业
+    enterprise_scale: Optional[str] = None  # 企业规模
     title: str
     department: Optional[str]
     job_type: Optional[str]
     salary_min: Optional[int]
     salary_max: Optional[int]
     work_location: Optional[str]
-    experience: Optional[str]
+    experience: Optional[str]  # 工作经验要求
     education: Optional[str]
     description: str
     requirements: Optional[str]
@@ -74,28 +78,60 @@ class JobListResponse(BaseModel):
 
 class JobIntentionCreate(BaseModel):
     """创建求职意向请求模式"""
-    job_type: Optional[str] = Field(None, max_length=50, description="职位类型")
-    industry: Optional[str] = Field(None, max_length=100, description="行业")
-    salary_expect: Optional[int] = Field(None, ge=0, description="期望薪资")
-    work_location: Optional[str] = Field(None, max_length=100, description="工作地点")
+    # 旧字段（保留兼容性）
+    job_type: Optional[str] = Field(None, max_length=50, description="职位类型（旧字段，已废弃）")
+    industry: Optional[str] = Field(None, max_length=100, description="行业（旧字段，已废弃）")
+    salary_expect: Optional[int] = Field(None, ge=0, description="期望薪资（旧字段，已废弃）")
+    work_location: Optional[str] = Field(None, max_length=100, description="工作地点（旧字段，已废弃）")
+    
+    # 新字段
+    job_type_list: Optional[List[str]] = Field(None, description="职位类型列表")
+    industry_list: Optional[List[str]] = Field(None, description="行业列表（包含一级和二级行业）")
+    work_location_list: Optional[List[str]] = Field(None, description="工作地点列表")
+    job_nature: Optional[str] = Field(None, description="求职类型：FULL_TIME（全职）、PART_TIME（兼职）")
+    salary_min: Optional[int] = Field(None, ge=0, description="期望薪资最小值（单位：千元/月）")
+    salary_max: Optional[int] = Field(None, ge=0, description="期望薪资最大值（单位：千元/月）")
+    part_time_days: Optional[str] = Field(None, max_length=50, description="兼职每周工作天数")
+    work_time_slot: Optional[str] = Field(None, max_length=50, description="兼职工作时间段")
 
 
 class JobIntentionUpdate(BaseModel):
     """更新求职意向请求模式"""
-    job_type: Optional[str] = Field(None, max_length=50, description="职位类型")
-    industry: Optional[str] = Field(None, max_length=100, description="行业")
-    salary_expect: Optional[int] = Field(None, ge=0, description="期望薪资")
-    work_location: Optional[str] = Field(None, max_length=100, description="工作地点")
+    # 旧字段（保留兼容性）
+    job_type: Optional[str] = Field(None, max_length=50, description="职位类型（旧字段，已废弃）")
+    industry: Optional[str] = Field(None, max_length=100, description="行业（旧字段，已废弃）")
+    salary_expect: Optional[int] = Field(None, ge=0, description="期望薪资（旧字段，已废弃）")
+    work_location: Optional[str] = Field(None, max_length=100, description="工作地点（旧字段，已废弃）")
+    
+    # 新字段
+    job_type_list: Optional[List[str]] = Field(None, description="职位类型列表")
+    industry_list: Optional[List[str]] = Field(None, description="行业列表（包含一级和二级行业）")
+    work_location_list: Optional[List[str]] = Field(None, description="工作地点列表")
+    job_nature: Optional[str] = Field(None, description="求职类型：FULL_TIME（全职）、PART_TIME（兼职）")
+    salary_min: Optional[int] = Field(None, ge=0, description="期望薪资最小值（单位：千元/月）")
+    salary_max: Optional[int] = Field(None, ge=0, description="期望薪资最大值（单位：千元/月）")
+    part_time_days: Optional[str] = Field(None, max_length=50, description="兼职每周工作天数")
+    work_time_slot: Optional[str] = Field(None, max_length=50, description="兼职工作时间段")
 
 
 class JobIntentionResponse(BaseModel):
     """求职意向响应模式"""
     id: str
     student_id: str
+    # 旧字段（保留兼容性）
     job_type: Optional[str]
     industry: Optional[str]
     salary_expect: Optional[int]
     work_location: Optional[str]
+    # 新字段
+    job_type_list: Optional[str]  # JSON字符串
+    industry_list: Optional[str]  # JSON字符串
+    work_location_list: Optional[str]  # JSON字符串
+    job_nature: Optional[str]
+    salary_min: Optional[int]
+    salary_max: Optional[int]
+    part_time_days: Optional[str]
+    work_time_slot: Optional[str]
     created_at: datetime
     updated_at: datetime
     

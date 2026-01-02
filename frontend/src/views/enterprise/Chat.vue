@@ -785,11 +785,26 @@ const handleSendMessage = async () => {
 
   try {
     const { sendMessage: sendMessageAPI } = await import('@/api/chat')
+    // 确定接收者ID：如果是与学校聊天，user2_id是学校主账号教师
+    let receiverId: string | undefined
+    if (currentSession.value.user2_id) {
+      receiverId = currentSession.value.user1_id === currentUserId.value
+        ? currentSession.value.user2_id
+        : currentSession.value.user1_id
+    } else {
+      // 如果没有user2_id，说明是学校聊天，需要从会话中获取
+      receiverId = currentSession.value.user1_id === currentUserId.value
+        ? currentSession.value.user2_id
+        : currentSession.value.user1_id
+    }
+    
+    if (!receiverId) {
+      alert('无法确定接收者，请刷新页面重试')
+      return
+    }
+    
     const newMessage = await sendMessageAPI(currentSession.value.id, {
-      receiver_id:
-        currentSession.value.user1_id === currentUserId.value
-          ? currentSession.value.user2_id
-          : currentSession.value.user1_id,
+      receiver_id: receiverId,
       content: messageContent.value,
     })
     messages.value.push(newMessage)
@@ -1157,17 +1172,44 @@ const initChat = async () => {
     // 加载会话列表
     await loadSessions()
     
-    // 检查URL参数中是否有user_id或student_id（从人才搜索发起聊天）
+    // 检查URL参数中是否有user_id、student_id、school_id或session_id（从其他页面发起聊天）
     const userIdParam = route.query.user_id as string
     const studentIdParam = route.query.student_id as string
+    const schoolIdParam = route.query.school_id as string
+    const sessionIdParam = route.query.session_id as string
+    const initialMessageParam = route.query.initial_message as string
     
-    if (userIdParam || studentIdParam) {
+    if (sessionIdParam) {
+      // 如果提供了session_id，直接选择该会话
+      try {
+        const { getChatSessions } = await import('@/api/chat')
+        const sessionsResponse = await getChatSessions()
+        const session = sessionsResponse.items.find(s => s.id === sessionIdParam)
+        if (session) {
+          await selectSession(session)
+          // 如果有初始消息，自动发送
+          if (initialMessageParam) {
+            setTimeout(() => {
+              messageContent.value = decodeURIComponent(initialMessageParam)
+              handleSendMessage()
+            }, 500)
+          }
+        }
+        // 清除URL参数
+        router.replace({ path: route.path, query: {} })
+      } catch (error: any) {
+        console.error('加载会话失败:', error)
+      }
+    } else if (userIdParam || studentIdParam || schoolIdParam) {
       // 创建或获取聊天会话
       try {
         const { createOrGetChatSession } = await import('@/api/chat')
         let session
         
-        if (studentIdParam) {
+        if (schoolIdParam) {
+          // 如果提供了school_id，使用school_id创建会话
+          session = await createOrGetChatSession(undefined, undefined, schoolIdParam)
+        } else if (studentIdParam) {
           // 如果提供了student_id，使用student_id创建会话
           // 后端API会将其转换为user_id
           session = await createOrGetChatSession('', studentIdParam)
@@ -1181,6 +1223,14 @@ const initChat = async () => {
         
         // 选择该会话
         await selectSession(session)
+        
+        // 如果有初始消息，自动发送
+        if (initialMessageParam) {
+          setTimeout(() => {
+            messageContent.value = decodeURIComponent(initialMessageParam)
+            handleSendMessage()
+          }, 500)
+        }
         
         // 清除URL参数
         router.replace({ path: route.path, query: {} })

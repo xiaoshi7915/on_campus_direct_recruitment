@@ -2,7 +2,7 @@
   <div class="enterprise-dashboard">
     <!-- 页面标题 -->
     <div class="mb-10 animate-fade-in-up">
-      <h1 class="text-5xl font-display font-bold text-gray-900 mb-3 bg-gradient-primary bg-clip-text text-transparent">企业工作台</h1>
+      <h1 class="text-5xl font-display font-bold text-gray-900 mb-3">企业工作台</h1>
       <p class="text-gray-600 text-lg">管理您的招聘业务，查看数据统计</p>
     </div>
     

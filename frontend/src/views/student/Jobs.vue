@@ -165,12 +165,35 @@
                 </svg>
                 {{ job.job_type }}
               </span>
+              <span v-if="job.experience" class="flex items-center">
+                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.564 23.564 0 0112 15c-3.183 0-6.22-1.04-8.755-2.745M9 10a3 3 0 11-6 0 3 3 0 016 0zm12 0a3 3 0 11-6 0 3 3 0 016 0zm-9 10a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {{ job.experience }}
+              </span>
               <span class="flex items-center">
                 <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253" />
                 </svg>
                 {{ job.education || '不限' }}
               </span>
+            </div>
+            <!-- 企业信息 -->
+            <div v-if="job.enterprise_name" class="flex items-center gap-3 mb-3">
+              <img
+                v-if="job.enterprise_logo"
+                :src="job.enterprise_logo"
+                :alt="job.enterprise_name"
+                class="w-10 h-10 rounded-lg object-cover border border-gray-200"
+                @error="(e: any) => e.target.style.display = 'none'"
+              />
+              <div class="flex-1">
+                <div class="font-medium text-gray-900">{{ job.enterprise_name }}</div>
+                <div v-if="job.enterprise_industry || job.enterprise_scale" class="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                  <span v-if="job.enterprise_industry">{{ job.enterprise_industry }}</span>
+                  <span v-if="job.enterprise_scale">{{ job.enterprise_scale }}</span>
+                </div>
+              </div>
             </div>
             <p class="text-gray-700 line-clamp-2 mb-3">{{ job.description }}</p>
             <div v-if="job.tags" class="flex flex-wrap gap-2">

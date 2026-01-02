@@ -166,7 +166,7 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       @click.self="closeModal"
     >
-      <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden">
         <!-- 固定头部 -->
         <div class="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h2 class="text-2xl font-bold text-gray-900 flex items-center">
@@ -187,7 +187,7 @@
         <!-- 可滚动内容区域 -->
         <div class="flex-1 overflow-y-auto p-6">
           <div class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">职位标题 *</label>
               <input
@@ -220,12 +220,30 @@
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">工作地点</label>
-              <input
-                v-model="jobForm.work_location"
-                type="text"
-                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
-                placeholder="例如：北京"
-              />
+              <div class="space-y-2">
+                <MultiSelect
+                  v-model="workLocationSelected"
+                  :options="cityOptions"
+                  placeholder="选择城市（可多选）"
+                  :searchable="true"
+                />
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model="customLocation"
+                    type="text"
+                    @keydown.enter="handleCustomLocationBlur"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                    placeholder="或输入自定义城市"
+                  />
+                  <button
+                    type="button"
+                    @click="handleCustomLocationBlur"
+                    class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    添加
+                  </button>
+                </div>
+              </div>
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">最低薪资</label>
@@ -247,11 +265,10 @@
             </div>
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">工作经验</label>
-              <input
+              <Select
                 v-model="jobForm.experience"
-                type="text"
-                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
-                placeholder="例如：1-3年"
+                :options="experienceOptions"
+                placeholder="请选择工作经验"
               />
             </div>
             <div>
@@ -287,12 +304,11 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">标签（用逗号分隔）</label>
-            <input
-              v-model="jobForm.tags"
-              type="text"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-all duration-200"
-              placeholder="例如：高薪,五险一金,带薪年假"
+            <TagInput
+              v-model="jobTags"
+              label="标签（技能、特殊经验等）"
+              placeholder="输入标签后按回车或逗号添加"
+              hint="例如：Java、Python、项目管理、团队协作、海外工作经验等"
             />
           </div>
           <div v-if="editingJob">
@@ -334,10 +350,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getJobs, createJob, updateJob, deleteJob, type Job } from '@/api/jobs'
 import Pagination from '@/components/Pagination.vue'
+import MultiSelect from '@/components/MultiSelect.vue'
+import Select from '@/components/Select.vue'
+import TagInput from '@/components/TagInput.vue'
 
 const router = useRouter()
 
@@ -350,6 +369,25 @@ const pageSize = ref(20)
 const total = ref(0)
 const showCreateModal = ref(false)
 const editingJob = ref<Job | null>(null)
+
+// 城市选项（常用城市）
+const cityOptions = [
+  '北京', '上海', '广州', '深圳', '杭州', '南京', '成都', '武汉', '西安', '重庆',
+  '苏州', '天津', '长沙', '郑州', '济南', '青岛', '大连', '厦门', '福州', '合肥',
+  '石家庄', '太原', '沈阳', '长春', '哈尔滨', '南昌', '南宁', '海口', '昆明', '贵阳',
+  '乌鲁木齐', '拉萨', '银川', '西宁', '呼和浩特'
+]
+
+// 工作经验选项
+const experienceOptions = [
+  '不限',
+  '应届毕业生',
+  '1年以下',
+  '1-3年',
+  '3-5年',
+  '5-10年',
+  '10年以上'
+]
 
 // 表单数据
 const jobForm = ref({
@@ -366,6 +404,32 @@ const jobForm = ref({
   tags: '',
   status: 'PUBLISHED',
 })
+
+// 工作地点多选
+const workLocationSelected = ref<string[]>([])
+const customLocation = ref('')
+
+// 标签数组
+const jobTags = ref<string[]>([])
+
+// 监听工作地点多选变化
+watch(workLocationSelected, (values) => {
+  jobForm.value.work_location = values.join(',')
+}, { deep: true })
+
+// 处理自定义城市
+const handleCustomLocationBlur = () => {
+  const trimmed = customLocation.value.trim()
+  if (trimmed && !workLocationSelected.value.includes(trimmed)) {
+    workLocationSelected.value.push(trimmed)
+    customLocation.value = ''
+  }
+}
+
+// 监听标签变化
+watch(jobTags, (tags) => {
+  jobForm.value.tags = tags.join(',')
+}, { deep: true })
 
 
 // 格式化日期
@@ -444,6 +508,19 @@ const editJob = (job: Job) => {
     tags: job.tags || '',
     status: job.status,
   }
+  // 初始化工作地点多选
+  if (job.work_location) {
+    workLocationSelected.value = job.work_location.split(',').filter(Boolean)
+  } else {
+    workLocationSelected.value = []
+  }
+  // 初始化标签数组
+  if (job.tags) {
+    jobTags.value = job.tags.split(',').filter(Boolean).map(t => t.trim())
+  } else {
+    jobTags.value = []
+  }
+  customLocation.value = ''
 }
 
 // 保存职位
@@ -497,6 +574,9 @@ const closeModal = () => {
     tags: '',
     status: 'PUBLISHED',
   }
+  workLocationSelected.value = []
+  jobTags.value = []
+  customLocation.value = ''
 }
 
 onMounted(() => {

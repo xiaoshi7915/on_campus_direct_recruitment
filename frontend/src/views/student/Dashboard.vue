@@ -2,7 +2,7 @@
   <div class="student-dashboard">
     <!-- 页面标题 -->
     <div class="mb-10 animate-fade-in-up">
-      <h1 class="text-5xl font-display font-bold text-gray-900 mb-3 bg-gradient-primary bg-clip-text text-transparent">学生工作台</h1>
+      <h1 class="text-5xl font-display font-bold text-gray-900 mb-3">学生工作台</h1>
       <p class="text-gray-600 text-lg">校园直聘，欢迎您，查看您的求职进展</p>
     </div>
     
@@ -238,8 +238,8 @@ const getStatusClass = (status: string) => {
 const loadData = async () => {
   loading.value = true
   try {
-    // 加载统计数据
-    const [resumesRes, applicationsRes, interviewsRes, favoritesRes, jobsRes] = await Promise.all([
+    // 加载统计数据，使用catch处理错误，避免一个失败导致全部失败
+    const [resumesRes, applicationsRes, interviewsRes, favoritesRes, jobsRes] = await Promise.allSettled([
       getResumes({ page_size: 1 }),
       getApplications({ page_size: 5 }),
       getInterviews({ status: 'SCHEDULED', page_size: 1 }),
@@ -247,14 +247,19 @@ const loadData = async () => {
       getJobs({ page_size: 5, status: 'PUBLISHED' }),
     ])
 
-    resumeCount.value = resumesRes.total
-    applicationCount.value = applicationsRes.total
-    interviewCount.value = interviewsRes.total
-    favoriteCount.value = favoritesRes.total
-    recentApplications.value = applicationsRes.items
-    recommendedJobs.value = jobsRes.items
+    resumeCount.value = resumesRes.status === 'fulfilled' ? (resumesRes.value.total || 0) : 0
+    applicationCount.value = applicationsRes.status === 'fulfilled' ? (applicationsRes.value.total || 0) : 0
+    interviewCount.value = interviewsRes.status === 'fulfilled' ? (interviewsRes.value.total || 0) : 0
+    favoriteCount.value = favoritesRes.status === 'fulfilled' ? (favoritesRes.value.total || 0) : 0
+    recentApplications.value = applicationsRes.status === 'fulfilled' ? (applicationsRes.value.items || []) : []
+    recommendedJobs.value = jobsRes.status === 'fulfilled' ? (jobsRes.value.items || []) : []
   } catch (error) {
     console.error('加载数据失败:', error)
+    // 确保所有计数都初始化为0
+    resumeCount.value = 0
+    applicationCount.value = 0
+    interviewCount.value = 0
+    favoriteCount.value = 0
   } finally {
     loading.value = false
   }

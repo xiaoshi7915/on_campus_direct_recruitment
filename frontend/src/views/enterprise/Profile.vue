@@ -314,9 +314,10 @@ const loadProfile = async () => {
     offerCount.value = 0 // TODO: 获取Offer数量
   } catch (error: any) {
     console.error('加载档案失败:', error)
-    // 如果档案不存在（404），允许创建
+    // 如果档案不存在（404），允许创建，不显示错误提示
     if (error.response?.status === 404) {
-      // 档案不存在，显示提示但不阻止用户填写表单
+      // 档案不存在，显示提示但不阻止用户填写表单，也不显示错误提示
+      console.log('企业档案不存在，可以创建新档案')
       // 表单已经显示，用户可以填写后保存（会自动创建）
     } else {
       alert('加载档案失败: ' + (error.response?.data?.detail || error.message))

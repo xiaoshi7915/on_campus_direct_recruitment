@@ -165,8 +165,14 @@ const loadStatistics = async () => {
     const response = await request.get('/statistics/students/activity', { params })
     statistics.value = response
     byDepartment.value = response.by_department || []
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载统计数据失败:', error)
+    // 如果是教师信息不存在的错误，跳转到学校认证页面
+    if (error.response?.status === 404 && (error.response?.data?.detail?.includes('教师信息不存在') || error.response?.data?.detail?.includes('教师档案不存在'))) {
+      alert('请先完成学校认证')
+      window.location.href = '/teacher/school-verification'
+      return
+    }
   } finally {
     loading.value = false
   }

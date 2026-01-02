@@ -33,7 +33,7 @@
                 class="nav-menu-item group"
                 active-class="active"
               >
-                <span class="relative z-10">面试专区</span>
+                <span class="relative z-10">AI面试辅导</span>
               </router-link>
               
               <router-link
@@ -41,7 +41,7 @@
                 class="nav-menu-item group"
                 active-class="active"
               >
-                <span class="relative z-10">简历投递</span>
+                <span class="relative z-10">简历智能匹配</span>
               </router-link>
             </template>
             

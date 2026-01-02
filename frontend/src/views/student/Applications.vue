@@ -1,6 +1,6 @@
 <template>
   <div class="student-applications w-full max-w-full px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 bg-gradient-primary bg-clip-text text-transparent animate-fade-in-up">我的申请</h1>
+    <h1 class="text-5xl font-display font-bold text-gray-900 mb-10 animate-fade-in-up">我的申请</h1>
 
     <!-- 筛选条件 -->
     <div class="card-elevated rounded-2xl p-6 mb-8 border border-gray-100/50 animate-fade-in-up" style="animation-delay: 0.1s;">

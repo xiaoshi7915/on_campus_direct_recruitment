@@ -83,3 +83,15 @@ export const getTalents = async (params?: {
   return request.get('/enterprise-management/talents', { params })
 }
 
+// 更新人才库信息
+export const updateTalent = async (
+  studentId: string,
+  data: {
+    status?: string
+    notes?: string
+    tags?: string
+  }
+): Promise<{ message: string; id: string }> => {
+  return request.put(`/enterprise-management/talents/${studentId}`, data)
+}
+

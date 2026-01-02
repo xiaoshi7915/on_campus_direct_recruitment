@@ -7,6 +7,19 @@
     </div>
     
     <div class="register-box w-full max-w-md relative z-10 animate-fade-in-up">
+      <!-- 返回首页按钮 -->
+      <div class="mb-6">
+        <router-link
+          to="/"
+          class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors font-medium"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          返回首页
+        </router-link>
+      </div>
+      
       <!-- Logo和标题 -->
       <div class="text-center mb-10">
         <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-primary rounded-3xl mb-6 shadow-xl transform hover:scale-105 transition-transform">
