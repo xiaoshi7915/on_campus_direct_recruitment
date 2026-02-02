@@ -13,6 +13,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 8008,
+    // 允许通过该域名访问开发服务器（用于远程/域名访问）
+    allowedHosts: ['campus-recruit.chenxiaoshivivid.top'],
     proxy: {
       '/api': {
         target: 'http://localhost:6121',
