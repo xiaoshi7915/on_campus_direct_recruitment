@@ -1,12 +1,21 @@
 """
 OSS文件上传工具
+当 oss2 或阿里云 SDK 不可用（如 certifi 兼容性问题）时，使用禁用态 stub，保证应用能正常启动。
 """
-import oss2
 from typing import Optional
 import uuid
 from datetime import datetime
 from pathlib import Path
 from app.core.config import settings
+
+# 延迟导入 oss2，避免 aliyunsdkcore 与 certifi 不兼容时阻塞应用启动
+try:
+    import oss2
+    _OSS2_AVAILABLE = True
+except Exception as e:
+    oss2 = None
+    _OSS2_AVAILABLE = False
+    _OSS2_IMPORT_ERROR = str(e)
 
 
 class OSSService:
@@ -15,12 +24,13 @@ class OSSService:
     """
     
     def __init__(self):
-        """初始化OSS服务"""
-        if not settings.OSS_ACCESS_KEY_ID or not settings.OSS_ACCESS_KEY_SECRET:
-            self.auth = None
-            self.bucket = None
-            self.enabled = False
-        else:
+        """初始化OSS服务（若 oss2 不可用或未配置 OSS，则 enabled=False）"""
+        self.auth = None
+        self.bucket = None
+        self.enabled = False
+        if not _OSS2_AVAILABLE or not settings.OSS_ACCESS_KEY_ID or not settings.OSS_ACCESS_KEY_SECRET:
+            return
+        try:
             # 创建OSS认证对象
             self.auth = oss2.Auth(settings.OSS_ACCESS_KEY_ID, settings.OSS_ACCESS_KEY_SECRET)
             # 创建OSS服务端点（如果endpoint已经包含https://，则不重复添加）
@@ -31,6 +41,10 @@ class OSSService:
             # 创建Bucket对象
             self.bucket = oss2.Bucket(self.auth, endpoint, settings.OSS_BUCKET_NAME)
             self.enabled = True
+        except Exception:
+            self.auth = None
+            self.bucket = None
+            self.enabled = False
     
     def generate_file_path(self, file_type: str, filename: str) -> str:
         """
