@@ -426,7 +426,6 @@ async def get_talents(
     
     # 关键词搜索
     if keyword:
-        keyword_lower = keyword.lower()
         # 通过学生姓名和手机号搜索
         query = query.join(StudentProfile, TalentPool.student_id == StudentProfile.id)
         query = query.join(User, StudentProfile.user_id == User.id)
