@@ -473,4 +473,3 @@ h1, h2, h3, h4, h5, h6 {
 .nav-badge {
   @apply bg-gradient-warm text-white text-xs rounded-full px-2.5 py-1 min-w-[22px] text-center font-semibold;
 }
-

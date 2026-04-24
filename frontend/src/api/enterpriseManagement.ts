@@ -94,4 +94,3 @@ export const updateTalent = async (
 ): Promise<{ message: string; id: string }> => {
   return request.put(`/enterprise-management/talents/${studentId}`, data)
 }
-

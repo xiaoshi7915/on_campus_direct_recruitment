@@ -186,4 +186,3 @@ export const getSchoolVerification = async (id: string): Promise<SchoolVerificat
 export const updateSchoolVerification = async (id: string, data: SchoolVerificationUpdateRequest): Promise<SchoolVerification> => {
   return request.put(`/verifications/school/${id}`, data)
 }
-
