@@ -99,10 +99,11 @@ class OSSService:
         result = self.bucket.put_object(file_path, file_content, headers=headers)
         
         if result.status == 200:
-            # 生成文件URL（如果endpoint已经包含https://，则使用bucket.endpoint格式）
+            # 生成文件URL：格式始终为 https://<bucket>.<host>/<path>
             if settings.OSS_ENDPOINT.startswith("https://"):
-                # endpoint格式：https://oss-cn-hangzhou.aliyuncs.com
-                file_url = f"{settings.OSS_ENDPOINT}/{file_path}"
+                # endpoint格式：https://oss-cn-hangzhou.aliyuncs.com → 去掉 scheme 后拼入 bucket
+                host = settings.OSS_ENDPOINT[len("https://"):]
+                file_url = f"https://{settings.OSS_BUCKET_NAME}.{host}/{file_path}"
             else:
                 # endpoint格式：oss-cn-hangzhou.aliyuncs.com
                 file_url = f"https://{settings.OSS_BUCKET_NAME}.{settings.OSS_ENDPOINT}/{file_path}"

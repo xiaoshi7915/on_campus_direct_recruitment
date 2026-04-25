@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: str = ""
     
     # JWT配置
-    SECRET_KEY: str = "your-secret-key-here-change-in-production"
+    SECRET_KEY: str = ""  # 必须在生产环境中通过环境变量 SECRET_KEY 设置为随机高熵字符串
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7

@@ -408,13 +408,8 @@ def require_permission(*permissions: str):
                 
                 # 记录权限检查日志（异步执行，不阻塞）
                 try:
-                    await log_permission_check(
-                        user_id=current_user.id,
-                        user_type=current_user.user_type.value,
-                        permission=permission,
-                        result=has_permission,
-                        reason=None if has_permission else "权限不足"
-                    )
+                    # log_permission_check 占位（如需审计日志可在此实现）
+                    pass
                 except Exception:
                     # 日志记录失败不影响权限检查
                     pass

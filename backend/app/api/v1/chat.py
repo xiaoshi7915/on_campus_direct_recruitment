@@ -258,47 +258,6 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = Query(
             logger.error(f"WebSocket认证失败: {str(e)}", exc_info=True)
             await websocket.close(code=1011, reason="服务器内部错误")
             break
-    try:
-        while True:
-            # 接收消息
-            data = await websocket.receive_text()
-            message_data = json.loads(data)
-            
-            # 处理不同类型的消息
-            message_type = message_data.get("type", "message")
-            
-            if message_type == "ping":
-                # 心跳检测
-                await manager.update_heartbeat(websocket)
-                await websocket.send_json({"type": "pong"})
-            elif message_type == "message":
-                # 普通消息（需要保存到数据库）
-                # 这里可以添加消息保存逻辑
-                receiver_id = message_data.get("receiver_id")
-                content = message_data.get("content")
-                
-                if receiver_id and content:
-                    # 发送给接收者
-                    await manager.send_personal_message({
-                        "type": "message",
-                        "sender_id": user_id_from_token,
-                        "content": content,
-                        "timestamp": message_data.get("timestamp")
-                    }, receiver_id)
-                    
-                    # 确认发送成功
-                    await websocket.send_json({
-                        "type": "message_sent",
-                        "message_id": message_data.get("message_id")
-                    })
-                    # 更新心跳
-                    await manager.update_heartbeat(websocket)
-    except WebSocketDisconnect:
-        logger.info(f"WebSocket连接断开: user_id={user_id_from_token}")
-        manager.disconnect(websocket, user_id_from_token)
-    except Exception as e:
-        logger.error(f"WebSocket处理出错: {str(e)}", exc_info=True)
-        manager.disconnect(websocket, user_id_from_token)
 
 
 # ==================== REST API接口 ====================

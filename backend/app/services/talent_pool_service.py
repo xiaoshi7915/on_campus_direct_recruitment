@@ -4,7 +4,7 @@
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from app.models.talent_pool import TalentPool
 from app.models.profile import StudentProfile
@@ -48,7 +48,7 @@ async def sync_talent_to_pool(
     )
     talent = result.scalar_one_or_none()
     
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     
     if talent:
         # 更新现有记录

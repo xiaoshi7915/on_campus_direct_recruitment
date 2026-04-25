@@ -511,7 +511,9 @@ router.beforeEach(async (to, from, next) => {
       }
     } catch (error) {
       console.error('[Router] 权限检查失败:', error)
-      // 权限检查失败时允许访问（避免阻塞正常使用）
+      // 权限检查失败时拒绝导航，避免未授权访问
+      next(false)
+      return
     }
   }
 

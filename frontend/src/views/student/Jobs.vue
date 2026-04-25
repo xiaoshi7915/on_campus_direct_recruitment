@@ -298,6 +298,14 @@ const handleSearch = async () => {
     if (filters.value.job_type) {
       params.job_type = filters.value.job_type
     }
+    if (filters.value.salary) {
+      // salary 格式为 "min-max"，如 "5-10" 表示 5k-10k
+      const parts = filters.value.salary.split('-')
+      if (parts.length === 2) {
+        if (parts[0]) params.salary_min = Number(parts[0]) * 1000
+        if (parts[1]) params.salary_max = Number(parts[1]) * 1000
+      }
+    }
     if (filters.value.education) {
       params.education = filters.value.education
     }
@@ -307,12 +315,14 @@ const handleSearch = async () => {
     total.value = response.total
 
     // 检查收藏状态
+    const newFavoriteIds = new Set<string>()
     for (const job of jobs.value) {
       const favorited = await checkFavorite('JOB', job.id)
       if (favorited) {
-        favoriteIds.value.add(job.id)
+        newFavoriteIds.add(job.id)
       }
     }
+    favoriteIds.value = newFavoriteIds
   } catch (error) {
     console.error('搜索职位失败:', error)
   } finally {
@@ -347,10 +357,12 @@ const handleFavorite = async (jobId: string) => {
   try {
     if (isFavorite(jobId)) {
       await removeFavorite('JOB', jobId)
-      favoriteIds.value.delete(jobId)
+      const next = new Set(favoriteIds.value)
+      next.delete(jobId)
+      favoriteIds.value = next
     } else {
       await addFavorite('JOB', jobId)
-      favoriteIds.value.add(jobId)
+      favoriteIds.value = new Set(favoriteIds.value).add(jobId)
     }
   } catch (error: any) {
     alert(error.response?.data?.detail || '操作失败，请稍后重试')

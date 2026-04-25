@@ -96,5 +96,6 @@ __all__ = [
     # 认证相关
     "EnterpriseVerification",
     "PersonalVerification",
+    "SchoolVerification",
     "VerificationStatus",
 ]

@@ -12,9 +12,9 @@ def check_production_settings():
     """检查生产环境配置"""
     warnings = []
     
-    # 检查密钥
-    if settings.SECRET_KEY == "your-secret-key-here-change-in-production":
-        warnings.append("⚠️ SECRET_KEY 使用默认值，生产环境必须修改！")
+    # 检查密钥（空字符串或旧的占位字符串都视为未配置）
+    if not settings.SECRET_KEY or settings.SECRET_KEY == "your-secret-key-here-change-in-production":
+        warnings.append("⚠️ SECRET_KEY 未设置或使用默认值，生产环境必须通过环境变量配置随机高熵字符串！")
     
     # 检查调试模式
     if settings.DEBUG:
