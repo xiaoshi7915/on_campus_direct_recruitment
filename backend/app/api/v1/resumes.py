@@ -327,12 +327,6 @@ async def create_resume(
     
     # 如果设置为默认简历，需要先取消其他默认简历
     if resume_data.is_default:
-        await db.execute(
-            select(Resume).where(
-                Resume.student_id == student.id,
-                Resume.is_default == True
-            )
-        )
         existing_defaults = await db.execute(
             select(Resume).where(
                 Resume.student_id == student.id,

@@ -254,19 +254,25 @@ async def delete_file(
     db = Depends(get_db)
 ):
     """
-    删除文件
+    删除文件（仅管理员）
     
     Args:
         file_path: 文件路径或URL
-        current_user: 当前登录用户
+        current_user: 当前登录用户（必须是管理员）
         db: 数据库会话
         
     Returns:
         dict: 删除结果
         
     Raises:
-        HTTPException: 如果删除失败
+        HTTPException: 如果无权限或删除失败
     """
+    # 仅允许管理员通过此接口删除文件，防止任意用户删除他人文件
+    if current_user.user_type != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有管理员才能通过此接口删除文件"
+        )
     try:
         success = await oss_service.delete_file(file_path)
         if success:
@@ -276,6 +282,8 @@ async def delete_file(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="文件删除失败"
             )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

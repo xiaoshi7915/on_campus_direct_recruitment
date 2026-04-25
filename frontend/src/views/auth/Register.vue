@@ -137,7 +137,6 @@
               <option value="STUDENT">学生</option>
               <option value="TEACHER">教师</option>
               <option value="ENTERPRISE">企业</option>
-              <option value="ADMIN">管理员</option>
             </select>
             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

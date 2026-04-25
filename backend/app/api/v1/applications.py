@@ -448,8 +448,12 @@ async def update_application_status(
         select(EnterpriseProfile).where(EnterpriseProfile.user_id == current_user.id)
     )
     enterprise = enterprise_result.scalar_one_or_none()
-    
-    if not enterprise or job.enterprise_id != enterprise.id:
+
+    # 加载申请关联的职位，校验企业归属
+    job_result = await db.execute(select(Job).where(Job.id == application.job_id))
+    job = job_result.scalar_one_or_none()
+
+    if not enterprise or not job or job.enterprise_id != enterprise.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权修改此申请"

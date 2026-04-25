@@ -282,6 +282,13 @@ async def refresh_token(
             detail="用户不存在"
         )
     
+    # 校验账户状态，禁止已停用账户刷新令牌
+    if user.status != "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="账户已被禁用，无法刷新令牌"
+        )
+    
     # 创建新的访问令牌
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -370,7 +377,6 @@ async def forgot_password(
             "success": True,
             "message": "验证码已发送到手机",
             "phone": user.phone[:3] + "****" + user.phone[-4:] if user.phone else None,
-            "code": code if settings.DEBUG else None  # 开发环境返回验证码
         }
     elif user.email:
         # TODO: 实现邮箱验证码发送

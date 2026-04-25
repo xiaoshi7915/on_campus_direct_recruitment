@@ -169,7 +169,7 @@ async def get_jobs(
         if enterprise:
             enterprise_id_for_cache = enterprise.id
     
-    cache_key = f"jobs:list:{page}:{page_size}:{keyword}:{location}:{status_filter}:{enterprise_id_for_cache}"
+    cache_key = f"jobs:list:{page}:{page_size}:{keyword}:{location}:{job_type}:{education}:{status_filter}:{enterprise_id_for_cache}"
     cached_result = await get_cache(cache_key)
     if cached_result:
         logger.debug(f"从缓存获取职位列表: {cache_key}")
